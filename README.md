@@ -30,16 +30,16 @@ V této části souboru README je stručně představena struktura šablony.
   V kořenovém adresáři se nachází následující soubory, které modifikují studenti :
   * 00-projekt.tex 
      Základní soubor šablony. Obsahuje základní nastavení, vkládá se v něm hlavička a dokumenty s příklady. Kromě hlavičky a případného nastavení jazyka není třeba tento soubor měnit.
-  ** 01-pr1.tex -- 05-pr5.tex
+  * 01-pr1.tex -- 05-pr5.tex
      Soubory, které obsahují jednotlivé příklady. Parametr příkazů prvniZadani, druhyZadani určuje, jaké zadání se vysazí do tabulky se zadáním a jaká skupina se doplní do odpovědní tabulky.
-  ** 06-tab.tex
+  * 06-tab.tex
      Soubor, který obsahuje odpovědní tabulku. Skupiny by se měly doplnit automaticky, doplňujete pouze výsledky a jednotky.
   Další soubory:
-  ** fitiel.cls
+  * fitiel.cls
      Definice stylu dokumentu. 
-  ** latexmkrc
+  * latexmkrc
      Nastavení pro utilitu latexmk (umístění balíků, podsložka packages). 
-  ** README.md
+  * README.md
      Tento dokument.
 
 # Další zdroje informací
