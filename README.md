@@ -34,7 +34,7 @@ V této části souboru README je stručně představena struktura šablony.
      Soubory, které obsahují jednotlivé příklady. Parametr příkazů prvniZadani, druhyZadani určuje, jaké zadání se vysazí do tabulky se zadáním a jaká skupina se doplní do odpovědní tabulky.
   * 06-tab.tex
      Soubor, který obsahuje odpovědní tabulku. Skupiny by se měly doplnit automaticky, doplňujete pouze výsledky a jednotky.
-  Další soubory:
+* Další soubory v kořenovém adresáři, které není třeba modifikovat:
   * fitiel.cls
      Definice stylu dokumentu. 
   * latexmkrc
