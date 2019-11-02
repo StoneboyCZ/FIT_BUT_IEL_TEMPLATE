@@ -1,5 +1,7 @@
 # Šablona pro projekt IEL, verze 2019/01
 
+Tento dokument popisuje použití šablony pro projekt IEL.
+
 ## Použití
 ### Overleaf
 Pro import do OVerleafu stačí v přehledu projektů kliknout na tlačítko New project (Nový projekt) --> Upload --> přetáhnout zip. Šablona bude připravena k použití. Přejmenujte si nově vytvořený projekt svým loginem.
