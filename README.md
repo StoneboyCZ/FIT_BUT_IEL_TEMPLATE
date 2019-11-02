@@ -8,11 +8,11 @@ Pro import do OVerleafu stačí v přehledu projektů kliknout na tlačítko New
 
 ### Lokálně 
 Stačí rozbalit zip archiv do libovolné složky. Lze překládat i z příkazové řádky. Pro tuto šablonu stačí:
+`
+pdflatex 00-projekt.tex xlogin00.pdf
 
-`pdflatex 00-projekt.tex xlogin00.pdf
-
-pdflatex 00-projekt.tex xlogin00.pdf`
-
+pdflatex 00-projekt.tex xlogin00.pdf
+`
 Pokud chcete použít balík circuitikz s parametry v šabloně, použijte:
 
 `latexmk -pdf 00-projekt.tex`
