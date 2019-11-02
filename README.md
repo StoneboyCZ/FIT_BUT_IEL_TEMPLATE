@@ -28,7 +28,7 @@ V této části souboru README je stručně představena struktura šablony.
   Adresář s balíky, které nemusí být součástí instalace LaTeXu (např. na merlinovi ). Aktuálně je přiložena nejnovější verze balíku circuitikz. Lze přidávat i další balíky podle potřeby.
 * kořenový adresář
   V kořenovém adresáři se nachází následující soubory, které modifikují studenti :
-  ** 00-projekt.tex 
+  * 00-projekt.tex 
      Základní soubor šablony. Obsahuje základní nastavení, vkládá se v něm hlavička a dokumenty s příklady. Kromě hlavičky a případného nastavení jazyka není třeba tento soubor měnit.
   ** 01-pr1.tex -- 05-pr5.tex
      Soubory, které obsahují jednotlivé příklady. Parametr příkazů prvniZadani, druhyZadani určuje, jaké zadání se vysazí do tabulky se zadáním a jaká skupina se doplní do odpovědní tabulky.
