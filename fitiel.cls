@@ -1,7 +1,7 @@
 %%% Nepovinná šablona pro projekty IEL %%%
 %%% Verze: 2019/01 %%%
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesClass{fitiel}[2019/10/27 IEL project class]
+\ProvidesClass{fitiel}[2020/09/14 IEL project class]
 
 % základní třída, odvozujeme ze třídy article
 \LoadClass[a4paper,11pt]{article}
@@ -84,7 +84,7 @@
 
     \newcommand{\prvniZadani}[1]{
         \def\prvniSkupina{#1}
-        Stanovte napětí $U_{R5}$ a proud $I_{R5}$. Použijte metodu postupného zjednodušování obvodu. \\
+        Stanovte napětí $U_{R6}$ a proud $I_{R6}$. Použijte metodu postupného zjednodušování obvodu. \\
         
         \begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|} \hline
 sk. & $U_1$ [\Vo] & $U_2$ [\Vo]  & $R_1$ [$\Omega$] & $R_2$ [$\Omega$] & $R_3$ [$\Omega$] & $R_4$ [$\Omega$] & $R_5$ [$\Omega$] & $R_6$ [$\Omega$] & $R_7$ [$\Omega$] & $R_8$ [$\Omega$] \\ \hline
@@ -112,7 +112,7 @@ sk. & $U_1$ [\Vo] & $U_2$ [\Vo]  & $R_1$ [$\Omega$] & $R_2$ [$\Omega$] & $R_3$ [
     % druhy priklad
     \newcommand{\druhyZadani}[1]{
         \def\druhySkupina{#1}
-        Stanovte napětí $U_{R6}$ a proud $I_{R6}$. Použijte metodu Théveninovy věty. \\
+        Stanovte napětí $U_{R3}$ a proud $I_{R3}$. Použijte metodu Théveninovy věty. \\
         
          \begin{tabular}{|c|c|c|c|c|c|c|c|c|} \hline
 sk. & $U$ [\Vo] & $R_1$ [$\Omega$] & $R_2$ [$\Omega$] & $R_3$ [$\Omega$] & $R_4$ [$\Omega$] & $R_5$ [$\Omega$] & $R_6$ [$\Omega$] \\ \hline
@@ -140,7 +140,7 @@ sk. & $U$ [\Vo] & $R_1$ [$\Omega$] & $R_2$ [$\Omega$] & $R_3$ [$\Omega$] & $R_4$
     % treti priklad
     \newcommand{\tretiZadani}[1]{
         \def\tretiSkupina{#1}
-        Stanovte napětí $U_{R4}$ a proud $I_{R4}$. Použijte metodu uzlových napětí ($U_A$, $U_B$, $U_C$). 
+        Stanovte napětí $U_{R2}$ a proud $I_{R2}$. Použijte metodu uzlových napětí ($U_A$, $U_B$, $U_C$). 
         
         \begin{tabular}{|c|c|c|c|c|c|c|c|c|} \hline
 sk. & $U$ [\Vo] & $I_1$ [\Am] & $I_2$ [\Am] & $R_1$ [$\Omega$] & $R_2$ [$\Omega$] & $R_3$ [$\Omega$] & $R_4$ [$\Omega$] & $R_5$ [$\Omega$] \\ \hline
@@ -170,7 +170,7 @@ sk. & $U$ [\Vo] & $I_1$ [\Am] & $I_2$ [\Am] & $R_1$ [$\Omega$] & $R_2$ [$\Omega$
         \def\ctvrtySkupina{#1}
         Pro napájecí napětí platí: $u_1=U_1{\cdot}\sin(2{\pi}ft)$, $u_2=U_2{\cdot}\sin(2{\pi}ft)$.\\
 Ve vztahu pro napětí $u_{C_{2}}=U_{C_2}{\cdot}\sin(2{\pi}ft+\varphi_{C_{2}})$
-určete $|U_{C_{2}}|$ a $\varphi_{C_{2}}$. Použijte metodu smyčkových proudů.\\
+určete $|U_{L_{2}}|$ a $\varphi_{L_{2}}$. Použijte metodu smyčkových proudů.\\
 
 Pozn: Pomocné směry šipek napájecích zdrojů platí pro speciální časový okamžik ($t=\frac{\pi}{2{\omega}}$).
         
