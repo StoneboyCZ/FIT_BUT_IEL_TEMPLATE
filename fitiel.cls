@@ -106,7 +106,7 @@ sk. & $U_1$ [\Vo] & $U_2$ [\Vo]  & $R_1$ [$\Omega$] & $R_2$ [$\Omega$] & $R_3$ [
     {H & 135 & 80 & 680 & 600 & 260 & 310 & 575 & 870 & 355 & 265}{}
     \\ \hline \end{tabular} \\
     
-    \includegraphics[scale=0.5,keepaspectratio]{fig/Pr1_2019.pdf} \\ 
+    \includegraphics[scale=0.5,keepaspectratio]{fig/Pr1.pdf} \\ 
     }
         
     % druhy priklad
@@ -134,7 +134,7 @@ sk. & $U$ [\Vo] & $R_1$ [$\Omega$] & $R_2$ [$\Omega$] & $R_3$ [$\Omega$] & $R_4$
     {H & 220 & 190 & 360 & 580 & 205 & 560 & 180}{}
     \\ \hline \end{tabular} \\
     
-    \includegraphics[scale=0.5,keepaspectratio]{fig/Pr2_2019.pdf} \\
+    \includegraphics[scale=0.5,keepaspectratio]{fig/Pr2.pdf} \\
     }
 
     % treti priklad
@@ -162,7 +162,7 @@ sk. & $U$ [\Vo] & $I_1$ [\Am] & $I_2$ [\Am] & $R_1$ [$\Omega$] & $R_2$ [$\Omega$
     {H & 130 & 0.95 & 0.50 & 47 & 39 & 58 & 28 & 25}{}
     \\ \hline \end{tabular} \\
     
-    \includegraphics[scale=0.5,keepaspectratio]{fig/Pr3_2019.pdf} \\
+    \includegraphics[scale=0.5,keepaspectratio]{fig/Pr3.pdf} \\
     }
     
     % ctvrty  priklad
@@ -193,7 +193,7 @@ sk. & $U_1$ [\Vo] & $U_2$ [\Vo] & $R_1$ [$\Omega$] & $R_2$ [$\Omega$] & $L_{1}$ 
     \ifthenelse{\equal{#1}{H}}
     {H & 65 & 60 & 10 & 10 & 160 &  75 & 155 &  70 & 95}{}
     \\ \hline \end{tabular} \\
-    \includegraphics[scale=0.5,keepaspectratio]{fig/Pr4_2019.pdf} \\
+    \includegraphics[scale=0.5,keepaspectratio]{fig/Pr4.pdf} \\
     }
 
     % paty priklad
@@ -223,7 +223,7 @@ Pozn: Pomocné směry šipek napájecích zdrojů platí pro speciální časov�
     \ifthenelse{\equal{#1}{H}}
     {H & 18 & 50 & 40 & 5}{}
     \\ \hline \end{tabular} \\
-    \includegraphics[scale=0.5,keepaspectratio]{fig/Pr5_2019.pdf} \\
+    \includegraphics[scale=0.5,keepaspectratio]{fig/Pr5.pdf} \\
     }
     
 }
