@@ -1,7 +1,7 @@
 %%% Nepovinná šablona pro projekty IEL %%%
 %%% Verze: 2019/01 %%%
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesClass{fitiel}[2020/09/14 IEL project class]
+\ProvidesClass{fitiel}[2020/10/01 IEL project class]
 
 % základní třída, odvozujeme ze třídy article
 \LoadClass[a4paper,11pt]{article}
@@ -169,7 +169,7 @@ sk. & $U$ [\Vo] & $I_1$ [\Am] & $I_2$ [\Am] & $R_1$ [$\Omega$] & $R_2$ [$\Omega$
     \newcommand{\ctvrtyZadani}[1]{
         \def\ctvrtySkupina{#1}
         Pro napájecí napětí platí: $u_1=U_1{\cdot}\sin(2{\pi}ft)$, $u_2=U_2{\cdot}\sin(2{\pi}ft)$.\\
-Ve vztahu pro napětí $u_{C_{2}}=U_{C_2}{\cdot}\sin(2{\pi}ft+\varphi_{C_{2}})$
+Ve vztahu pro napětí $u_{L_{2}}=U_{L_2}{\cdot}\sin(2{\pi}ft+\varphi_{L_{2}})$
 určete $|U_{L_{2}}|$ a $\varphi_{L_{2}}$. Použijte metodu smyčkových proudů.\\
 
 Pozn: Pomocné směry šipek napájecích zdrojů platí pro speciální časový okamžik ($t=\frac{\pi}{2{\omega}}$).
@@ -200,12 +200,12 @@ sk. & $U_1$ [\Vo] & $U_2$ [\Vo] & $R_1$ [$\Omega$] & $R_2$ [$\Omega$] & $L_{1}$ 
     \newcommand{\patyZadani}[1]{
         \def\patySkupina{#1}
         V obvodu na obrázku níže v čase $t=0 $[s] sepne spínač $S$. Sestavte diferenciální rovnici popisující chování obvodu na obrázku, dále ji upravte dosazením hodnot parametrů. Vypočítejte analytické řešení
-$u_{C}~=~f(t)$. Proveďte kontrolu výpočtu dosazením do sestavené diferenciální rovnice.\\
+$i_{L}~=~f(t)$. Proveďte kontrolu výpočtu dosazením do sestavené diferenciální rovnice.\\
 
 Pozn: Pomocné směry šipek napájecích zdrojů platí pro speciální časový okamžik ($t=\frac{\pi}{2{\omega}}$).\\
         
         \begin{tabular}{|c|c|c|c|c|} \hline
-        sk. & $U$ [\Vo] & $C$ [F] & $R$ [$\Omega$] & $u_C(0)$ [\Vo] \\ \hline
+        sk. & $U$ [\Vo] & $L$ [H] & $R$ [$\Omega$] & $i_L(0)$ [\Am] \\ \hline
     \ifthenelse{\equal{#1}{A}}
     {A & 40 & 50 & 10 & 16}{}
     \ifthenelse{\equal{#1}{B}}
