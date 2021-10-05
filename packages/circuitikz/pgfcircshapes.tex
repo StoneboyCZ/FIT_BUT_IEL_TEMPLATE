@@ -1,4 +1,7 @@
-% Copyright 2007-2009 by Massimo Redaelli
+% Copyright 2018-2021 by Romano Giannetti
+% Copyright 2015-2021 by Stefan Lindner
+% Copyright 2013-2021 by Stefan Erhardt
+% Copyright 2007-2021 by Massimo Redaelli
 %
 % This file may be distributed and/or modified
 %
@@ -30,6 +33,23 @@
         \pgfpointorigin
     }
 }
+%
+% Provision for changing opacity. Only expert use, see the manual.
+%
+\ctikzset{poles/open fill opacity/.initial=1.0}% better not touch it
+\tikzset{open poles opacity/.code={%
+        \ctikzset{poles/open fill opacity=#1}%
+}}
+\ctikzset{poles/full fill opacity/.initial=1.0}% better not touch it
+\tikzset{full poles opacity/.code={%
+        \ctikzset{poles/full fill opacity=#1}%
+}}
+
+%
+% Provision for changing default background
+%
+
+\ctikzset{open poles fill/.initial={white}}
 
 %% Full terminal
 
@@ -61,18 +81,16 @@
         }{\pgfpoint{\ctikzvalof{nodes width}*\pgf@circ@Rlen}{\ctikzvalof{nodes width}*\pgf@circ@Rlen}}
     }
     \behindforegroundpath{
-
         \pgfscope
             \pgfpathcircle{\pgfpointorigin}{\ctikzvalof{nodes width}*\pgf@circ@Rlen}
             \pgfsetcolor{\ctikzvalof{color}}
-            \pgfsetfillopacity{1.0}
+            \pgfsetfillopacity{\ctikzvalof{poles/full fill opacity}}% normally 1.0
             \pgfusepath{draw,fill}
         \endpgfscope
-
     }
 }
 
-%% Empty terminal
+%% Empty round terminal
 
 \pgfdeclareshape{ocirc}{
     \anchor{center}{
@@ -101,15 +119,14 @@
         \pgfpointborderellipse{\pgfpoint{\pgf@circ@res@left}{\pgf@circ@res@up}
         }{\pgfpoint{\ctikzvalof{nodes width}*\pgf@circ@Rlen}{\ctikzvalof{nodes width}*\pgf@circ@Rlen}}
     }
-
     \behindforegroundpath{
-
         \pgfscope
             \pgfpathcircle{\pgfpointorigin}{\ctikzvalof{nodes width}*\pgf@circ@Rlen}
             \pgfsetcolor{\ctikzvalof{color}}
+            \pgfsetfillopacity{\ctikzvalof{poles/open fill opacity}}% normally 1.0
             \ifx\tikz@fillcolor\pgfutil@empty
                 % set the default fill color to white
-                \pgfsetfillcolor{white}
+                \pgfsetfillcolor{\ctikzvalof{open poles fill}}
                 % ...but override it if the class is defined!
                 % note that this element has no class, but will inherit it when used
                 % into another component
@@ -117,10 +134,8 @@
             \else
                 \pgfsetfillcolor{\tikz@fillcolor}
             \fi
-            \pgfsetfillopacity{1.0}
             \pgfusepath{draw,fill}
         \endpgfscope
-
     }
 }
 
@@ -171,7 +186,7 @@
             {\pgfpoint{-\pgf@circ@res@temp}{-\pgf@circ@res@temp}}
             {\pgfpoint{\pgf@circ@res@temp}{\pgf@circ@res@temp}}
             \pgfsetcolor{\ctikzvalof{color}}
-            \pgfsetfillopacity{1.0}
+            \pgfsetfillopacity{\ctikzvalof{poles/full fill opacity}}% normally 1.0
             \pgfusepath{draw,fill}
         \endpgfscope
     }
@@ -224,9 +239,10 @@
             {\pgfpoint{-\pgf@circ@res@temp}{-\pgf@circ@res@temp}}
             {\pgfpoint{\pgf@circ@res@temp}{\pgf@circ@res@temp}}
             \pgfsetcolor{\ctikzvalof{color}}
+            \pgfsetfillopacity{\ctikzvalof{poles/open fill opacity}}% normally 1.0
             \ifx\tikz@fillcolor\pgfutil@empty
                 % set the default fill color to white
-                \pgfsetfillcolor{white}
+                \pgfsetfillcolor{\ctikzvalof{open poles fill}}
                 % ...but override it if the class is defined!
                 % note that this element has no class, but will inherit it when used
                 % into another component
@@ -234,7 +250,6 @@
             \else
                 \pgfsetfillcolor{\tikz@fillcolor}
             \fi
-            \pgfsetfillopacity{1.0}
             \pgfusepath{draw,fill}
         \endpgfscope
     }
@@ -269,7 +284,7 @@
         \pgfextracty{\pgf@circ@res@up}{\northwest}
         \pgfpointborderrectangle
             {\pgfqpoint{\pgf@xa}{\pgf@ya}}
-            {\pgfqpoint{\pgf@circ@res@up}{\pgfqpoint{\pgf@circ@res@up}}}
+            {\pgfqpoint{\pgf@circ@res@up}{\pgf@circ@res@up}}
     }
     \behindforegroundpath{
         \pgfscope
@@ -278,7 +293,7 @@
             {\pgfpoint{-\pgf@circ@res@temp}{-\pgf@circ@res@temp}}
             {\pgfpoint{\pgf@circ@res@temp}{\pgf@circ@res@temp}}
             \pgfsetcolor{\ctikzvalof{color}}
-            \pgfsetfillopacity{1.0}
+            \pgfsetfillopacity{\ctikzvalof{poles/full fill opacity}}% normally 1.0
             \pgfusepath{draw,fill}
         \endpgfscope
     }
@@ -312,7 +327,7 @@
         \pgfextracty{\pgf@circ@res@up}{\northwest}
         \pgfpointborderrectangle
             {\pgfqpoint{\pgf@xa}{\pgf@ya}}
-            {\pgfqpoint{\pgf@circ@res@up}{\pgfqpoint{\pgf@circ@res@up}}}
+            {\pgfqpoint{\pgf@circ@res@up}{\pgf@circ@res@up}}
     }
     \behindforegroundpath{
         \pgfscope
@@ -321,9 +336,10 @@
             {\pgfpoint{-\pgf@circ@res@temp}{-\pgf@circ@res@temp}}
             {\pgfpoint{\pgf@circ@res@temp}{\pgf@circ@res@temp}}
             \pgfsetcolor{\ctikzvalof{color}}
+            \pgfsetfillopacity{\ctikzvalof{poles/open fill opacity}}% normally 1.0
             \ifx\tikz@fillcolor\pgfutil@empty
                 % set the default fill color to white
-                \pgfsetfillcolor{white}
+                \pgfsetfillcolor{\ctikzvalof{open poles fill}}
                 % ...but override it if the class is defined!
                 % note that this element has no class, but will inherit it when used
                 % into another component
@@ -331,7 +347,6 @@
             \else
                 \pgfsetfillcolor{\tikz@fillcolor}
             \fi
-            \pgfsetfillopacity{1.0}
             \pgfusepath{draw,fill}
         \endpgfscope
     }
@@ -443,8 +458,104 @@
     }
 }
 
+%% transistor arrow
+
+\def\pgf@circ@find@linescale{
+    % find the scale inverse of the scale factor: line width do not scale
+    % with scale=..., transform shape so we have to counteract it.
+    \iftikz@fullytransformed % this is true if `transform shape` is active
+        % from @Circumscribe https://tex.stackexchange.com/a/474035/38080
+        % Note that this trick is not working inside a `spy` environment...
+        \pgfgettransformentries{\scaleA}{\scaleB}{\scaleC}{\scaleD}{\whatevs}{\whatevs}%
+        \pgfmathsetmacro{\@@factor}{1.0/sqrt(abs(\scaleA*\scaleD-\scaleB*\scaleC))}%
+    \else
+        \pgfmathsetmacro{\@@factor}{1.0}
+    \fi
+}
+
+\pgfdeclareshape{trarrow}{%
+    % this arrow is only filled but grows with the linewidth, more or less
+    % like currarrow do
+    \savedanchor{\northeast}{%
+        \pgf@circ@res@step = \pgf@circ@Rlen
+        \pgf@circ@find@linescale
+        \divide \pgf@circ@res@step by \ctikzvalof{current arrow scale}
+        \pgfpoint{0.7*\pgf@circ@res@step +0.5*\@@factor*\pgflinewidth}
+            {0.8*\pgf@circ@res@step+0.7593*\@@factor*\pgflinewidth}
+    }
+    % The arrow size should be more or less the same of a currarrow, which is
+    % both filled and stroke, for backward output compatibility (more or less)
+    %
+    %      angle \beta       W is \pgf@circ@Rlen/\ctikzvalof{current arrow scale}
+    %    |-\__               currarrow as the tip at (W,0)
+    %    |    |              and the upper tail at (-0.7*W, 0.8*W)
+    %    |    \__            it then "overshoot" do to the linew width L
+    %    |       \__ xangle \alpha
+    %    ---0------->
+    %
+    %   \beta = atan(0.7/0.8)  \alpha=atan(0.8/1.7)
+    %   tip overshoot is (L/2)/sin(\alpha) = 1.743*L only in x direction
+    %   tail overshoot is -(L/2) in x, and (L/2)/sin(\beta) = 0.7539*L in y
+    %
+    \savedanchor{\northwest}{%
+        \pgf@circ@res@step = \pgf@circ@Rlen
+        \divide \pgf@circ@res@step by \ctikzvalof{current arrow scale}
+        \pgf@circ@find@linescale
+        \pgfpoint{-0.7*\pgf@circ@res@step -0.5*\@@factor*\pgflinewidth}
+            {0.8*\pgf@circ@res@step+0.7593*\@@factor*\pgflinewidth}
+    }
+    \savedanchor{\tip}{%
+        \pgf@circ@res@step = \pgf@circ@Rlen
+        \divide \pgf@circ@res@step by \ctikzvalof{current arrow scale}
+        \pgf@circ@find@linescale
+        \pgfpoint{\pgf@circ@res@step + 1.743*\@@factor*\pgflinewidth}{0pt}
+    }
+    \anchor{north}{\northeast\pgf@x=0cm\relax}
+    \anchor{east}{\northeast\pgf@y=0cm\relax}
+    \anchor{south}{\northeast\pgf@y=-\pgf@y \pgf@x=0cm\relax}
+    \anchor{west}{\northeast\pgf@y=0cm\pgf@x=-\pgf@x}
+    \anchor{north east}{\northeast}
+    \anchor{north west}{\northeast\pgf@x=-\pgf@x}
+    \anchor{south east}{\northeast\pgf@y=-\pgf@y}
+    \anchor{south west}{\northeast\pgf@y=-\pgf@y\pgf@x=-\pgf@x}
+    \anchor{center}{
+        \pgfpointorigin
+    }
+    \anchor{tip}{
+        \tip
+    }
+    \anchor{btip}{% this anchor is behind the tip of half a linewidth
+        \tip
+        \pgf@circ@find@linescale
+        \pgf@circ@res@temp=\@@factor\pgflinewidth
+        \advance\pgf@x by -.5\pgf@circ@res@temp
+    }
+    \behindforegroundpath{
+        \pgfscope
+            \northwest
+            \pgf@circ@res@up=\pgf@y
+            \pgf@circ@res@left=\pgf@x
+            \tip
+            \pgf@circ@res@step = \pgf@x
+            %
+            \pgfpathmoveto{\pgfpoint{\pgf@circ@res@left}{0pt}}
+            \pgfpathlineto{\pgfpoint{\pgf@circ@res@left}{\pgf@circ@res@up}}
+            \pgfpathlineto{\pgfpoint{1\pgf@circ@res@step}{0pt}}
+            \pgfpathlineto{\pgfpoint{\pgf@circ@res@left}{-\pgf@circ@res@up}}
+            \pgfpathclose
+            \pgfsetcolor{\ctikzvalof{color}}
+            \pgfusepath{fill} % just fill
+        \endpgfscope
+    }
+}
 
 %% Current arrow
+
+%% we need a phantom version of this shape for advanced v-i-f
+%% use strange names to keep ot private
+\newif\ifpgfcirc@really@draw@currarrow\pgfcirc@really@draw@currarrowtrue
+\ctikzset{phantom@currarrow/.code=\pgfcirc@really@draw@currarrowfalse}
+\ctikzset{normal@currarrow/.code=\pgfcirc@really@draw@currarrowtrue}
 
 \pgfdeclareshape{currarrow}{
     \savedanchor{\northeast}{%
@@ -472,22 +583,28 @@
     }
     \behindforegroundpath{
         \pgfscope
-            \pgf@circ@res@step = \pgf@circ@Rlen
-            \divide \pgf@circ@res@step by \ctikzvalof{current arrow scale}
+            \ifpgfcirc@really@draw@currarrow
+                \pgf@circ@res@step = \pgf@circ@Rlen
+                \divide \pgf@circ@res@step by \ctikzvalof{current arrow scale}
 
-            \pgfpathmoveto{\pgfpoint{-.7\pgf@circ@res@step}{0pt}}
-            \pgfpathlineto{\pgfpoint{-.7\pgf@circ@res@step}{-.8\pgf@circ@res@step}}
-            \pgfpathlineto{\pgfpoint{1\pgf@circ@res@step}{0pt}}
-            \pgfpathlineto{\pgfpoint{-.7\pgf@circ@res@step}{.8\pgf@circ@res@step}}
-            \pgfpathlineto{\pgfpoint{-.7\pgf@circ@res@step}{0pt}}
-            \pgfsetcolor{\ctikzvalof{color}}
-            \pgfusepath{draw,fill}
-
+                \pgfpathmoveto{\pgfpoint{-.7\pgf@circ@res@step}{0pt}}
+                \pgfpathlineto{\pgfpoint{-.7\pgf@circ@res@step}{-.8\pgf@circ@res@step}}
+                \pgfpathlineto{\pgfpoint{1\pgf@circ@res@step}{0pt}}
+                \pgfpathlineto{\pgfpoint{-.7\pgf@circ@res@step}{.8\pgf@circ@res@step}}
+                \pgfpathlineto{\pgfpoint{-.7\pgf@circ@res@step}{0pt}}
+                \pgfsetcolor{\ctikzvalof{color}}
+                \pgfusepath{draw,fill}
+            \fi
         \endpgfscope
     }
 }
 
 %% Flow arrow
+%% we need a phantom version of this shape for advanced v-i-f
+%% use strange names to keep ot private
+\newif\ifpgfcirc@really@draw@flowarrow\pgfcirc@really@draw@flowarrowtrue
+\ctikzset{phantom@flowarrow/.code=\pgfcirc@really@draw@flowarrowfalse}
+\ctikzset{normal@flowarrow/.code=\pgfcirc@really@draw@vlowarrowtrue}
 
 \pgfdeclareshape{flowarrow}{
     \savedanchor{\northeast}{%
@@ -506,6 +623,10 @@
     \anchor{north west}{\northeast\pgf@x=-\pgf@x}
     \anchor{south east}{\northeast\pgf@y=-\pgf@y}
     \anchor{south west}{\northeast\pgf@y=-\pgf@y\pgf@x=-\pgf@x}
+    \anchor{text}{% text centered above
+        \pgfpointorigin
+        \pgfpoint{-.5\wd\pgfnodeparttextbox}{\dimexpr.5\dp\pgfnodeparttextbox+.5\ht\pgfnodeparttextbox}
+    }
     \anchor{center}{
         \pgfpointorigin
     }
@@ -517,14 +638,16 @@
     }
     \behindforegroundpath{
         \pgfscope
-            \pgf@circ@res@step = \pgf@circ@Rlen
-            \divide \pgf@circ@res@step by 4
-            \pgfpathmoveto{\pgfpoint{-\pgf@circ@res@step}{0pt}}
-            \pgfpathlineto{\pgfpoint{\pgf@circ@res@step}{0pt}}
-            \pgfsetcolor{\ctikzvalof{color}}
-            \pgfusepath{draw}
-            \pgftransformshift{\pgfpoint{\pgf@circ@res@step}{0pt}}
-            \pgfnode{currarrow}{tip}{}{}{\pgfusepath{fill}}
+            \ifpgfcirc@really@draw@flowarrow
+                \pgf@circ@res@step = \pgf@circ@Rlen
+                \divide \pgf@circ@res@step by 4
+                \pgfpathmoveto{\pgfpoint{-\pgf@circ@res@step}{0pt}}
+                \pgfpathlineto{\pgfpoint{\pgf@circ@res@step}{0pt}}
+                \pgfsetcolor{\ctikzvalof{color}}
+                \pgfusepath{draw}
+                \pgftransformshift{\pgfpoint{\pgf@circ@res@step}{0pt}}
+                \pgfnode{currarrow}{tip}{}{}{\pgfusepath{fill}}
+            \fi
         \endpgfscope
     }
 }

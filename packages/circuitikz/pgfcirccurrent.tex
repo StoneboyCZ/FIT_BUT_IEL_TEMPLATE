@@ -1,4 +1,7 @@
-% Copyright 2007-2009 by Massimo Redaelli
+% Copyright 2018-2021 by Romano Giannetti
+% Copyright 2015-2021 by Stefan Lindner
+% Copyright 2013-2021 by Stefan Erhardt
+% Copyright 2007-2021 by Massimo Redaelli
 %
 % This file may be distributed and/or modified
 %
@@ -21,7 +24,7 @@
 
 %% Options
 \ctikzset{i^>/.style = {
-        i = #1,
+        i={#1},
         \circuitikzbasekey/bipole/current/direction = forward,
         \circuitikzbasekey/bipole/current/x position = after,
         \circuitikzbasekey/bipole/current/y position = above
@@ -29,7 +32,7 @@
 }
 
 \ctikzset{i_>/.style = {
-        i = #1,
+        i={#1},
         \circuitikzbasekey/bipole/current/direction = forward,
         \circuitikzbasekey/bipole/current/x position = after,
         \circuitikzbasekey/bipole/current/y position = below
@@ -37,7 +40,7 @@
 }
 
 \ctikzset{i>^/.style = {
-        i = #1,
+        i={#1},
         \circuitikzbasekey/bipole/current/direction = forward,
         \circuitikzbasekey/bipole/current/x position = before,
         \circuitikzbasekey/bipole/current/y position = above
@@ -45,7 +48,7 @@
 }
 
 \ctikzset{i>_/.style = {
-        i = #1,
+        i={#1},
         \circuitikzbasekey/bipole/current/direction = forward,
         \circuitikzbasekey/bipole/current/x position = before,
         \circuitikzbasekey/bipole/current/y position = below
@@ -53,7 +56,7 @@
 }
 
 \ctikzset{i^</.style = {
-        i = #1,
+        i={#1},
         \circuitikzbasekey/bipole/current/direction = backward,
         \circuitikzbasekey/bipole/current/x position = after,
         \circuitikzbasekey/bipole/current/y position = above
@@ -61,7 +64,7 @@
 }
 
 \ctikzset{i_</.style = {
-        i = #1,
+        i={#1},
         \circuitikzbasekey/bipole/current/direction = backward,
         \circuitikzbasekey/bipole/current/x position = after,
         \circuitikzbasekey/bipole/current/y position = below
@@ -69,7 +72,7 @@
 }
 
 \ctikzset{i<^/.style = {
-        i = #1,
+        i={#1},
         \circuitikzbasekey/bipole/current/direction = backward,
         \circuitikzbasekey/bipole/current/x position = before,
         \circuitikzbasekey/bipole/current/y position = above
@@ -77,18 +80,23 @@
 }
 
 \ctikzset{i<_/.style = {
-        i = #1,
+        i={#1},
         \circuitikzbasekey/bipole/current/direction = backward,
         \circuitikzbasekey/bipole/current/x position = before,
         \circuitikzbasekey/bipole/current/y position = below
     }
 }
 
+\newif\ifpgfcirc@do@i@symbols\pgfcirc@do@i@symbolstrue
+\ctikzset{no i symbols/.code={\pgfcirc@do@i@symbolsfalse}}
+\ctikzset{i symbols/.code={\pgfcirc@do@i@symbolstrue}}
+
 \ctikzset{i/.code = {
+        \pgfcirc@has@itrue
         \pgfkeys{\circuitikzbasekey/bipole/current/direction = forward,
             \circuitikzbasekey/bipole/current/x position = after,
         \circuitikzbasekey/bipole/current/y position = above }
-        \pgfkeys{/tikz/circuitikz/bipole/current/label/name=#1}
+        \pgfkeys{/tikz/circuitikz/bipole/current/label/name={#1}}
         \ctikzsetvalof{bipole/current/label/unit}{}
         \ifpgf@circ@siunitx
             \pgf@circ@handleSI{#1}
@@ -117,19 +125,19 @@
 }
 
 \ifpgf@circ@oldvoltagedirection
-    \ctikzset{i</.style = { i = #1, \circuitikzbasekey/bipole/current/direction = backward } }
+    \ctikzset{i</.style = { i={#1}, \circuitikzbasekey/bipole/current/direction = backward } }
 \else
-    \ctikzset{i</.style = { i = #1, \circuitikzbasekey/bipole/current/direction = backward, \circuitikzbasekey/bipole/current/x position = before } }
+    \ctikzset{i</.style = { i={#1}, \circuitikzbasekey/bipole/current/direction = backward, \circuitikzbasekey/bipole/current/x position = before } }
 \fi
-\ctikzset{i_/.style = { i = #1, \circuitikzbasekey/bipole/current/y position = below } }
-\ctikzset{i>/.style = {i = #1, \circuitikzbasekey/bipole/current/direction = forward } }
-\ctikzset{i^/.style = { i= #1, \circuitikzbasekey/bipole/current/y position = above } }
+\ctikzset{i_/.style = { i={#1}, \circuitikzbasekey/bipole/current/y position = below } }
+\ctikzset{i>/.style = {i={#1}, \circuitikzbasekey/bipole/current/direction = forward } }
+\ctikzset{i^/.style = { i={#1}, \circuitikzbasekey/bipole/current/y position = above } }
 
 %% Output routine
 \def\pgf@circ@drawcurrent{
     \pgfextra{
-        \edef\pgf@circ@ffffff{\pgf@circ@direction}
-        \def\pgfcircmathresult{\expandafter\pgf@circ@stripdecimals\pgf@circ@ffffff\pgf@nil}
+        \edef\pgf@circ@rounded@dir{\pgf@circ@direction}
+        \def\pgfcircmathresult{\expandafter\pgf@circ@stripdecimals\pgf@circ@rounded@dir\pgf@nil}
 
         \ifnum\pgfcircmathresult >4 \ifnum\pgfcircmathresult <86
         \ifpgf@circuit@bipole@current@below
@@ -175,35 +183,58 @@
         \ifpgf@circuit@bipole@current@below
             \def\pgf@circ@dir{north}\else\def\pgf@circ@dir{south}
         \fi
-    \fi
+        \fi
+        % export anchor position (if not needed, is always the same macro)
+        \expandafter\xdef\csname pgfcirc@\pgfcirc@a@prefix-Ilab-anchor\endcsname{\pgf@circ@dir}
 
-    \ifpgf@circuit@bipole@current@below
-        \def\pgf@circ@bipole@current@label@where{-90}
-    \else
-        \def\pgf@circ@bipole@current@label@where{+90}
-    \fi
+        \ifpgf@circuit@bipole@current@below
+            \def\pgf@circ@bipole@current@label@where{-90}
+        \else
+            \def\pgf@circ@bipole@current@label@where{+90}
+        \fi
     }
 
+    %
     \pgfextra{\def\pgf@temp{short}\edef\pgf@circ@temp{\ctikzvalof{bipole/kind}}}
     \ifx\pgf@circ@temp\pgf@temp%draw current at a short at middle of the line
-        (\tikztostart)--(\tikztotarget)
+        coordinate (\pgfcirc@a@prefix-Ifrom) at (\tikztostart)
+        coordinate (\pgfcirc@a@prefix-Ito) at (\tikztotarget)
     \else% normal bipole or source
         \ifpgf@circuit@bipole@current@before
-            (\tikztostart)--(anchorstartnode)
+            coordinate (\pgfcirc@a@prefix-Ifrom) at (\tikztostart)
+            coordinate (\pgfcirc@a@prefix-Ito) at (pgfcirc@anchorstartnode)
         \else
-            (anchorendnode)--(\tikztotarget)
+            coordinate (\pgfcirc@a@prefix-Ifrom) at (pgfcirc@anchorendnode)
+            coordinate (\pgfcirc@a@prefix-Ito) at (\tikztotarget)
         \fi
     \fi
     \ifpgf@circuit@bipole@current@backward
         \pgfextra{
-            \pgfmathsubtract{\pgf@circ@ffffff}{180}
-            \edef\pgf@circ@ffffff{\expandafter\pgf@circ@stripdecimals\pgfmathresult\pgf@nil}
+            \pgfmathsubtract{\pgf@circ@rounded@dir}{180}
+            \edef\pgf@circ@rounded@dir{\expandafter\pgf@circ@stripdecimals\pgfmathresult\pgf@nil}
         }
     \fi
-    coordinate[currarrow,pos=\ctikzvalof{current/distance},rotate=\pgf@circ@ffffff](Iarrow)
-    (Iarrow.\pgf@circ@bipole@current@label@where)
+    coordinate (\pgfcirc@a@prefix-Ipos) at ($(\pgfcirc@a@prefix-Ifrom)! \ctikzvalof{current/distance} !(\pgfcirc@a@prefix-Ito)$)
+    % export the current direction
+    \pgfextra{\expandafter\xdef\csname pgfcirc@\pgfcirc@a@prefix-Iarrow-direction\endcsname{\pgf@circ@rounded@dir}}
+    % if the current label is not empty (in which case we have already all the anchors)
+    \pgf@circ@ifkeyempty{bipole/current/label/name}\else
+    % put the arrow node
+    % if we do not want the arrow, just put an empty node (needed to maintain the exact same distances)
+    \ifpgfcirc@do@i@symbols
+        node[currarrow, rotate=\pgf@circ@rounded@dir, anchor=center](Iarrow) at (\pgfcirc@a@prefix-Ipos) {}
+    \else
+        node[currarrow, rotate=\pgf@circ@rounded@dir, anchor=center,
+            circuitikz/phantom@currarrow](Iarrow) at (\pgfcirc@a@prefix-Ipos) {}
+    \fi
+    % put the label
     node[anchor=\pgf@circ@dir, \circuitikzbasekey/bipole current style]
-    (\ctikzvalof{bipole/name}current){\pgf@circ@finallabels{current/label}}
+        (\ctikzvalof{bipole/name}current)
+        at (Iarrow.\pgf@circ@bipole@current@label@where){\pgf@circ@finallabels{current/label}}
+    \fi % end ifempty
+    \ifpgf@circuit@bipole@current@backward
+        \pgfcirc@swap@coordinates{\pgfcirc@a@prefix-Ifrom}{\pgfcirc@a@prefix-Ito}
+    \fi
 }
 
 \endinput

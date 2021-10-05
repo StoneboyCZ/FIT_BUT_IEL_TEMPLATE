@@ -1,7 +1,9 @@
 %%% Nepovinná šablona pro projekty IEL %%%
 %%% Verze: 2019/01 %%%
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesClass{fitiel}[2020/10/01 IEL project class]
+\ProvidesClass{fitiel}[2021/10/05 IEL project class]
+
+\pdfminorversion=7
 
 % základní třída, odvozujeme ze třídy article
 \LoadClass[a4paper,11pt]{article}
@@ -79,6 +81,7 @@
     \newcommand{\uF}{\si {\micro\farad}}
     \newcommand{\mH}{\si {\milli\henry}}
     \newcommand{\Hz}{\si \hertz}
+    \newcommand{\F}{\si \farad}
     
     % prvni priklad
 
@@ -199,11 +202,11 @@ sk. & $U_1$ [\Vo] & $U_2$ [\Vo] & $R_1$ [$\Omega$] & $R_2$ [$\Omega$] & $L_{1}$ 
     % paty priklad
     \newcommand{\patyZadani}[1]{
         \def\patySkupina{#1}
-        V obvodu na obrázku níže v čase $t=0 $[s] sepne spínač $S$. Sestavte diferenciální rovnici popisující chování obvodu na obrázku, dále ji upravte dosazením hodnot parametrů. Vypočítejte analytické řešení
+        V obvodu na obrázku níže v čase $t=0$ [s] sepne spínač $S$. Sestavte diferenciální rovnici popisující chování obvodu na obrázku, dále ji upravte dosazením hodnot parametrů. Vypočítejte analytické řešení
 $u_{C}~=~f(t)$. Proveďte kontrolu výpočtu dosazením do sestavené diferenciální rovnice.\\
         
         \begin{tabular}{|c|c|c|c|c|} \hline
-        sk. & $U$ [\Vo] & $R$ [$\Omega$] & $C$ [\H] & $u_C(0)$ [\Vo] \\ \hline
+        sk. & $U$ [\Vo] & $R$ [$\Omega$] & $C$ [\F] & $u_C(0)$ [\Vo] \\ \hline
     \ifthenelse{\equal{#1}{A}}
     {A & 60 & 50 & 10 & 14}{}
     \ifthenelse{\equal{#1}{B}}

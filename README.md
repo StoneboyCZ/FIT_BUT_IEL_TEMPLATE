@@ -4,7 +4,7 @@ Tento dokument popisuje použití šablony pro projekt IEL.
 
 ## Použití
 ### Overleaf
-Pro import do OVerleafu stačí v přehledu projektů kliknout na tlačítko New project (Nový projekt) --> Upload --> přetáhnout zip. Šablona bude připravena k použití. Přejmenujte si nově vytvořený projekt svým loginem.
+Pro import do Overleafu odstraňte ze stažené šablony adresář `packages` a soubor `latexmkrc` a takto upravenou šablonu znovu zabalte jako zip. Poté stačí v přehledu projektů kliknout na tlačítko New project (Nový projekt) --> Upload --> přetáhnout zip. Šablona bude připravena k použití. Přejmenujte si nově vytvořený projekt svým loginem.
 
 ### Lokálně 
 Stačí rozbalit zip archiv do libovolné složky. Lze překládat i z příkazové řádky. Pro tuto šablonu stačí:
