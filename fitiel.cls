@@ -1,7 +1,9 @@
 %%% Nepovinná šablona pro projekty IEL %%%
 %%% Verze: 2019/01 %%%
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesClass{fitiel}[2020/10/01 IEL project class]
+\ProvidesClass{fitiel}[2021/10/05 IEL project class]
+
+\pdfminorversion=7
 
 % základní třída, odvozujeme ze třídy article
 \LoadClass[a4paper,11pt]{article}
@@ -79,12 +81,13 @@
     \newcommand{\uF}{\si {\micro\farad}}
     \newcommand{\mH}{\si {\milli\henry}}
     \newcommand{\Hz}{\si \hertz}
+    \newcommand{\F}{\si \farad}
     
     % prvni priklad
 
     \newcommand{\prvniZadani}[1]{
         \def\prvniSkupina{#1}
-        Stanovte napětí $U_{R6}$ a proud $I_{R6}$. Použijte metodu postupného zjednodušování obvodu. \\
+        Stanovte napětí $U_{R7}$ a proud $I_{R7}$. Použijte metodu postupného zjednodušování obvodu. \\
         
         \begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|} \hline
 sk. & $U_1$ [\Vo] & $U_2$ [\Vo]  & $R_1$ [$\Omega$] & $R_2$ [$\Omega$] & $R_3$ [$\Omega$] & $R_4$ [$\Omega$] & $R_5$ [$\Omega$] & $R_6$ [$\Omega$] & $R_7$ [$\Omega$] & $R_8$ [$\Omega$] \\ \hline
@@ -112,26 +115,26 @@ sk. & $U_1$ [\Vo] & $U_2$ [\Vo]  & $R_1$ [$\Omega$] & $R_2$ [$\Omega$] & $R_3$ [
     % druhy priklad
     \newcommand{\druhyZadani}[1]{
         \def\druhySkupina{#1}
-        Stanovte napětí $U_{R3}$ a proud $I_{R3}$. Použijte metodu Théveninovy věty. \\
+        Stanovte napětí $U_{R1}$ a proud $I_{R1}$. Použijte metodu Théveninovy věty. \\
         
-         \begin{tabular}{|c|c|c|c|c|c|c|c|c|} \hline
-sk. & $U$ [\Vo] & $R_1$ [$\Omega$] & $R_2$ [$\Omega$] & $R_3$ [$\Omega$] & $R_4$ [$\Omega$] & $R_5$ [$\Omega$] & $R_6$ [$\Omega$] \\ \hline
+         \begin{tabular}{|c|c|c|c|c|c|c|c|} \hline
+sk. & $U$ [\Vo] & $R_1$ [$\Omega$] & $R_2$ [$\Omega$] & $R_3$ [$\Omega$] & $R_4$ [$\Omega$] & $R_5$ [$\Omega$] \\ \hline
     \ifthenelse{\equal{#1}{A}}
-    {A & 50 & 100 & 525 & 620 & 210 & 530 & 100}{}
+    {A & 50 & 100 & 525 & 620 & 210 & 530}{}
     \ifthenelse{\equal{#1}{B}}
-    {B & 100 & 50 & 310 & 610 & 220 &  570 & 200}{}
+    {B & 100 & 50 & 310 & 610 & 220 & 570}{}
     \ifthenelse{\equal{#1}{C}}
-    {C & 200 & 70 & 220 & 630 & 240 & 450 & 300}{}
+    {C & 200 & 70 & 220 & 630 & 240 & 450}{}
     \ifthenelse{\equal{#1}{D}}
-    {D & 150 & 200 & 200 & 660 & 200 & 550 & 400}{}
+    {D & 150 & 200 & 200 & 660 & 200 & 550}{}
     \ifthenelse{\equal{#1}{E}}
-    {E & 250 & 150 & 335 & 625 & 245 & 600 & 150}{}
+    {E & 250 & 150 & 335 & 625 & 245 & 600}{}
     \ifthenelse{\equal{#1}{F}}
-    {F & 130 & 180 &350 & 600 & 195 & 650 & 250}{}
+    {F & 130 & 180 & 350 & 600 & 195 & 650}{}
     \ifthenelse{\equal{#1}{G}}
-    {G & 180 & 250 & 315 & 615 & 180 & 460 & 350}{}
+    {G & 180 & 250 & 315 & 615 & 180 & 460}{}
     \ifthenelse{\equal{#1}{H}}
-    {H & 220 & 190 & 360 & 580 & 205 & 560 & 180}{}
+    {H & 220 & 190 & 360 & 580 & 205 & 560}{}
     \\ \hline \end{tabular} \\
     
     \includegraphics[scale=0.5,keepaspectratio]{fig/Pr2.pdf} \\
@@ -140,7 +143,7 @@ sk. & $U$ [\Vo] & $R_1$ [$\Omega$] & $R_2$ [$\Omega$] & $R_3$ [$\Omega$] & $R_4$
     % treti priklad
     \newcommand{\tretiZadani}[1]{
         \def\tretiSkupina{#1}
-        Stanovte napětí $U_{R2}$ a proud $I_{R2}$. Použijte metodu uzlových napětí ($U_A$, $U_B$, $U_C$). 
+        Stanovte napětí $U_{R3}$ a proud $I_{R3}$. Použijte metodu uzlových napětí ($U_A$, $U_B$, $U_C$). 
         
         \begin{tabular}{|c|c|c|c|c|c|c|c|c|} \hline
 sk. & $U$ [\Vo] & $I_1$ [\Am] & $I_2$ [\Am] & $R_1$ [$\Omega$] & $R_2$ [$\Omega$] & $R_3$ [$\Omega$] & $R_4$ [$\Omega$] & $R_5$ [$\Omega$] \\ \hline
@@ -177,21 +180,21 @@ Pozn: Pomocné směry šipek napájecích zdrojů platí pro speciální časov�
         \begin{tabular}{|c|c|c|c|c|c|c|c|c|c|} \hline
 sk. & $U_1$ [\Vo] & $U_2$ [\Vo] & $R_1$ [$\Omega$] & $R_2$ [$\Omega$] & $L_{1}$ [\mH] & $L_{2}$ [\mH] & $C_1$ [$\uF$] & $C_2$ [$\uF$] & $f$ [\Hz] \\ \hline
     \ifthenelse{\equal{#1}{A}}
-    {A & 35 & 55 & 12 & 14 & 120 & 100 & 200 & 105 & 70}{}
+    {A & 3 & 5 & 12 & 14 & 120 & 100 & 200 & 105 & 70}{}
     \ifthenelse{\equal{#1}{B}}
-    {B & 25 & 40 & 11 & 15 & 100 &  85 & 220 &  95 & 80}{}
+    {B & 2 & 4 & 11 & 15 & 100 &  85 & 220 &  95 & 80}{}
     \ifthenelse{\equal{#1}{C}}
-    {C & 35 & 45 & 10 & 13 & 220 &  70 & 230 &  85 & 75}{}
+    {C & 3 & 4 & 10 & 13 & 220 &  70 & 230 &  85 & 75}{}
     \ifthenelse{\equal{#1}{D}}
-    {D & 45 & 50 & 13 & 15 & 180 &  90 & 210 &  75 & 85}{}
+    {D & 4 & 5 & 13 & 15 & 180 &  90 & 210 &  75 & 85}{}
     \ifthenelse{\equal{#1}{E}}
-    {E & 50 & 30 & 14 & 13 & 130 &  60 & 100 &  65 & 90}{}
+    {E & 5 & 3 & 14 & 13 & 130 &  60 & 100 &  65 & 90}{}
     \ifthenelse{\equal{#1}{F}}
-    {F & 20 & 35 & 12 & 10 & 170 &  80 & 150 &  90 & 65}{}
+    {F & 2 & 3 & 12 & 10 & 170 &  80 & 150 &  90 & 65}{}
     \ifthenelse{\equal{#1}{G}}
-    {G & 55 & 50 & 13 & 12 & 140 &  60 & 160 &  80 & 60}{}
+    {G & 5 & 5 & 13 & 12 & 140 &  60 & 160 &  80 & 60}{}
     \ifthenelse{\equal{#1}{H}}
-    {H & 65 & 60 & 10 & 10 & 160 &  75 & 155 &  70 & 95}{}
+    {H & 5 & 6 & 10 & 10 & 160 &  75 & 155 &  70 & 95}{}
     \\ \hline \end{tabular} \\
     \includegraphics[scale=0.5,keepaspectratio]{fig/Pr4.pdf} \\
     }
@@ -199,29 +202,27 @@ sk. & $U_1$ [\Vo] & $U_2$ [\Vo] & $R_1$ [$\Omega$] & $R_2$ [$\Omega$] & $L_{1}$ 
     % paty priklad
     \newcommand{\patyZadani}[1]{
         \def\patySkupina{#1}
-        V obvodu na obrázku níže v čase $t=0 $[s] sepne spínač $S$. Sestavte diferenciální rovnici popisující chování obvodu na obrázku, dále ji upravte dosazením hodnot parametrů. Vypočítejte analytické řešení
-$i_{L}~=~f(t)$. Proveďte kontrolu výpočtu dosazením do sestavené diferenciální rovnice.\\
-
-Pozn: Pomocné směry šipek napájecích zdrojů platí pro speciální časový okamžik ($t=\frac{\pi}{2{\omega}}$).\\
+        V obvodu na obrázku níže v čase $t=0$ [s] sepne spínač $S$. Sestavte diferenciální rovnici popisující chování obvodu na obrázku, dále ji upravte dosazením hodnot parametrů. Vypočítejte analytické řešení
+$u_{C}~=~f(t)$. Proveďte kontrolu výpočtu dosazením do sestavené diferenciální rovnice.\\
         
         \begin{tabular}{|c|c|c|c|c|} \hline
-        sk. & $U$ [\Vo] & $L$ [H] & $R$ [$\Omega$] & $i_L(0)$ [\Am] \\ \hline
+        sk. & $U$ [\Vo] & $R$ [$\Omega$] & $C$ [\F] & $u_C(0)$ [\Vo] \\ \hline
     \ifthenelse{\equal{#1}{A}}
-    {A & 40 & 50 & 10 & 16}{}
+    {A & 60 & 50 & 10 & 14}{}
     \ifthenelse{\equal{#1}{B}}
-    {B & 30 & 10 & 20 & 15}{}
+    {B & 40 & 10 & 20 & 16}{}
     \ifthenelse{\equal{#1}{C}}
-    {C & 35 & 5 & 30 & 14}{}
+    {C & 45 & 5 & 30 & 12}{}
     \ifthenelse{\equal{#1}{D}}
-    {D & 25 & 5 & 25 & 12}{}
+    {D & 35 & 5 & 25 & 15}{}
     \ifthenelse{\equal{#1}{E}}
-    {E & 40 & 30 & 40 & 11}{}
+    {E & 50 & 30 & 40 & 10}{}
     \ifthenelse{\equal{#1}{F}}
-    {F & 22 & 30 & 15 & 10}{}
+    {F & 32 & 30 & 15 & 11}{}
     \ifthenelse{\equal{#1}{G}}
-    {G & 20 & 50 & 25 & 8}{}
+    {G & 10 & 50 & 25 & 7}{}
     \ifthenelse{\equal{#1}{H}}
-    {H & 18 & 50 & 40 & 5}{}
+    {H & 8 & 50 & 40 & 4}{}
     \\ \hline \end{tabular} \\
     \includegraphics[scale=0.5,keepaspectratio]{fig/Pr5.pdf} \\
     }

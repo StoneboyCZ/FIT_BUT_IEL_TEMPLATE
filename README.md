@@ -1,10 +1,10 @@
-# Šablona pro projekt IEL, verze 2020/02
+# Šablona pro projekt IEL, verze 2021/01
 
 Tento dokument popisuje použití šablony pro projekt IEL.
 
 ## Použití
 ### Overleaf
-Pro import do OVerleafu stačí v přehledu projektů kliknout na tlačítko New project (Nový projekt) --> Upload --> přetáhnout zip. Šablona bude připravena k použití. Přejmenujte si nově vytvořený projekt svým loginem.
+Pro import do Overleafu odstraňte ze stažené šablony adresář `packages` a soubor `latexmkrc` a takto upravenou šablonu znovu zabalte jako zip. Poté stačí v přehledu projektů kliknout na tlačítko New project (Nový projekt) --> Upload --> přetáhnout zip. Šablona bude připravena k použití. Přejmenujte si nově vytvořený projekt svým loginem.
 
 ### Lokálně 
 Stačí rozbalit zip archiv do libovolné složky. Lze překládat i z příkazové řádky. Pro tuto šablonu stačí:
@@ -28,7 +28,7 @@ V této části souboru README je stručně představena struktura šablony.
 * fig
   Adresář s obrázky. Obsahuje logo FIT VUT v české a anglické verzi obvody k jednotlivým příkladům
 * packages
-  Adresář s balíky, které nemusí být součástí instalace LaTeXu (např. na merlinovi ). Aktuálně je přiložena nejnovější verze balíku circuitikz. Lze přidávat i další balíky podle potřeby.
+  Adresář s balíky, které nemusí být součástí instalace LaTeXu (např. na merlinovi). Aktuálně je přiložena nejnovější verze balíku circuitikz. Lze přidávat i další balíky podle potřeby.
 * kořenový adresář
   V kořenovém adresáři se nachází následující soubory, které modifikují studenti :
   * 00-projekt.tex 
