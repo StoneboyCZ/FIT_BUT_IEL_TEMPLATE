@@ -1,0 +1,4129 @@
+\iffalse meta-comment
+
+File: siunitx.tex Copyright (C) 2014-2022 Joseph Wright
+
+It may be distributed and/or modified under the conditions of the
+LaTeX Project Public License (LPPL), either version 1.3c of this
+license or (at your option) any later version.  The latest version
+of this license is in the file
+
+   https://www.latex-project.org/lppl.txt
+
+This file is part of the "siunitx bundle" (The Work in LPPL)
+and all files in that bundle must be distributed together.
+
+The released version of this bundle is available from CTAN.
+
+-----------------------------------------------------------------------
+
+The development version of the bundle can be found at
+
+   https://github.com/josephwright/siunitx
+
+for those people who are interested.
+
+-----------------------------------------------------------------------
+
+\fi
+
+\documentclass{l3doc}
+
+% The next line is needed so that \GetFileInfo will be able to pick up
+% version data (quite apart from making the demos work).
+\usepackage{siunitx}
+\DeclareSIUnit\noop{\relax} % For printing prefixes
+\DeclareSIPower\quartic\tothefourth{4} % For demos
+\DeclareSIUnit\KWH{kWh}
+\DeclareSIQualifier\polymer{pol}
+\DeclareSIQualifier\catalyst{cat}
+\DeclareSIUnit\millimetremercury{mmHg}
+
+% Commands for this document
+\ExplSyntaxOn
+\makeatletter
+\NewDocumentCommand \acro { m }
+  {
+    \textsc
+      {
+        \exp_args:NV \tl_if_head_eq_charcode:nNTF \f@series { m }
+          { \text_lowercase:n }
+          { \use:n }
+            {#1}
+      }
+  }
+\makeatother
+\ExplSyntaxOff
+\NewDocumentCommand\email{m}{\href{mailto:#1}{\nolinkurl{#1}}}
+\NewDocumentCommand\ext{m}{\texttt{.#1}}
+\NewDocumentCommand\foreign{m}{\textit{#1}}
+\NewDocumentCommand\opt{m}{\texttt{#1}}
+% Tidy up the above in bookmarks
+\makeatletter
+\pdfstringdefDisableCommands{%
+  \let\acro\@firstofone
+  \let\ext\@firstofone
+  \let\foreign\@firstofone
+  \let\opt\@firstofone
+}
+\makeatother
+
+\NewDocumentCommand\DescribePrefix{m}{%
+  #1 &
+  \cs{#1} &
+  \unit{\csname #1\endcsname\noop}
+}
+\NewDocumentCommand\DescribeUnit{O{#2}m}{%
+  #1 &
+  \cs{#2} &
+  \unit{\csname #2\endcsname}
+}
+
+% For demos
+\usepackage[portuguese,brazilian,catalan,french,german,polish,spanish,UKenglish]{babel}
+\AtBeginDocument{\shorthandoff{:<>}}
+\usepackage{translations}
+\usepackage{cancel}
+\usepackage{collcell}
+\usepackage{sansmath}
+\newlength{\mylength}
+
+% For creating code demonstrations
+% This needs access to some code-level interfaces in listings
+\usepackage{listings}
+\makeatletter
+\lst@RequireAspects{writefile}
+\newsavebox\LaTeXdemo@box
+\lstnewenvironment{LaTeXdemo}[1][code and example]
+  {%
+    \global\let\lst@intname\@empty
+    \edef\LaTeXdemo@end{%
+      \expandafter\noexpand\csname LaTeXdemo@@#1@end\endcsname
+    }%
+    \@nameuse{LaTeXdemo@@#1}%
+  }
+  {\LaTeXdemo@end}
+\newcommand\LaTeXdemo@new[3]{%
+  \@namedef{LaTeXdemo@@#1}{#2}%
+  \@namedef{LaTeXdemo@@#1@end}{#3}%
+}
+\newcommand*\LaTeXdemo@common{%
+  \setkeys{lst}
+    {%
+       basicstyle   = \small\ttfamily,
+       basewidth    = 0.51em,
+       gobble       = 2,
+       language     = [LaTeX]{TeX},
+    }%
+}
+\newcount\LaTeXdemo@count
+\newcommand*\LaTeXdemo@input{%
+  \catcode`\^^M = 10\relax
+  \input{\jobname-\number\LaTeXdemo@count.tmp}%
+}
+\LaTeXdemo@new{code and example}{%
+  \setbox\LaTeXdemo@box=\hbox\bgroup
+    \global\advance\LaTeXdemo@count by 1 %
+    \lst@BeginAlsoWriteFile{\jobname-\number\LaTeXdemo@count.tmp}%
+    \LaTeXdemo@common
+}{%
+    \lst@EndWriteFile
+  \egroup
+  \begin{center}
+    \ifdim\wd\LaTeXdemo@box > 0.48\linewidth
+      \begin{minipage}{\linewidth}
+        \usebox\LaTeXdemo@box
+      \end{minipage}%
+      \par
+      \begin{minipage}{\linewidth}
+        \LaTeXdemo@input
+      \end{minipage}
+    \else
+      \begin{minipage}{0.48\linewidth}
+        \LaTeXdemo@input
+      \end{minipage}%
+      \hspace{\fill}%
+      \begin{minipage}{0.48\linewidth}
+        \usebox\LaTeXdemo@box
+      \end{minipage}%
+    \fi
+  \end{center}
+}
+\LaTeXdemo@new{code and float}{%
+  \global\advance\LaTeXdemo@count by 1 %
+  \lst@BeginAlsoWriteFile{\jobname-\number\LaTeXdemo@count.tmp}%
+  \LaTeXdemo@common
+}{%
+  \lst@EndWriteFile
+  \LaTeXdemo@input
+}
+\LaTeXdemo@new{code only}{\LaTeXdemo@common}{}
+\makeatother
+
+% For table demos
+\usepackage{datatool}
+\usepackage{multirow}
+\usepackage[table]{xcolor}
+% Has to come after xcolor
+\usepackage{pgfplots}
+\pgfplotsset{compat = 1.16, compat/show suggested version = false}
+\usepackage{xfp}
+
+% For the extra-long tables
+\usepackage{xtab}
+
+% For the table notes
+\usepackage{threeparttable}
+
+% Design changes
+\usepackage{caption}
+\makeatletter
+\edef\@floatboxreset{%
+  \unexpanded\expandafter{\@floatboxreset}%
+  \noexpand\centering
+}
+\makeatother
+\usepackage[osf]{mathpazo}
+
+\hypersetup{hidelinks}
+
+\begin{document}
+
+\GetFileInfo{siunitx.sty}
+
+\title{%
+  \pkg{siunitx} -- A comprehensive (\acro{SI}) units package%
+  \thanks{This file describes \fileversion,
+    last revised \filedate.}%
+}
+
+\author{%
+  Joseph Wright%
+  \thanks{%
+    E-mail:
+    \href{mailto:joseph.wright@morningstar2.co.uk}
+      {joseph.wright@morningstar2.co.uk}%
+  }%
+}
+
+\date{Released \filedate}
+
+\maketitle
+
+\tableofcontents
+
+\begin{abstract}
+  Physical quantities have both numbers and units, and each physical quantity
+  should be expressed as the product of a number and a unit. Typesetting
+  physical quantities requires care to ensure that the combined mathematical
+  meaning of the number--unit combination is clear. In particular, the
+  \acro{SI} units system lays down a consistent set of units with rules on how
+  these are to be used. However, different countries and publishers have
+  differing conventions on the exact appearance of numbers (and units). The
+  \pkg{siunitx} package provides a set of tools for authors to typeset
+  quantities in a consistent way. The package has an extended set of
+  configuration options which make it possible to follow varying typographic
+  conventions with the same input syntax. The package includes automated
+  processing of numbers and units, and the ability to control tabular alignment
+  of numbers.
+\end{abstract}
+
+\begin{documentation}
+
+\section{Introduction}
+
+The correct application of units of measurement is very important in technical
+applications. For this reason, carefully-crafted definitions of a coherent
+units system have been laid down by the \foreign{Conférence Génrale des Poids
+et Mesures} (\acro{CGPM}): this has resulted in the \foreign{Système
+International d'Unités}~(\acro{SI}). At the same time, typographic conventions
+for correctly displaying both numbers and units exist to ensure that no loss of
+meaning occurs in printed matter.
+
+The \pkg{siunitx} package aims to provide a unified method for \LaTeX{} users
+to typeset numbers and units correctly and easily. The design philosophy of
+\pkg{siunitx} is to follow the agreed rules by default, but to allow variation
+through option settings. In this way, users can use \pkg{siunitx} to follow the
+requirements of publishers, co-authors, universities, \foreign{etc}.\ without
+needing to alter the input at all.
+
+\section{\pkg{siunitx} for the impatient}
+
+The package provides the user macros:
+\begin{itemize}
+  \item \cs{ang}\oarg{options}\marg{angle}
+  \item \cs{num}\oarg{options}\marg{number}
+  \item \cs{unit}\oarg{options}\marg{unit}
+  \item \cs{qty}\oarg{options}\marg{number}\marg{unit}
+  \item \cs{numlist}\oarg{options}\marg{numbers}
+  \item \cs{numproduct}\oarg{options}\marg{numbers}
+  \item \cs{numrange}\oarg{options}\marg{numbers}\marg{number2}
+  \item \cs{qtylist}\oarg{options}\marg{numbers}\marg{unit}
+  \item \cs{qtyproduct}\oarg{options}\marg{numbers}\marg{unit}
+  \item \cs{qtyrange}\oarg{options}\marg{number1}\marg{number2}\marg{unit}
+  \item \cs{complexnum}\oarg{options}\marg{number}
+  \item \cs{complexqty}\oarg{options}\marg{number}\marg{unit}
+  \item \cs{sisetup}\marg{options}
+  \item \cs{tablenum}\oarg{options}\marg{number}
+\end{itemize}
+plus the \texttt{S} column type for decimal alignments and units in tabular
+environments. These user macros and column types are designed for typesetting
+numbers and units with control of appearance and with intelligent processing.
+
+Numbers are processed with understanding of exponents, or using additional
+commands for products and complex numbers.
+\begin{LaTeXdemo}
+  \num{12345,67890}  \\
+  \num{.3e45}        \\
+  \complexnum{1+-2i} \\
+  \numproduct{1.654 x 2.34 x 3.430}
+\end{LaTeXdemo}
+
+The unit system can interpret units given as text to be used directly or as
+macro-based units. In the latter case, different formatting is possible.
+\begin{LaTeXdemo}
+  \unit{kg.m.s^{-1}}                \\
+  \unit{\kilogram\metre\per\second} \\
+  \unit[per-mode = symbol]
+    {\kilogram\metre\per\second}  \\
+  \unit[per-mode = symbol]
+    {\kilogram\metre\per\ampere\per\second}
+\end{LaTeXdemo}
+
+Simple lists and ranges of numbers can be handled.
+\begin{LaTeXdemo}
+  \numlist{10;20;30}                     \\
+  \qtylist{0.13;0.67;0.80}{\milli\metre} \\
+  \numrange{10}{20}                      \\
+  \qtyrange{0.13}{0.67}{\milli\metre}
+\end{LaTeXdemo}
+
+A wide range of options are available to control the behavior of the package.
+For example, with the standard settings all text is typeset in the current
+upright math font. This can be adjusted to use text mode, follow various
+aspects of the surrounding formatting, \foreign{etc}. Similarly, the standard
+settings are based around an English-speaking locale, but can be adjusted
+to follow the traditions of other areas.
+
+\section{Using the \pkg{siunitx} package}
+
+\subsection{Numbers}
+
+\begin{function}{\num}
+  \begin{syntax}
+    \cs{num}\oarg{options}\marg{number}
+  \end{syntax}
+\end{function}
+Numbers are automatically formatted by the \cs{num} macro. This takes one
+optional argument, \meta{options}, and one mandatory one, \meta{number}. The
+contents of \meta{number} are automatically formatted. The formatter removes
+both \enquote{soft} (\verb*| |) and \enquote{hard} spaces (|\,| and |~|),
+automatically identifies exponents (as standard marked using |e|, |E|, |d| or
+|D|) and adds the appropriate spacing of large numbers. If required,
+a leading zero is added before a decimal marker: both |.|
+and "," are recognised as decimal markers.
+\begin{LaTeXdemo}
+  \num{123}     \\
+  \num{1234}    \\
+  \num{12345}   \\
+  \num{0.123}   \\
+  \num{0,1234}  \\
+  \num{.12345}  \\
+  \num{3.45d-4} \\
+  \num{-e10}
+\end{LaTeXdemo}
+
+Note that numbers are parsed before typesetting, which does have a performance
+overhead (only obvious with very large amounts of numerical input). The parser
+understands a range of input syntaxes, as demonstrated above.
+
+\begin{function}{\numlist}
+  \begin{syntax}
+    \cs{numlist}\oarg{options}\marg{numbers}
+  \end{syntax}
+\end{function}
+Lists of numbers may be processed using the \cs{numlist} function. Each
+\meta{number} is given within the list of \meta{numbers} within a brace pair,
+as the list can have a flexible length.
+\begin{LaTeXdemo}
+  \numlist{10;30;50;70}
+\end{LaTeXdemo}
+
+\begin{function}{\numproduct}
+  \begin{syntax}
+    \cs{numproduct}\oarg{options}\marg{numbers}
+  \end{syntax}
+\end{function}
+Runs of products of numbers may be inserted using the \cs{numproduct} function.
+This acts in the same way as \cs{num}, but inserts either a symbol or phrase
+between the entries. The latter should be separated by |x| tokens.
+\begin{LaTeXdemo}
+  \numproduct{10 x 30}
+\end{LaTeXdemo}
+
+\begin{function}{\numrange}
+  \begin{syntax}
+    \cs{numrange}\oarg{options}\marg{number1}\marg{number2}
+  \end{syntax}
+\end{function}
+Simple ranges of numbers can be handled using the \cs{numrange} function. This
+acts in the same way as \cs{num}, but inserts a phrase or other text between
+the two entries.
+\begin{LaTeXdemo}
+  \numrange{10}{30}
+\end{LaTeXdemo}
+
+\subsection{Angles}
+
+\begin{function}{\ang}
+  \begin{syntax}
+    \cs{ang}\oarg{options}\marg{angle}
+  \end{syntax}
+\end{function}
+Angles can be typeset using the \cs{ang} command. The \meta{angle} can be given
+either as a decimal number or as a semi-colon separated list of degrees,
+minutes and seconds, which is called \enquote{arc format} in this document. The
+numbers which make up an angle are processed using the same system as other
+numbers.
+\begin{LaTeXdemo}
+  \ang{10}    \\
+  \ang{12.3}  \\
+  \ang{4,5}   \\
+  \ang{1;2;3} \\
+  \ang{;;1}   \\
+  \ang{+10;;} \\
+  \ang{-0;1;}
+\end{LaTeXdemo}
+
+\subsection{Units}
+
+\begin{function}{\unit}
+  \begin{syntax}
+    \cs{unit}\oarg{options}\marg{unit}
+  \end{syntax}
+\end{function}
+The symbol for a unit can be typeset using the \cs{unit} macro: this provides
+full control over output format for the unit. Like the \cs{num} macro,
+\cs{unit} takes one optional and one mandatory argument. The unit formatting
+system can accept two types of input. When the \meta{unit} contains literal
+items (for example letters or numbers) then \pkg{siunitx} converts |.| and |~|
+into inter-unit product and correctly positions sub- and superscripts specified
+using |_| and |^|. The formatting methods will work with both math and text
+mode.
+\begin{LaTeXdemo}
+  \unit{kg.m/s^2} \\
+  \unit{g_{polymer}~mol_{cat}.s^{-1}}
+\end{LaTeXdemo}
+
+The second operation mode for the \cs{unit} macro is an \enquote{interpreted}
+system, Here, each unit, \acro{SI} multiple prefix and power is given a macro
+name. These are entered in a method very similar to the reading of the unit
+name in English.
+\begin{LaTeXdemo}
+  \unit{\kilo\gram\metre\per\square\second} \\
+  \unit{\gram\per\cubic\centi\metre}        \\
+  \unit{\square\volt\cubic\lumen\per\farad} \\
+  \unit{\metre\squared\per\gray\cubic\lux}  \\
+  \unit{\henry\second}
+\end{LaTeXdemo}
+
+On its own, this is less convenient than the direct method, although it does
+use meaning rather than appearance for input. However, the package allows you
+to define new unit macros; a large number of pre-defined abbreviations are also
+supplied. More importantly, by defining macros for units, instead of literal
+input, new functionality is made available. By altering the settings used by
+the package, the same input can yield a variety of different output formats.
+For example, the \cs{per} macro can give reciprocal powers, slashes or be used
+to construct units as fractions.
+
+\begin{function}{\qty}
+  \begin{syntax}
+    \cs{qty}\oarg{options}\marg{number}\marg{unit}
+  \end{syntax}
+\end{function}
+Very often, numbers and units are given together. Formally, the value of a
+quantity is the product of the number and the unit, the space being regarded as
+a multiplication sign. The \cs{qty} macro combines the
+functionality of \cs{num} and \cs{unit}, and makes this both possible and easy.
+The \meta{number} and \meta{unit} arguments work exactly like those for the
+\cs{num} and \cs{unit} macros, respectively.
+\begin{LaTeXdemo}
+  \qty[mode = text]{1.23}{J.mol^{-1}.K^{-1}}          \\
+  \qty{.23e7}{\candela}                               \\
+  \qty[per-mode = symbol]{1.99}{\per\kilogram}        \\
+  \qty[per-mode = fraction]{1,345}{\coulomb\per\mole}
+\end{LaTeXdemo}
+
+It is possible to set up the unit macros to be available outside of the
+\cs{qty} and \cs{unit} functions. This is not the standard behaviour as there
+is the risk of name clashes (for example, \cs{day} is a \TeX{} primitive
+and several packages define \cs{degree}). Full details of using \enquote{stand
+alone} units are found in \ref{sec:units:creating}.
+
+\begin{function}{\qtylist}
+  \begin{syntax}
+    \cs{qtylist}\oarg{options}\marg{numbers}\marg{unit}
+  \end{syntax}
+\end{function}
+Lists of numbers with units can be handled using the \cs{qtylist} function. The
+behaviour of this function is similar to \cs{numlist}, but with the addition of
+the unit to each number.
+\begin{LaTeXdemo}
+  \qtylist{10;30;45}{\metre}
+\end{LaTeXdemo}
+
+\begin{function}{\qtyproduct}
+  \begin{syntax}
+    \cs{qtyproduct}\oarg{options}\marg{numbers}\marg{unit}
+  \end{syntax}
+\end{function}
+Runs of products of of numbers with units can be handled using the
+\cs{qtyproduct} function. The behaviour of this function is similar to
+\cs{numproduct}, but with the addition of a unit to each number.
+\begin{LaTeXdemo}
+  \qtyproduct{10 x 30 x 45}{\metre}
+\end{LaTeXdemo}
+
+\begin{function}{\qtyrange}
+  \begin{syntax}
+    \cs{qtyrange}\oarg{options}\marg{number1}\marg{number2}\marg{unit}
+  \end{syntax}
+\end{function}
+Ranges of numbers with units can be handled using the \cs{qtyrange}
+function. The behaviour of this function is similar to \cs{numrange}, but
+with the addition of a unit to each number.
+\begin{LaTeXdemo}
+  \qtyrange{10}{30}{\metre}
+\end{LaTeXdemo}
+
+The input of lists, products and ranges of quantities using a single command
+allows them to be adjusted together. These commands are intended to allow
+consistent formatting of related values: as such, they apply a single
+unit to all of the values. This is particularly notable when using
+adjustment of the numerical values.
+
+\subsection{Complex numbers and quantities}
+
+\begin{function}{\complexnum}
+  \begin{syntax}
+    \cs{complexnum}\oarg{options}\marg{number}
+  \end{syntax}
+\end{function}
+Typesets the complex number, which can be given in the Cartesian form $a +
+b\mathrm{i}$ or $a + \mathrm{i}b$, or in the polar form $r$\texttt{:}$\theta$.
+Processing of the numerical parts is otherwise identical to the standard
+\cs{num} command.
+
+\begin{function}{\complexqty}
+  \begin{syntax}
+    \cs{complexqty}\oarg{options}\marg{number}\marg{unit}
+  \end{syntax}
+\end{function}
+Typesets the complex number, which can be given in the Cartesian form $a +
+b\mathrm{i}$ or $a + \mathrm{i}b$, or in the polar form $r$\texttt{:}$\theta$.
+Processing of the numerical parts is otherwise identical to the standard
+\cs{qty} command.
+
+\subsection{The unit macros}
+
+The package always defines the basic set of \acro{SI} units with macro names.
+This includes the base \acro{SI} units, the derived units with special names
+and the prefixes. A small number of powers are also given pre-defined names.
+Full details of units in the \acro{SI} are available on-line~\cite{BIPM}.
+
+The seven base \acro{SI} units are always defined (Table~\ref{tab:unit:base}).
+In addition, the macro \cs{meter} is available as an alias for \cs{metre}, for
+users of US spellings. The full details of the base units are given in the
+\acro{SI} Brochure.
+\begin{table}
+  \caption{\acro{SI} base units.%
+    \label{tab:unit:base}}
+  \begin{tabular}{@{}lll@{}}
+    \toprule
+      Unit & Command & Symbol \\
+    \midrule
+      \DescribeUnit{ampere}   \\
+      \DescribeUnit{candela}  \\
+      \DescribeUnit{kelvin}   \\
+      \DescribeUnit{kilogram} \\
+      \DescribeUnit{metre}    \\
+      \DescribeUnit{mole}     \\
+      \DescribeUnit{second}   \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+The \acro{SI} also lists a number of units which have special names and
+symbols: these are listed in Table~\ref{tab:unit:derived}.
+\begin{table}
+  \caption{Coherent derived units in the \acro{SI} with special names and
+      symbols.%
+      \label{tab:unit:derived}}
+  \begin{tabular}{@{}lll>{\qquad}lll@{}}
+    \toprule
+      Unit & Command & Symbol & Unit & Command & Symbol \\
+    \midrule
+      \DescribeUnit{becquerel} &
+      \DescribeUnit{newton}    \\
+      \DescribeUnit[degree Celsius]{degreeCelsius} &
+      \DescribeUnit{ohm}       \\
+      \DescribeUnit{coulomb}   &
+      \DescribeUnit{pascal}    \\
+      \DescribeUnit{farad}     &
+      \DescribeUnit{radian}    \\
+      \DescribeUnit{gray}      &
+      \DescribeUnit{siemens}   \\
+      \DescribeUnit{hertz}     &
+      \DescribeUnit{sievert}   \\
+      \DescribeUnit{henry}     &
+      \DescribeUnit{steradian} \\
+      \DescribeUnit{joule}     &
+      \DescribeUnit{tesla}     \\
+      \DescribeUnit{lumen}     &
+      \DescribeUnit{volt}      \\
+      \DescribeUnit{katal}     &
+      \DescribeUnit{watt}      \\
+      \DescribeUnit{lux}       &
+      \DescribeUnit{weber}     \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+In addition to the official \acro{SI} units, \pkg{siunitx} also provides macros
+for a number of units which are accepted for use in the \acro{SI} although they
+are not \acro{SI} units. Table~\ref{tab:unit:accepted} lists the
+\enquote{accepted} units. The command \cs{percent} is also provided for use in
+units: this is accepted with the \acro{SI} as detailed in Section~5.4.7 of the
+Brochure.
+\begin{table}
+  \caption{Non-\acro{SI} units accepted for use with the International System of
+    Units.%
+      \label{tab:unit:accepted}}
+  \begin{tabular}{@{}lll@{}}
+    \toprule
+      Unit & Command & Symbol \\
+    \midrule
+      \DescribeUnit{astronomicalunit} \\
+      \DescribeUnit{bel}              \\
+      \DescribeUnit{dalton}           \\
+      \DescribeUnit{day}              \\
+      \DescribeUnit{decibel}          \\
+      \DescribeUnit{degree}           \\
+      \DescribeUnit{electronvolt}     \\
+      \DescribeUnit{hectare}          \\
+      \DescribeUnit{hour}             \\
+      \DescribeUnit{litre} \\
+       & \cs{liter} & \unit{\liter} \\
+      \DescribeUnit[minute (plane angle)]{arcminute} \\
+      \DescribeUnit[minute (time)]{minute} \\
+      \DescribeUnit[second (plane angle)]{arcsecond} \\
+      \DescribeUnit{neper}            \\
+      \DescribeUnit{tonne}            \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+In addition to the units themselves, \pkg{siunitx} provides pre-defined macros
+for all of the \acro{SI} prefixes (Table~\ref{tab:unit:prefix}).
+The spelling \enquote{\cs{deka}} is provided for US users as an alternative to
+\cs{deca}.
+\begin{table}
+  \caption{SI prefixes.%
+    \label{tab:unit:prefix}}
+  \sisetup{table-number-alignment = right, table-format = 2}
+  \begin{tabular}{@{}llcS[table-format = -2]>{\qquad}llcS@{}}
+    \toprule
+      Prefix & Command & Symbol & \multicolumn{1}{l}{Power} &
+      Prefix & Command & Symbol & \multicolumn{1}{l@{}}{Power} \\
+    \midrule
+      \DescribePrefix{yocto} & -24 &
+      \DescribePrefix{deca}  &   1 \\
+      \DescribePrefix{zepto} & -21 &
+      \DescribePrefix{hecto} &   2 \\
+      \DescribePrefix{atto}  & -18 &
+      \DescribePrefix{kilo}  &   3 \\
+      \DescribePrefix{femto} & -15 &
+      \DescribePrefix{mega}  &   6 \\
+      \DescribePrefix{pico}  & -12 &
+      \DescribePrefix{giga}  &  9 \\
+      \DescribePrefix{nano}  &  -9 &
+      \DescribePrefix{tera}  &  12 \\
+      \DescribePrefix{micro} & -6 &
+      \DescribePrefix{peta}  &  15 \\
+      \DescribePrefix{milli} &  -3 &
+      \DescribePrefix{exa}   &  18 \\
+      \DescribePrefix{centi} &  -2 &
+      \DescribePrefix{zetta} &  21 \\
+      \DescribePrefix{deci}  &  -1 &
+      \DescribePrefix{yotta} &  24 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+A small number of pre-defined powers are provided as macros. \cs{square} and
+\cs{cubic} are intended for use before units, with \cs{squared} and \cs{cubed}
+going after the unit.
+\begin{LaTeXdemo}
+  \unit{\square\becquerel} \\
+  \unit{\joule\squared\per\lumen} \\
+  \unit{\cubic\lux\volt\tesla\cubed}
+\end{LaTeXdemo}
+Generic powers can be inserted on a one-off basis using the \cs{tothe} and
+\cs{raiseto} macros. These are the only macros for units which take an
+argument:
+\begin{LaTeXdemo}
+  \unit{\henry\tothe{5}} \\
+  \unit{\raiseto{4.5}\radian}
+\end{LaTeXdemo}
+Reciprocal powers are indicated using the \cs{per} macro. This applies to the
+next unit only, unless the \opt{sticky-per} option is turned on.
+\begin{LaTeXdemo}
+  \unit{\joule\per\mole\per\kelvin} \\
+  \unit{\joule\per\mole\kelvin} \\
+  \unit{\per\henry\tothe{5}} \\
+  \unit{\per\square\becquerel}
+\end{LaTeXdemo}
+As for generic powers, generic qualifiers are also available using the \cs{of}
+function:
+\begin{LaTeXdemo}
+  \unit{\kilogram\of{metal}} \\
+  \qty[qualifier-mode = bracket]
+    {0.1}{\milli\mole\of{cat}\per\kilogram\of{prod}}
+\end{LaTeXdemo}
+
+When the \pkg{cancel} package is loaded, it is possible to \enquote{cancel out}
+units using the \cs{cancel} macro. This applies to the next unit, in a similar
+manner to a prefix. The \cs{highlight} macro is also available to selectively
+color units. Both \cs{cancel} and \cs{highlight} are outside of the normal
+semantic meaning of units, but are provided as they may be useful in some
+cases.
+\begin{LaTeXdemo}
+  \unit[per-mode = fraction]
+    {\cancel\kilogram\metre\per\cancel\kilogram\per\second} \\
+  \unit{\highlight{red}\kilogram\metre\per\second} \\
+  \unit[unit-color = purple]
+    {\highlight{blue}\kilogram\metre\per\second}
+\end{LaTeXdemo}
+
+\subsection{Unit abbreviations}
+
+In addition to the \enquote{full} names, \pkg{siunitx} loads a set of
+abbreviated versions of the \acro{SI} units (Table~\ref{tab:unit:abbr}). The
+standard \pkg{siunitx} settings only create these abbreviations within the
+scope of the \cs{unit} and \cs{qty} functions, meaning that no clashes should
+occur (for example with the standard \cs{pm} symbol).
+\begin{center}
+  \tablecaption{Unit abbreviations}
+  \label{tab:unit:abbr}
+  \tablefirsthead{%
+    \toprule
+      \multicolumn{1}{@{}l}{Unit}      &
+      \multicolumn{1}{l}{Abbreviation} &
+      \multicolumn{1}{l@{}}{Symbol} \\
+    \midrule
+  }
+  \tablehead{%
+    \multicolumn{3}{@{}l@{}}{\emph{Continued from previous page}} \\
+    \toprule
+      \multicolumn{1}{@{}l}{Unit}      &
+      \multicolumn{1}{l}{Abbreviation} &
+      \multicolumn{1}{l@{}}{Symbol} \\
+    \midrule
+  }
+  \tabletail{%
+    \bottomrule
+    \multicolumn{3}{@{}r@{}}{\emph{Continued on next page}} \\
+  }
+  \tablelasttail{\bottomrule}
+  \begin{xtabular}{@{}lcc@{}}
+      \DescribeUnit[femtogram]{fg} \\
+      \DescribeUnit[picogram]{pg}  \\
+      \DescribeUnit[nanogram]{ng}  \\
+      \DescribeUnit[microgram]{ug} \\
+      \DescribeUnit[milligram]{mg} \\
+      \DescribeUnit[gram]{g}       \\
+      \DescribeUnit[kilogram]{kg}  \\
+
+      \midrule
+
+      \DescribeUnit[picometre]{pm}  \\
+      \DescribeUnit[nanometre]{nm}  \\
+      \DescribeUnit[micrometre]{um} \\
+      \DescribeUnit[millimetre]{mm} \\
+      \DescribeUnit[centimetre]{cm} \\
+      \DescribeUnit[decimetre]{dm}  \\
+      \DescribeUnit[metre]{m}       \\
+      \DescribeUnit[kilometre]{km}  \\
+
+      \midrule
+
+      \DescribeUnit[attosecond]{as}  \\
+      \DescribeUnit[femtosecond]{fs} \\
+      \DescribeUnit[picosecond]{ps}  \\
+      \DescribeUnit[nanosecond]{ns}  \\
+      \DescribeUnit[microsecond]{us} \\
+      \DescribeUnit[millisecond]{ms} \\
+      \DescribeUnit[second]{s}       \\
+
+      \midrule
+
+      \DescribeUnit[femtomole]{fmol} \\
+      \DescribeUnit[picomole]{pmol}  \\
+      \DescribeUnit[nanomole]{nmol}  \\
+      \DescribeUnit[micromole]{umol} \\
+      \DescribeUnit[millimole]{mmol} \\
+      \DescribeUnit[mole]{mol}       \\
+      \DescribeUnit[kilomole]{kmol}  \\
+
+      \midrule
+
+      \DescribeUnit[picoampere]{pA}  \\
+      \DescribeUnit[nanoampere]{nA}  \\
+      \DescribeUnit[microampere]{uA} \\
+      \DescribeUnit[milliampere]{mA} \\
+      \DescribeUnit[ampere]{A}       \\
+      \DescribeUnit[kiloampere]{kA}  \\
+
+      \midrule
+
+      \DescribeUnit[microlitre]{ul} \\
+      \DescribeUnit[millilitre]{ml} \\
+      \DescribeUnit[litre]{l}       \\
+      \DescribeUnit[hectolitre]{hl} \\
+      \DescribeUnit[microliter]{uL} \\
+      \DescribeUnit[milliliter]{mL} \\
+      \DescribeUnit[liter]{L}       \\
+      \DescribeUnit[hectoliter]{hL} \\
+
+      \midrule
+
+      \DescribeUnit[millihertz]{mHz} \\
+      \DescribeUnit[hertz]{Hz}       \\
+      \DescribeUnit[kilohertz]{kHz}  \\
+      \DescribeUnit[megahertz]{MHz}  \\
+      \DescribeUnit[gigahertz]{GHz}  \\
+      \DescribeUnit[terahertz]{THz}  \\
+
+      \midrule
+
+      \DescribeUnit[millinewton]{mN} \\
+      \DescribeUnit[newton]{N}       \\
+      \DescribeUnit[kilonewton]{kN}  \\
+      \DescribeUnit[meganewton]{MN}  \\
+
+      \midrule
+
+      \DescribeUnit[pascal]{Pa}      \\
+      \DescribeUnit[kilopascal]{kPa} \\
+      \DescribeUnit[megapacal]{MPa}  \\
+      \DescribeUnit[gigapascal]{GPa} \\
+
+      \midrule
+
+      \DescribeUnit[milliohm]{mohm} \\
+      \DescribeUnit[kilohm]{kohm}   \\
+      \DescribeUnit[megohm]{Mohm}   \\
+
+      \midrule
+
+      \DescribeUnit[picovolt]{pV}  \\
+      \DescribeUnit[nanovolt]{nV}  \\
+      \DescribeUnit[microvolt]{uV} \\
+      \DescribeUnit[millivolt]{mV} \\
+      \DescribeUnit[volt]{V}       \\
+      \DescribeUnit[kilovolt]{kV}  \\
+
+      \midrule
+
+      \DescribeUnit[watt]{W}                \\
+      \DescribeUnit[nanowatt]{nW}           \\
+      \DescribeUnit[microwatt]{uW}          \\
+      \DescribeUnit[milliwatt]{mW}          \\
+      \DescribeUnit[kilowatt]{kW}           \\
+      \DescribeUnit[megawatt]{MW}           \\
+      \DescribeUnit[gigawatt]{GW}           \\
+      \DescribeUnit[joule]{J}               \\
+      \DescribeUnit[microjoule]{uJ}         \\
+      \DescribeUnit[millijoule]{mJ}         \\
+      \DescribeUnit[kilojoule]{kJ}          \\
+      \DescribeUnit[electronvolt]{eV}       \\
+      \DescribeUnit[millielectronvolt]{meV} \\
+      \DescribeUnit[kiloelectronvolt]{keV}  \\
+      \DescribeUnit[megaelectronvolt]{MeV}  \\
+      \DescribeUnit[gigaelectronvolt]{GeV}  \\
+      \DescribeUnit[teraelectronvolt]{TeV}  \\
+      \DescribeUnit[kilowatt hour]{kWh}     \\
+
+      \midrule
+
+      \DescribeUnit[farad]{F}       \\
+      \DescribeUnit[femtofarad]{fF} \\
+      \DescribeUnit[picofarad]{pF}  \\
+      \DescribeUnit[nanofarad]{nF}  \\
+      \DescribeUnit[microfarad]{uF} \\
+
+      \midrule
+
+      \DescribeUnit[henry]{H}       \\
+      \DescribeUnit[femtohenry]{fH} \\
+      \DescribeUnit[picohenry]{pH}  \\
+      \DescribeUnit[nanohenry]{nH}  \\
+      \DescribeUnit[millihenry]{mH} \\
+      \DescribeUnit[microhenry]{uH} \\
+
+      \midrule
+
+      \DescribeUnit[coulomb]{C}       \\
+      \DescribeUnit[nanocoulomb]{nC}  \\
+      \DescribeUnit[millicoulomb]{mC} \\
+      \DescribeUnit[microcoulomb]{uC} \\
+
+      \midrule
+
+      \DescribeUnit[kelvin]{K} \\
+
+      \midrule
+
+      \DescribeUnit[decibel]{dB} \\
+
+  \end{xtabular}
+\end{center}
+
+\DescribeMacro{bit}
+\DescribeMacro{byte}
+Binary data is expressed in units of bits and bytes. These are normally given
+prefixes which use powers of two, rather than the powers of ten used by the
+\acro{SI} prefixes. As these binary prefixes are closely related to the
+\acro{SI} prefixes, they are defined by \pkg{siunitx}.
+\begin{table}
+  \caption{Binary prefixes.%
+    \label{tab:unit:binary}}
+  \sisetup{table-number-alignment = right, table-format = 2}
+  \begin{tabular}{@{}llcS@{}}
+    \toprule
+      Prefix & Command & Symbol & \multicolumn{1}{l@{}}{Power} \\ \\
+    \midrule
+      \DescribePrefix{kibi} & 10 \\
+      \DescribePrefix{mebi} & 20 \\
+      \DescribePrefix{gibi} & 30 \\
+      \DescribePrefix{tebi} & 40 \\
+      \DescribePrefix{pebi} & 50 \\
+      \DescribePrefix{exbi} & 60 \\
+      \DescribePrefix{zebi} & 70 \\
+      \DescribePrefix{yobi} & 80 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{Creating new macros}
+
+The various macro components of a unit have to be defined before they can be
+used. The package supplies a number of common definitions, but new definitions
+are also possible. As the definition of a logical unit should remain the same
+in a single document, these creation functions are all preamble-only.
+
+\begin{function}{\DeclareSIUnit}
+  \begin{syntax}
+    \cs{DeclareSIUnit}\oarg{options}\marg{unit}\marg{symbol}
+  \end{syntax}
+\end{function}
+New units are produced using the \cs{DeclareSIUnit} macro. The \meta{symbol}
+can contain literal input, other units, multiple prefixes, powers and \cs{per},
+although literal text should not be intermixed with unit macros. Units can be
+created with \meta{options} from the usual list understood by \pkg{siunitx},
+and apply the specific unit macro only. The (first) optional argument to
+\cs{qty} and \cs{unit} can be used to override the settings for the unit: an
+example is the \cs{degree} unit.
+\begin{LaTeXdemo}
+  \qty{3.1415}{\degree}
+\end{LaTeXdemo}
+ This is declared in the package (effectively) as
+\begin{LaTeXdemo}[code only]
+  \DeclareSIUnit[quantity-product = {}]
+    \degree{\text{\textdegree}}
+\end{LaTeXdemo}
+ The spacing can still be altered at point of use:
+\begin{LaTeXdemo}
+  \qty{67890}{\degree} \\
+  \qty[quantity-product = \,]{67890}{\degree}
+\end{LaTeXdemo}
+The meaning of a pre-defined unit can be altered by using \cs{DeclareSIUnit}
+after loading \pkg{siunitx}. This will overwrite the original definition with
+the newer version.
+
+\begin{function}{\DeclareSIPrefix}
+  \begin{syntax}
+    \cs{DeclareSIPrefix}\marg{prefix}\marg{symbol}\marg{powers-ten}
+  \end{syntax}
+\end{function}
+The standard \acro{SI} powers of ten are defined by the package, and are
+described above. However, the user can define new prefixes with
+\cs{DeclareSIPrefix}. For example, \cs{kilo} is defined
+\begin{LaTeXdemo}[code only]
+  \DeclareSIPrefix\kilo{k}{3}
+\end{LaTeXdemo}
+
+\begin{function}{\DeclareSIPower}
+  \begin{syntax}
+    \cs{DeclareSIPower}\marg{symbol-before}\marg{symbol-after}\marg{power}
+  \end{syntax}
+\end{function}
+This function creates two symbols, one for use before a unit, the second
+for use after a unit, both of which are equivalent to the \meta{power}.
+For example, one might use
+\begin{LaTeXdemo}[code only]
+  \DeclareSIPower\quartic\tothefourth{4}
+\end{LaTeXdemo}
+ with the functions then used in the document as
+\begin{LaTeXdemo}
+  \unit{\kilogram\tothefourth}\\
+  \unit{\quartic\metre}
+\end{LaTeXdemo}
+
+\begin{function}{\DeclareSIQualifier}
+  \begin{syntax}
+    \cs{DeclareSIQualifier}\marg{qualifier}\marg{symbol}
+  \end{syntax}
+\end{function}
+Following the syntax of the other macros, qualifiers may be created using the
+\cs{DeclareSIQualifier} command. In contrast to the other parts of a unit,
+there are no pre-defined qualifiers. It is therefore entirely up to the user to
+create these. For example, to identify the mass of a product created when using
+a particular catalyst, the preamble could contain:
+\begin{LaTeXdemo}[code only]
+  \DeclareSIQualifier\polymer{pol}
+  \DeclareSIQualifier\catalyst{cat}
+\end{LaTeXdemo}
+ and then in the body the document could read
+\begin{LaTeXdemo}
+  \qty{1.234}{\gram\polymer\per\mole\catalyst\per\hour}
+\end{LaTeXdemo}
+
+\subsection{Tabular material}
+
+Aligning numbers in tabular content is handled by a new column type, the
+\texttt{S} column. This new column type can align material using a number of
+different strategies, with the aim of flexibility of output without needing to
+alter the input. The method used as standard is to place the decimal marker in
+the number at the centre of the cell and to align the material appropriately
+(Table~\ref{tab:S:standard}).
+\begin{LaTeXdemo}[code and float]
+  \begin{table}
+    \caption{Standard behaviour of the \texttt{S} column type.%
+      \label{tab:S:standard}}
+    \begin{tabular}{@{}S@{}}
+    \toprule
+      {Some Values} \\
+    \midrule
+         2.3456 \\
+        34.2345 \\
+        -6.7835 \\
+        90.473  \\
+      5642.5    \\
+          1.2e3 \\
+            e4  \\
+    \bottomrule
+    \end{tabular}
+  \end{table}
+\end{LaTeXdemo}
+
+The \texttt{S} column will attempt to automatically detect material which
+should be placed before or after a number, and will maintain the alignment of
+the numerical data (Table~\ref{tab:S:extras}). If the material could be
+mistaken for part of a number, it should be protected by braces. The use of
+\cs{color} in a table cell will also be detected and will override any general
+color applied by \pkg{siunitx}.
+\begin{LaTeXdemo}[code and float]
+  \begin{table}
+    \caption{Detection of surrounding material in an \texttt{S} column.%
+      \label{tab:S:extras}}
+    \begin{tabular}{@{}S[color = orange]@{}}
+    \toprule
+      {Some Values} \\
+    \midrule
+      12.34 \\
+      \color{purple} 975,31 \\
+      44.268 \textsuperscript{\emph{a}} \\
+    \bottomrule
+    \end{tabular}
+  \end{table}
+\end{LaTeXdemo}
+
+\begin{function}{\tablenum}
+  \begin{syntax}
+    \cs{tablenum}\oarg{options}\marg{number}
+  \end{syntax}
+\end{function}
+Within more complex tables, aligned numbers may be desirable within the
+argument of \cs{multicolumn} or \cs{multirow}.\footnote{Provided by the
+\pkg{multirow} package} The \cs{tablenum} function is available to achieve
+alignment in these situations: this is, in effect, a macro version of the
+\texttt{S} column (Table~\ref{tab:tablenum}).
+\begin{LaTeXdemo}[code and float]
+  \begin{table}
+    \caption{Controlling complex alignment with the \cs{tablenum} macro.%
+      \label{tab:tablenum}}
+    \begin{tabular}{@{}lr@{}}
+      \toprule
+      Heading & Heading \\
+      \midrule
+      Info & More info \\
+      Info & More info \\
+      \multicolumn{2}{c}{\tablenum[table-format = 4.4]{12,34}}    \\
+      \multicolumn{2}{c}{\tablenum[table-format = 4.4]{333.5567}} \\
+      \multicolumn{2}{c}{\tablenum[table-format = 4.4]{4563.21}}  \\
+      \bottomrule
+    \end{tabular}
+    \hspace{\fill}%
+    \begin{tabular}{@{}lr@{}}
+      \toprule
+      Heading & Heading \\
+      \midrule
+      \multirow{2}*{\tablenum{88,999}} & aaa \\
+                                       & bbb \\
+      \multirow{2}*{\tablenum{33,435}} & ccc \\
+                                       & ddd \\
+      \bottomrule
+    \end{tabular}
+  \end{table}
+\end{LaTeXdemo}
+
+\section{Package control options}
+
+\subsection{The key--value control system}
+
+ The package uses a range of different key types:
+\begin{description}
+  \item[\texttt{Choice}] Takes a limited number of choices, which are described
+    separately for each key.
+  \item[\texttt{Integer}] Requires a number as the argument.
+  \item[\texttt{Length}] Requires a length, either as a literal
+    value such as \texttt{2.0cm}, or stored as a \LaTeX{} length.
+  \item[\texttt{Literal}] A key which uses the value(s) given directly,
+    either to check input or in output.
+  \item[\texttt{Macro}] Requires a macro, which may need a single argument.
+  \item[\texttt{Math}] Similar to a \texttt{literal} option, but the input is
+    always used in math mode, irrespective of other \pkg{siunitx} settings.
+    Thus to text-mode only input must be placed inside the argument of a
+    \cs{text} macro.
+  \item[\texttt{Meta}] These are options which actually apply a number of
+    other options.
+  \item[\texttt{Switch}] These are on--off switches, and recognise \opt{true}
+    and \opt{false}.  Giving just the key name also turns the key on.
+\end{description}
+The tables of option names use these descriptions to indicate how the keys
+should be used.
+
+\subsection{Printing%
+  \label{sec:print}}
+
+The \pkg{siunitx} package can control the font used to print output
+independently of the surrounding material. Which aspects of the font follow
+those of the surroundings is influenced by a range of setting as detailed in
+Table~\ref{tab:opt:print}.
+\begin{table}
+  \caption{Print options.%
+    \label{tab:opt:print}}
+  \begin{tabular}{@{}>{\ttfamily}ll>{\ttfamily}l@{}}
+    \toprule
+      \multicolumn{1}{@{}l}{Option name} &
+      Type &
+      \multicolumn{1}{l@{}}{Default} \\
+    \midrule
+      color                    & Literal & \meta{none}          \\
+      mode                     & Choice  & math                 \\
+      number-color             & Literal & \meta{none}          \\
+      number-mode              & Choice  & math                 \\
+      propagate-math-font      & Switch  & false                \\
+      reset-math-version       & Switch  & true                 \\
+      reset-text-family        & Switch  & true                 \\
+      reset-text-series        & Switch  & true                 \\
+      reset-text-shape         & Switch  & true                 \\
+      text-family-to-math      & Switch  & false                \\
+      text-font-command        & Literal & \meta{none}          \\
+      text-subscript-command   & Literal & \cs{textsubscript}   \\
+      text-superscript-command & Literal & \cs{textsuperscript} \\
+      text-series-to-math      & Switch  & false                \\
+      unit-color               & Literal & \meta{none}          \\
+      unit-mode                & Choice  & math                 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\DescribeOption{mode}
+\DescribeOption{number-mode}
+\DescribeOption{unit-mode}
+The \opt{mode} option determines whether \pkg{siunitx} uses math or text mode
+when printing output. The choices are \opt{match}, \opt{math}, \opt{text}. The
+\opt{match} setting means that printing uses the prevailing mode unchanged
+whereas \opt{math} and \opt{text} select the appropriate \TeX{} mode. It is
+possible to have different fonts in math and text modes, which will highlight
+the difference. The font settings which apply are also different depending on
+the mode. As well as the overall setting, it is possible to apply mode
+to numbers and units separately using the \opt{number-mode} and \opt{unit-mode}
+options.
+
+\DescribeOption{reset-text-family}
+\DescribeOption{reset-text-series}
+\DescribeOption{reset-text-shape}
+When printing in text mode, the options \opt{reset-text-family},
+\opt{reset-text-series} and \opt{reset-text-shape} apply. When these are
+active, \pkg{siunitx} resets the relevant font selection axis property
+when printing: the standard font setting is upright mid-weight roman
+(|\upshape| |\mdseries| |\rmfamily|).
+\begin{LaTeXdemo}
+  \sisetup{mode = text}
+  {\itshape  \num{1234}}\\
+  {\bfseries \num{1234}}\\
+  {\sffamily \num{1234}}\\
+  \sisetup{
+    reset-text-family = false ,
+    reset-text-series = false ,
+    reset-text-shape  = false
+  }
+  {\itshape  \num{1234}}\\
+  {\bfseries \num{1234}}\\
+  {\sffamily \num{1234}}\\
+\end{LaTeXdemo}
+
+\DescribeOption{propagate-math-font}
+\DescribeOption{reset-math-version}
+In math mode, the font used by \LaTeX{} is \enquote{invariant}, and this is
+reflected in the options available. With the standard settings, in math mode
+printing uses the standard math font and version (weight). The option
+\opt{propagate-math-font} may be used to apply the prevailing math font
+to the printed material. The setting \opt{reset-math-version} controls
+whether the math version is reset or not. Note that math version is typically
+used to set \enquote{bold math} but may also be used for other effects, for
+example all sanserif math.
+\begin{LaTeXdemo}
+  {\boldmath \unit{\kilogram}}\\
+  {\sansmath $\unit{\kilogram}$}\\
+  {$\mathsf{\unit{\kilogram}}$}\\
+  \sisetup{
+    propagate-math-font = true  ,
+    reset-math-version  = false
+  }
+  {\boldmath \unit{\kilogram}}\\
+  {\sansmath $\unit{\kilogram}$}\\
+  {$\mathsf{\unit{\kilogram}}$}
+\end{LaTeXdemo}
+
+\DescribeOption{text-family-to-math}
+\DescribeOption{text-series-to-math}
+The options \opt{text-family-to-math} and \opt{text-series-to-math} can be
+used to match (as far as possible) math mode output to the surrounding text.
+These options work by detecting the current text settings and making the
+appropriate choice in math mode.
+\begin{LaTeXdemo}
+  {\sffamily \unit{\kilogram}}\\
+  {\bfseries $\unit{\kilogram}$}\\
+  \sisetup{
+    text-family-to-math = true  ,
+    text-series-to-math = true
+  }
+  {\sffamily \unit{\kilogram}}\\
+  {\bfseries $\unit{\kilogram}$}
+\end{LaTeXdemo}
+
+\DescribeOption{text-font-command}
+In some circumstances, it may be desirable to use a non-standard font command
+when printing in text mode. This might be used for example to switch from
+old-style to lining numbers whilst still using text mode. This may be achieved
+by setting \opt{text-font-command}. For example, this document uses old-style
+numbers in text mode as-standard, which can be over-ridden by selecting the
+font variant which does not feature them.
+\begin{LaTeXdemo}
+  \sisetup{number-mode = text}
+  \qty{123456789}{\kilo\volt\per\centi\metre} \\
+  \sisetup{text-font-command = \fontfamily{pplx}\selectfont}
+  \qty{123456789}{\kilo\volt\per\centi\metre}
+\end{LaTeXdemo}
+
+\DescribeOption{text-subscript-command}
+\DescribeOption{text-superscript-command}
+In most cases, the commands \cs{textsubscript} and \cs{textsuperscript} are
+appropriagte for creating sub- and superscript material in text mode. However,
+when the \pkg{realscripts} package is loaded, it is possible that the output is
+not as desired. These two commands are therefore available to allow tuning of
+the results. They can also be used for non-standard effects, for example as
+here adding color to subscripts.
+\begin{LaTeXdemo}
+  \sisetup{unit-mode = text}
+  \unit{\kg\of{polymer}} \\
+  \newcommand*\mysubscript[1]{%
+    \textsubscript{\textcolor{blue}{#1}}%
+  }
+  \sisetup{text-subscript-command = \mysubscript}
+  \unit{\kg\of{polymer}}
+\end{LaTeXdemo}
+
+\DescribeOption{color}
+\DescribeOption{number-color}
+\DescribeOption{unit-color}
+The color of printed output can be set using the \opt{color} option. When no
+color is given, printing follows the surrounding text. In contrast, when a
+specific color is given, it is used irrespective of the surroundings. As with
+\opt{mode}, the \opt{color} setting may also be applied to numbers and units
+independently.
+\begin{LaTeXdemo}
+  \color{red}%
+  Some text \\
+  \qty{4}{\kilogram} \\
+  More text \\
+  \qty[color = blue]{4}{\kilogram} \\
+  Still red here!
+\end{LaTeXdemo}
+
+\subsection{Parsing numbers}
+
+The package uses a sophisticated parsing system to understand numbers. This
+allows \pkg{siunitx} to carry out a range of formatting, as described later.
+All of the input options take lists of literal tokens, and are summarised in
+Table~\ref{tab:opt:num:in}.
+\begin{table}
+  \caption{Options for number parsing.%
+    \label{tab:opt:num:in}}
+  \begin{tabular}{@{}>{\ttfamily}ll>{\ttfamily}l@{}}
+    \toprule
+      \multicolumn{1}{@{}l}{Option name} &
+      Type &
+      \multicolumn{1}{l@{}}{Default} \\
+    \midrule
+      evaluate-expression            & Switch  & false            \\
+      expression                     & Literal & |#1|             \\^^A (
+      input-close-uncertainty        & Literal & )                \\
+      input-comparators              & Literal &
+        <=>\cs{approx}\cs{ge}\cs{geq} \\
+        & & \cs{gg}\cs{le}\cs{leq}\cs{ll} \cs{sim} \\
+      input-decimal-markers          & Literal & .,               \\
+      input-digits                   & Literal & 0123456789       \\
+      input-exponent-markers         & Literal & dDeE             \\
+      input-ignore                   & Literal & \meta{none}      \\
+      input-open-uncertainty         & Literal & (                \\ ^^A )
+      input-signs                    & Literal & +-\cs{pm}\cs{mp} \\
+      input-uncertainty-signs        & Literal & \cs{pm}          \\
+      parse-numbers                  & Switch  & true             \\
+      retain-explicit-decimal-marker & Switch  & false            \\
+      retain-explicit-plus           & Switch  & false            \\
+      retain-negative-zero           & Switch  & false            \\
+      retain-zero-uncertainty        & Switch  & false            \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\DescribeOption{input-digits}
+\DescribeOption{input-decimal-markers}
+\DescribeOption{input-signs}
+\DescribeOption{input-exponent-markers}
+The basic parts of a number are the digits, any sign and a separator between
+the integer and decimal parts. These are stored in the input options
+\opt{input-digits}, \opt{input-decimal-markers} and \opt{input-signs},
+respectively. More than one input decimal marker can be used: it will be
+converted by the package to the appropriate output marker. Numbers which
+include an exponent part also require a marker for the exponent: this again is
+taken from the range of tokens in the \opt{input-exponent-markers} option.
+
+\DescribeOption{input-ignore}
+Tokens given in the \opt{input-ignore} list are totally passed over by
+\pkg{siunitx}: they will be removed from the input with no further processing.
+
+\DescribeOption{input-comparators}
+In addition to signs, \pkg{siunitx} can recognise comparators, such as |<|. The
+package will automatically carry out conversions for |<<|, |>>|, |<=| and |>=|
+to |\ll|, |\gg|, |\le| and |\ge|, respectively.
+\begin{LaTeXdemo}
+  \num{< 10} \\
+  \qty{>> 5}{\metre} \\
+  \num{\le 0.12}
+\end{LaTeXdemo}
+
+\DescribeOption{input-open-uncertainty}
+\DescribeOption{input-close-uncertainty}
+\DescribeOption{input-uncertainty-signs}
+In some fields, it is common to give the uncertainty in a number in brackets
+after the main part of the number, for example \enquote{\num{1.234(5)}}. The
+opening and closing symbols used for this type of input are set as
+\opt{input-open-uncertainty} and \opt{input-close-uncertainty}. Alternatively,
+the uncertainty may be given as a separate part following a sign. Which signs
+are valid for this operation is determined by the \opt{input-uncertainty-signs}
+option. As with other signs, the combination |+-| will automatically be
+converted to |\pm| internally.
+\begin{LaTeXdemo}
+  \num{9.99(9)}       \\
+  \num{9.99 +- 0.09}  \\
+  \num{9.99 \pm 0.09} \\
+  \num{123 +- 4.5}    \\
+  \num{12.3 +- 6}
+\end{LaTeXdemo}
+
+Uncertainties which cross the decimal marker may be given with or without a
+decimal marker in \enquote{compact} form. These are treated as equivalent by
+the code.\footnote{The package author favors the form without a decimal marker,
+and formal guidance is ambiguous on which is correct. The form with a decimal
+marker is seen in for example some \acro{NIST} publications.}
+\begin{LaTeXdemo}
+  \num{123.4(12)} \\
+  \num{123.4(1.2)}
+\end{LaTeXdemo}
+Multiple uncertainties may also be given: these must all either be in the short
+or the long form.
+\begin{LaTeXdemo}
+  \num{123.4(12)(45)} \\
+  \num{123.4 \pm 1.2 \pm 4.5}
+\end{LaTeXdemo}
+
+\DescribeOption{parse-numbers}
+The \opt{parse-numbers} option turns the entire parsing system on and off. The
+option is made available for two reasons. First, if all of the numbers in a
+document are to be reproduced \enquote{as given}, turning off the parser will
+represent a significant saving in processing required. Second, it allows the
+use of arbitrary \TeX{} code in numbers. If the parser is turned off, the input
+will be printed in math mode (requiring |\text| to protect any text in the
+number).
+\begin{LaTeXdemo}
+  \num[parse-numbers = false]{\sqrt{2}}        \\
+  \qty[parse-numbers = false]{\sqrt{3}}{\metre}
+\end{LaTeXdemo}
+
+\DescribeOption{evaluate-expression}
+\DescribeOption{expression}
+With the standard settings, numerical input is parsed \enquote{as is} with no
+attempt to interpret it mathematically. By enabling the
+\opt{evaluate-expression} option, the input can be processed by the standard
+\LaTeX3 \acro{FPU} (see package \pkg{xfp} for more). The nature of the
+expression itself can be adjusted using the \opt{expression} setting: as
+standard, the entire input is simply parsed with no change, but this setting
+may be used to add additional steps. The \emph{input} in such an expression is
+represented by |#1|. Note that the \acro{FPU} uses its own syntax for numbers,
+most notably in that a decimal marker must be |.|.
+\begin{LaTeXdemo}
+  \sisetup{evaluate-expression}%
+  \qty{2 + 4 * 3}{\joule} \\
+  \qty[expression = 10 * (#1)]{2 + 4 * 3}{\joule}
+\end{LaTeXdemo}
+
+\DescribeOption{retain-explicit-decimal-marker}
+\DescribeOption{retain-explicit-plus}
+\DescribeOption{retain-negative-zero}
+\DescribeOption{retain-zero-uncertainty}
+In some areas, a trailing decimal marker with no decimal part present is used
+to show that zeros in the integer part are significant. This can be enabled
+using the \opt{retain-explicit-decimal-marker} option. The inclusion of a
+leading plus sign is usually unnecessary for positive numbers, and so they are
+not retained as-standard when parsing. The \opt{retain-explicit-plus} option is
+available to control this behaviour. Similarly, an uncertainty of zero is
+normally not meaningful, and so is ignored by the parser. This can be
+controlled using the \opt{retain-zero-uncertainty} option. Finally, a negative
+sign for an entirely zero value may or may not have significance: this is
+controlled by the \opt{retain-negative-zero} option.
+\begin{LaTeXdemo}
+  \num{10.} \\
+  \num[retain-explicit-decimal-marker]{10.} \\
+  \num{+345} \\
+  \num[retain-explicit-plus]{+345} \\
+  \num{-0} \\
+  \num[retain-negative-zero]{-0} \\
+  \num{12.3(0)} \\
+  \num[retain-zero-uncertainty]{12.3(0)}
+\end{LaTeXdemo}
+
+\subsection{Post-processing numbers}
+
+Before typesetting numbers, various post-processing steps can be carried out.
+These involve adding or removing information from the number in a systematic
+way; the options are summarised in Table~\ref{tab:opt:num:post}.
+\begin{table}
+  \caption{Number post-processing options.%
+    \label{tab:opt:num:post}}
+  \begin{tabular}{@{}>{\ttfamily}ll>{\ttfamily}l@{}}
+    \toprule
+      \multicolumn{1}{@{}l}{Option name} &
+      Type &
+      \multicolumn{1}{l@{}}{Default} \\
+    \midrule
+      drop-exponent          & Switch  & false       \\
+      drop-uncertainty       & Switch  & false       \\
+      drop-zero-decimal      & Switch  & false       \\
+      exponent-mode          & Switch  & input       \\
+      fixed-exponent         & Integer & 0           \\
+      minimum-integer-digits & Integer & 0           \\
+      minimum-decimal-digits & Integer & 0           \\
+      round-half             & Choice  & up          \\
+      round-minimum          & Literal & 0           \\
+      round-mode             & Choice  & none        \\
+      round-pad              & Switch  & true        \\
+      round-precision        & Integer & 2           \\
+      round-zero-positive    & Switch  & true        \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\DescribeOption{exponent-mode}
+\DescribeOption{fixed-exponent}
+Numbers can be converted to scientific notation by the package. This is
+controlled by the \opt{exponent-mode} option, which takes choices \opt{input},
+\opt{fixed}, \opt{engineering} and \opt{scientific}. The \opt{fixed} setting
+will use the exponent value by the \opt{fixed-exponent} option. When
+\opt{engineering} is set, the exponent is always a power of three.
+\begin{LaTeXdemo}
+  \num{0.001}  \\
+  \num{0.0100} \\
+  \num{1200}   \\
+  \sisetup{exponent-mode = scientific}%
+  \num{0.001}  \\
+  \num{0.0100} \\
+  \num{1200}   \\
+  \sisetup{exponent-mode = engineering}%
+  \num{0.001}  \\
+  \num{0.0100} \\
+  \num{1200}   \\
+  \sisetup{
+    exponent-mode  = fixed,
+    fixed-exponent = 2,
+  }%
+  \num{0.001}  \\
+  \num{0.0100} \\
+  \num{1200}
+\end{LaTeXdemo}
+When used with a \opt{fixed-exponent} of zero, this may be used to remove
+scientific notation from the input
+\begin{LaTeXdemo}
+  \num{1.23e4} \\
+  \num[exponent-mode = fixed, fixed-exponent = 0]{1.23e4}
+\end{LaTeXdemo}
+Exponent mode applies \emph{after} rounding, such that the number of decimal
+places for rounding is those which appear in the output.
+
+\DescribeOption{drop-exponent}
+\DescribeOption{drop-uncertainty}
+The use of an uncertainty can be suppressed entirely using the
+\opt{drop-uncertainty} option: this applies \emph{before} rounding is
+attempted. Similarly, exponents can be dropped using \opt{drop-exponent} can be
+used to suppress the exponent part (\emph{after} conversion to a fixed
+exponent).
+\begin{LaTeXdemo}
+  \num{0.01(2)} \\
+  \num[drop-uncertainty]{0.01(2)} \\
+   \num{0.01e3} \\
+  \num[drop-exponent]{0.01e3}
+\end{LaTeXdemo}
+
+\DescribeOption{round-mode}
+\DescribeOption{round-precision}
+\DescribeOption{round-pad}
+The package can round numerical input to a fixed number of significant figures
+or decimal places. This is controlled by the \opt{round-mode} option, which
+takes the choices \opt{none}, \opt{figures}, \opt{places} and
+\opt{uncertainty}. When rounding is turned on, the number of digits used
+(either decimal places or significant figures in the mantissa) is set using the
+\opt{round-precision} option. Rounding numbers with uncertainties may be
+carried out using the \opt{uncertainty} setting to \opt{round-mode}. In this
+case the precision is used first to round the uncertainty itself (to a number
+of figures), before rounding the main value to follow.
+\begin{LaTeXdemo}
+  \num{1.23456}     \\
+  \num{14.23}      \\
+  \num{0.12345(9)} \\
+  \sisetup{
+    round-mode      = places,
+    round-precision = 3
+  }%
+  \num{1.23456}     \\
+  \num{14.23}      \\
+  \num{0.12345(9)} \\
+  \sisetup{
+    round-mode      = figures,
+    round-precision = 3
+  }%
+  \num{1.23456}     \\
+  \num{14.23}      \\
+  \num{0.12345(9)} \\
+  \sisetup{
+    round-mode      = uncertainty,
+    round-precision = 1
+  }%
+  \num{0.12345(9)}   \\
+  \num{0.12345(23)}  \\
+  \num{0.12345(234)}
+\end{LaTeXdemo}
+Rounding may \enquote{extend} a short number to more digits (or figures): this
+is controlled by the switch \opt{round-pad}, which is \opt{true} as standard.
+\begin{LaTeXdemo}
+  \sisetup{round-mode = figures, round-precision = 4}%
+  \num{12.3} \\
+  \num[round-pad = false]{12.3}
+\end{LaTeXdemo}
+
+\DescribeOption{round-half}
+In cases where the rounded part of a number is exactly half, there are two
+common methods for \enquote{breaking the tie}. The choice of method is
+determined by the option \opt{round-half}, which recognises the choices
+\opt{up} and \opt{even}.
+\begin{LaTeXdemo}
+  \sisetup{
+    round-mode      = figures,
+    round-precision = 1,
+    round-half      = up
+  }%
+  \num{0.055} \\
+  \num{0.045} \\
+  \sisetup{round-half = even}%
+  \num{0.055} \\
+  \num{0.045}
+\end{LaTeXdemo}
+
+\DescribeOption{round-minimum}
+There are cases in which rounding will result in the number reaching zero. It
+may be desirable to show such results as below a threshold value. This can be
+achieved by setting \opt{round-minimum} to the threshold value. There will be
+no effect when rounding to a number of significant figures as it is not
+possible to obtain the value zero in these cases.
+\begin{LaTeXdemo}
+  \sisetup{round-mode = places}%
+  \num{0.0055} \\
+  \num{0.0045} \\
+  \sisetup{round-minimum = 0.01}%
+  \num{0.0055} \\
+  \num{0.0045}
+\end{LaTeXdemo}
+
+\DescribeOption{round-zero-positive}
+When rounding negative numbers to a fixed number of places, a zero value may
+result. Usually this is expressed as an unsigned value, but in some cases
+retaining the negative sign may be desirable. This behaviour can be controlled
+using the \opt{round-zero-positive} switch.
+\begin{LaTeXdemo}
+  \sisetup{round-mode = places}%
+  \num{-0.001} \\
+  \sisetup{round-zero-positive = false}%
+  \num{-0.001}
+\end{LaTeXdemo}
+
+\DescribeOption{drop-zero-decimal}
+It may be desirable to convert decimals to integers when the decimal part is
+zero. This is set up using the \opt{drop-zero-decimal} option, which applies
+after rounding but before setting minimum numbers of digits.
+\begin{LaTeXdemo}
+  \num{2.0} \\
+  \num{2.1} \\
+  \sisetup{drop-zero-decimal}%
+  \num{2.0} \\
+  \num{2.1}
+\end{LaTeXdemo}
+
+\DescribeOption{minimum-decimal-digits}
+\DescribeOption{minimum-integer-digits}
+The \opt{minimum-decimal-digits} and \opt{minimum-integer-digits} option may be
+used to pad numbers to a given size. This applies independent of any rounding.
+\begin{LaTeXdemo}
+  \num{123} \\
+  \num[minimum-integer-digits = 2]{123} \\
+  \num[minimum-integer-digits = 4]{123} \\
+  \num{0.123} \\
+  \num[minimum-decimal-digits = 2]{0.123} \\
+  \num[minimum-decimal-digits = 4]{0.123} \\
+\end{LaTeXdemo}
+
+\subsection{Printing numbers}
+
+Actually printing numbers is controlled by a number of settings, which apply
+ideas such as differing decimal markers, digit grouping and so on. All of these
+options are concerned with the appearance of output, rather than the data it
+conveys. The options are summarised in Table~\ref{tab:opt:num:out}.
+\begin{table}
+  \caption{Output options for numbers.%
+    \label{tab:opt:num:out}}
+  \begin{tabular}{@{}>{\ttfamily}ll>{\ttfamily}l@{}}
+    \toprule
+      \multicolumn{1}{l}{Option name} &
+      Type &
+      \multicolumn{1}{l}{Default} \\
+    \midrule
+      bracket-negative-numbers         & Switch  & false             \\
+      digit-group-size                 & Integer & 3                 \\
+      digit-group-first-size           & Integer & 3                 \\
+      digit-group-other-size           & Integer & 3                 \\
+      exponent-base                    & Literal & 10                \\
+      exponent-product                 & Math    & \verb=\times=     \\
+      group-digits                     & Choice  & all               \\
+      group-minimum-digits             & Integer & 5                 \\
+      group-separator                  & Literal & \cs{,}            \\
+      negative-color                   & Literal & \meta{none}       \\ ^^A (
+      output-close-uncertainty         & Literal & )                 \\
+      output-decimal-marker            & Literal & .                 \\
+      output-exponent-marker           & Literal & \meta{none}       \\
+      output-open-uncertainty          & Literal & (                 \\ ^^A )
+      print-implicit-plus              & Switch  & false             \\
+      print-unity-mantissa             & Switch  & true              \\
+      print-zero-exponent              & Switch  & false             \\
+      print-zero-integer               & Switch  & true              \\
+      tight-spacing                    & Switch  & false             \\
+      uncertainty-descriptor-mode      & Choice  & bracket-separator \\
+      uncertainty-descriptor-separator & Literal & \cs{ }            \\
+      uncertainty-descriptors          & Literal & \meta{none}       \\
+      uncertainty-mode                 & Choice  & compact           \\
+      uncertainty-separator            & Literal & \meta{none}       \\
+      zero-decimal-as-symbol           & Switch  & false             \\
+      zero-symbol                      & Literal & \verb=\mbox{---}= \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\DescribeOption{group-digits}
+\DescribeOption{group-separator}
+Grouping digits into blocks of three is a common method to increase the ease of
+reading of numbers. The \opt{group-digits} choice controls whether this
+behaviour applies, and takes the values \opt{all}, \opt{none}, \opt{decimal}
+and \opt{integer}. Grouping can be activated separately for the integer and
+decimal parts of a number using the appropriately-named values.
+\begin{LaTeXdemo}
+  \num{12345.67890} \\
+  \num[group-digits = none]{12345.67890}   \\
+  \num[group-digits = decimal]{12345.67890} \\
+  \num[group-digits = integer]{12345.67890}
+\end{LaTeXdemo}
+The separator used between groups of digits is stored by the
+\opt{group-separator} option. This takes literal input and may be used in math
+mode: for a text-mode full space use \verb*|\ |.
+\begin{LaTeXdemo}
+  \num{12345} \\
+  \num[group-separator = {,}]{12345} \\
+  \num[group-separator = \ ]{12345}
+\end{LaTeXdemo}
+
+\DescribeOption{group-minimum-digits}
+Grouping is not always applied to smaller numbers; this can be controlled using
+the option \opt{group-minimum-digits}, which specifies how many digits must be
+present before grouping is applied. The number of digits is considered
+separately for the integer and decimal parts of the number: grouping does not
+\enquote{cross the boundary}.
+\begin{LaTeXdemo}
+  \num{1234} \\
+  \num{12345} \\
+  \num[group-minimum-digits = 5]{1234} \\
+  \num[group-minimum-digits = 5]{12345} \\
+  \num{1234.5678} \\
+  \num{12345.67890} \\
+  \num[group-minimum-digits = 5]{1234.5678} \\
+  \num[group-minimum-digits = 5]{12345.67890}
+\end{LaTeXdemo}
+
+\DescribeOption{digit-group-size}
+\DescribeOption{digit-group-first-size}
+\DescribeOption{digit-group-other-size}
+The number of digits in each group can be controlled by the setting
+\opt{digit-group-size}, which has standard value $3$. Finer control can be
+achieved using \opt{digit-group-first-size} and \opt{digit-group-other-size}:
+the first group is that immediately by the decimal point, the other value
+applies to the second and subsequent groupings. These can be used for
+example to achieve the grouping typically used in India (lakh).
+\begin{LaTeXdemo}
+  \num{1234567890} \\
+  \num[digit-group-size = 5]{1234567890} \\
+  \num[digit-group-other-size = 2]{1234567890}
+\end{LaTeXdemo}
+
+\DescribeOption{output-decimal-marker}
+The decimal marker used in output is set using the \opt{output-decimal-marker}
+option; this can differ from the input marker.
+\begin{LaTeXdemo}
+  \num{1.23} \\
+  \num[output-decimal-marker = {,}]{1.23} \\
+\end{LaTeXdemo}
+
+\DescribeOption{exponent-base}
+\DescribeOption{exponent-product}
+When exponents are present in the input, the \opt{exponent-base} and
+\opt{exponent-product} options set the obvious parts of the output.
+\begin{LaTeXdemo}
+  \num[exponent-product = \times]{1e2} \\
+  \num[exponent-product = \cdot]{1e2} \\
+  \num[exponent-base = 2]{1e2}
+\end{LaTeXdemo}
+\DescribeOption{output-exponent-marker}
+Alternatively, if the \opt{output-exponent-marker} option is set then the value
+stored will be used in place of the normal product and base combination.
+\begin{LaTeXdemo}
+  \num[output-exponent-marker = e]{1e2} \\
+  \num[output-exponent-marker = \mathrm{E}]{1e2}
+\end{LaTeXdemo}
+
+\DescribeOption{uncertainty-mode}
+\DescribeOption{output-open-uncertainty}
+\DescribeOption{output-close-uncertainty}
+\DescribeOption{uncertainty-separator}
+When input is given including a single uncertainty, it can be printed either
+with the uncertainty in brackets or as a separate number. This behaviour is
+controlled by the \opt{uncertainty-mode} choice. When this is set to
+\opt{separate}, the uncertainty is printed as an entirely separate number
+preceded by \cs{pm}. Other settings all place the uncertainty in brackets
+directly attached to the main value. The standard setting of \opt{compact}
+prints digits of uncertainty in the least-significant digits. It does
+\emph{not} print a decimal marker if the uncertainty crosses the decimal. The
+setting \opt{full} prints the full value of the uncertainty. Finally,
+\opt{compact-marker} is available to print in the \opt{compact} style except
+where the uncertainty crosses the decimal, in which case the \opt{full} style
+is used. When the uncertainty is given in brackets, a space may be added
+between the main number and the uncertainty: this is stored using the
+\opt{uncertainty-separator} option. The opening and closing brackets used are
+stored in \opt{output-open-uncertainty} and \opt{output-close-uncertainty},
+respectively. Tokens may be inserted before the opening bracket using
+\opt{uncertainty-separator}.
+\begin{LaTeXdemo}
+  \num{123.45(120)} \\
+  \num{0.035(14)}   \\
+  \sisetup{uncertainty-mode = full}
+  \num{123.45(120)} \\
+  \num{0.035(14)}   \\
+  \sisetup{uncertainty-mode = compact-marker}
+  \num{123.45(120)} \\
+  \num{0.035(14)}   \\
+  \sisetup{uncertainty-mode = separate}
+  \sisetup{
+    output-open-uncertainty  = [,
+    output-close-uncertainty = ],
+    uncertainty-separator    = \,
+  }%
+  \num{1.234(5)}
+\end{LaTeXdemo}
+
+\DescribeOption{uncertainty-descriptors}
+\DescribeOption{uncertainty-descriptor-mode}
+\DescribeOption{uncertainty-descriptor-separator}
+Multiple uncertainties can be given for a number. These are always printed in a
+separated form. When there is more than one uncertainty part, it may be useful
+to describe the nature of this value. This can be achieved using the
+\opt{uncertainty-descriptors} option, which take a comma-separated list of
+descriptions. The formatting of the descriptors can be adjusted using the
+settings \opt{uncertainty-descriptor-mode} and
+\opt{uncertainty-descriptor-separator}. The choices for the \opt{mode} are
+\opt{bracket}, \opt{bracket-separator}, \opt{separator} and \opt{subscript}.
+\begin{LaTeXdemo}
+  \num{1.2(3)(4)} \\
+  \sisetup{uncertainty-descriptors = {sys, stat}}
+  \num{1.2(3)(4)} \\
+  \num[uncertainty-descriptor-mode = subscript]{1.2(3)(4)}
+\end{LaTeXdemo}
+
+\DescribeOption{bracket-ambiguous-numbers}
+There are certain combinations of numerical input which can be ambiguous. This
+can be corrected by adding brackets in the appropriate place, and is controlled
+by the \opt{bracket-ambiguous-numbers} switch. This option only applies to pure
+numbers: when formatting quantities, the need for brackets also depends on the
+placement of units, so is controlled by \opt{separate-uncertainty-units}.
+\begin{LaTeXdemo}
+  \sisetup{separate-uncertainty}
+  \num{1.2(3)e4} \\
+  \num[bracket-ambiguous-numbers = false]{1.2(3)e4}
+\end{LaTeXdemo}
+
+\DescribeOption{negative-color}
+The package can detect negative mantissa values and alter print color
+accordingly. This is disabled by setting the option to an empty value.
+\begin{LaTeXdemo}
+  \num{-15673} \\
+  \num[negative-color = red]{-15673}
+\end{LaTeXdemo}
+
+\DescribeOption{bracket-negative-numbers}
+A common means to display negative numbers in financial situations is to place
+them in brackets. This can be carried out automatically using the
+\opt{bracket-negative-numbers} option.
+\begin{LaTeXdemo}
+  \num{-15673} \\
+  \num[bracket-negative-numbers]{-15673} \\
+  \qty{-10}{\metre} \\
+  \qty[bracket-negative-numbers]{-10}{\metre}
+\end{LaTeXdemo}
+
+\DescribeOption{tight-spacing}
+Under some circumstances is may be desirable to \enquote{squeeze} the output
+spacing. This is turned on using the \opt{tight-spacing} switch, which
+compresses spacing where possible.
+\begin{LaTeXdemo}
+  \num{2e3} \\
+  \num[tight-spacing = true]{2e3}
+\end{LaTeXdemo}
+
+\DescribeOption{print-implicit-plus}
+It may be useful to force all numbers to have a sign. This behaviour is
+controlled by the \opt{print-implicit-plus} option: this is used if given and
+if no sign was present in the input.
+\begin{LaTeXdemo}
+  \num{345} \\
+  \num[print-implicit-plus]{345}
+\end{LaTeXdemo}
+
+\DescribeOption{print-unity-mantissa}
+\DescribeOption{print-zero-exponent}
+\DescribeOption{print-zero-integer}
+Printing of a mantissa of $1$, an exponent of $0$ and an integer component of
+$0$ is controllable by the options \opt{print-unity-mantissa},
+\opt{print-zero-exponent} and \opt{print-zero-integer}. The standard settings
+print a mantissa of $1$ and an integer part of $0$, but omit an exponent of
+$0$. Notice that where both \opt{print-unity-mantissa} and
+\opt{print-zero-exponent} are set to \opt{false}, the value $1$ will still be
+printed (\foreign{i.e.}~\opt{print-zero-exponent} has a higher priority).
+\begin{LaTeXdemo}
+  \num{1e4} \\
+  \num[print-unity-mantissa = false]{1e4} \\
+  \num{444e0} \\
+  \num[print-zero-exponent = true]{444e0} \\
+  \num{0.123} \\
+  \num[print-zero-integer = false]{0.123}
+\end{LaTeXdemo}
+
+\DescribeOption{zero-decimal-as-symbol}
+\DescribeOption{zero-symbol}
+In some areas, particularly financial, entirely zero decimal parts are
+replaced by a dash. This is supported by option \opt{zero-decimal-as-symbol},
+which then uses the material stored using \opt{zero-symbol} as the replacement.
+\begin{LaTeXdemo}
+  \num{123.00} \\
+  \sisetup{zero-decimal-as-symbol}
+  \num{123.00} \\
+  \num[zero-symbol = \text{[{---}]}]{123.00}
+\end{LaTeXdemo}
+
+\subsection{Lists, products and ranges}
+
+Lists, products and ranges of numbers and quantities have a small number of
+specialised options, which apply to these more unusual input forms
+(Table~\ref{tab:opt:num:list}).
+\begin{table}
+  \begin{threeparttable}
+    \caption{Output options for lists, products and ranges of numbers and
+      quantities.%
+      \label{tab:opt:num:list}}
+    \begin{tabular}{@{}>{\ttfamily}ll>{\ttfamily}l@{}}
+      \toprule
+        \multicolumn{1}{l}{Option name} &
+        Type &
+        \multicolumn{1}{l}{Default\tnote{*}} \\
+      \midrule
+        list-exponents       & Choice  & individual           \\
+        list-final-separator & Literal & \verb*= \text{and} = \\
+        list-pair-separator  & Literal & \verb*= \text{and} = \\
+        list-separator       & Literal & \verb*=\text{,} =    \\
+        list-units           & Choice  & repeat               \\
+        product-exponents    & Choice  & individual           \\
+        product-mode         & Choice  & symbol               \\
+        product-phrase       & Literal & \verb*= \text{by} =  \\
+        product-symbol       & Literal & \cs{times}           \\
+        product-units        & Choice  & repeat               \\
+        range-exponents      & Choice  & individual           \\
+        range-phrase         & Literal & \verb*= \text{to} =  \\
+        range-units          & Choice  & repeat               \\
+      \bottomrule
+    \end{tabular}
+    \footnotesize
+    \begin{tablenotes}
+      \item[*] The default values are actually more complex for two
+        reasons: allowing spaces to work in both math and text modes,
+        and localization of strings.
+    \end{tablenotes}
+  \end{threeparttable}
+\end{table}
+
+\DescribeOption{list-final-separator}
+\DescribeOption{list-pair-separator}
+\DescribeOption{list-separator}
+Lists of numbers are printed with a separator between each item, which is
+stored using the \opt{list-separator} option. The separator before the last
+item of a list may be different, and is therefore set using the
+\opt{list-final-separator} option. The separator used for exactly two items is
+set using the \opt{list-pair-separator} option. Any spaces needed should be
+included in the option settings: none are added within the code. The separators
+are always printed in text mode.
+\begin{LaTeXdemo}
+  \numlist{0.1;0.2;0.3}                              \\
+  \numlist[list-separator = {; }]{0.1;0.2;0.3}       \\
+  \numlist[list-final-separator = {, }]{0.1;0.2;0.3} \\
+  \numlist[
+    list-separator       = { and },
+    list-final-separator = { and finally }
+  ]{0.1;0.2;0.3} \\
+  \numlist{0.1;0.2} \\
+  \numlist[list-pair-separator = {, and }]{0.1;0.2}
+\end{LaTeXdemo}
+
+\DescribeOption{product-mode}
+\DescribeOption{product-phrase}
+\DescribeOption{product-symbol}
+Products of numbers can be output using either a product symbol or phrase:
+this is controlled by the \opt{product-mode} setting. When \opt{symbol} is
+set, the appropriate symbol is stored in \opt{product-symbol}. When using
+\opt{phrase-mode}, the information is stored in \opt{product-phrase}. Phrases
+are always printed in text mode; symbols are printed using the same routine
+as for numbers.
+\begin{LaTeXdemo}
+  \numproduct{5 x 100 x 2} \\
+  \numproduct[product-symbol = \ensuremath{\cdot}]{5 x 100 x 2} \\
+  \sisetup{product-mode = phrase}%
+  \numproduct{5 x 100 x 2}\\
+  \numproduct[product-phrase = { BY }]{5 x 100 x 2} \\
+\end{LaTeXdemo}
+
+\DescribeOption{range-phrase}
+Ranges of numbers can be given as input. These will have an appropriate word or
+symbol inserted between the two entries: this is stored using the
+\opt{range-phrase} option. The phrase should include any necessary spaces: no
+extra space is added. The phrase is always printed in text mode.
+\begin{LaTeXdemo}
+  \numrange{5}{100} \\
+  \numrange[range-phrase = --]{5}{100}
+\end{LaTeXdemo}
+
+\DescribeOption{list-exponents}
+\DescribeOption{product-exponents}
+\DescribeOption{range-exponents}
+Lists, products and ranges can be \enquote{compressed} by combining the
+exponent parts. This is controlled by the options \opt{list-exponents},
+\opt{product-exponents} and \opt{range-exponents}, all of which take the
+choices \opt{individual}, \opt{combine-bracket} and \opt{combine}. The standard
+setting, \opt{individual}, leaves the exponent with the matching value. Both
+\opt{combine} and \opt{combine-bracket} take the exponent of the first entry
+and apply to to all other entries, with the exponent itself places at the end.
+\begin{LaTeXdemo}
+  \numlist{5e3;7e3;9e3;1e4} \\
+  \numproduct{5e3 x 7e3 x 9e3 x 1e4} \\
+  \numrange{5e3}{7e3} \\
+  \sisetup
+    {
+      list-exponents    = combine-bracket ,
+      product-exponents = combine-bracket ,
+      range-exponents   = combine-bracket
+    }
+  \numlist{5e3;7e3;9e3;1e4} \\
+  \numproduct{5e3 x 7e3 x 9e3 x 1e4} \\
+  \numrange{5e3}{7e3} \\
+  \sisetup
+    {
+      list-exponents    = combine ,
+      product-exponents = combine ,
+      range-exponents   = combine
+    }
+  \numlist{5e3;7e3;9e3;1e4} \\
+  \numproduct{5e3 x 7e3 x 9e3 x 1e4} \\
+  \numrange{5e3}{7e3}
+\end{LaTeXdemo}
+
+\DescribeOption{list-units}
+\DescribeOption{product-units}
+\DescribeOption{range-units}
+The \opt{list-units}, \opt{product-units} and \opt{range-units} options
+determine how \cs{qtylist}, \cs{qtyproduct} and \cs{qtyrange} command print
+units, respectively. The standard setting for these is \opt{repeat}, where each
+number will be printed with a unit. Alternatives are \opt{bracket} and
+\opt{single}. If set to \opt{single}, this will override collection of
+exponents.
+\begin{LaTeXdemo}
+  \qtylist{2;4;6;8}{\tesla} \\
+  \qtylist[list-units = bracket]{2;4;6;8}{\tesla} \\
+  \qtylist[list-units = repeat]{2;4;6;8}{\tesla} \\
+  \qtylist[list-units = single]{2;4;6;8}{\tesla} \\
+  \qtyrange{2}{4}{\degreeCelsius} \\
+  \qtyrange[range-units = bracket]{2}{4}{\degreeCelsius} \\
+  \qtyrange[range-units = repeat]{2}{4}{\degreeCelsius} \\
+  \qtyrange[range-units = single]{2}{4}{\degreeCelsius}
+\end{LaTeXdemo}
+The option \opt{product-units} also offers the settings \opt{bracket-power} and
+\opt{power}.
+\begin{LaTeXdemo}
+  \qtyproduct{2 x 4}{\metre} \\
+  \qtyproduct[product-units = bracket-power]{2 x 4}{\metre} \\
+  \qtyproduct[product-units = power]{2 x 4}{\metre}
+\end{LaTeXdemo}
+
+\subsection{Complex numbers}
+
+A small number of options apply specifically to the handling of complex
+numbers; these are summarised in Table~\ref{tab:opt:num:complex}.
+\begin{table}
+  \caption{Options for complex numbers.%
+    \label{tab:opt:num:complex}}
+  \begin{tabular}{@{}>{\ttfamily}ll>{\ttfamily}l@{}}
+    \toprule
+      \multicolumn{1}{@{}l}{Option name} &
+      Type &
+      \multicolumn{1}{l@{}}{Default} \\
+    \midrule
+      complex-angle-unit    & Choice  & degrees           \\
+      complex-mode          & Choice  & input             \\
+      complex-root-position & Choice  & after-number      \\
+      complex-symbol-angle  & Literal & \cs{angle}        \\
+      complex-symbol-degree & Literal & \cs{degree}       \\
+      input-complex-root    & Literal & ij                \\
+      output-complex-root   & Literal & \verb=\mathrm{i}= \\
+      print-complex-unity   & Switch  & false             \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\DescribeOption{complex-mode}
+The format in which complex values are printed can be set using the
+\opt{complex-mode} option. With the standard setting (\opt{input}), the complex
+value is printed as-given. By setting the option to \opt{cartesian} or
+\opt{polar}, the output format can be set to an Cartesian or polar form.
+Conversion uses the \LaTeX3 floating-point unit, so is limited to $16$ decimal
+places. When converting from Cartesian to polar form, the complex root symbol
+must come at the \emph{end} of the imaginary part. It must also be specified
+using \texttt{i}.
+\begin{LaTeXdemo}
+  \complexnum{1 + i} \\
+  \complexnum{1:45}  \\
+  \complexnum[complex-mode = cartesian]{1 + i} \\
+  \complexnum[complex-mode = cartesian, round-mode = places]{1:45}  \\
+  \complexnum[complex-mode = polar]{1 + i} \\
+  \complexnum[complex-mode = polar]{1:45}
+\end{LaTeXdemo}
+
+\DescribeOption{input-complex-root}
+When using complex numbers in input, the complex root $(\mathrm{i} =
+\sqrt{-1}\,)$ is indicated by one of the tokens stored in
+\opt{input-complex-roots}. The parser understands complex root symbols given
+either before or after the associated number (but will detect any invalid
+arrangement):
+\begin{LaTeXdemo}
+  \complexnum{9.99 + 88.8i} \\
+  \complexnum{9.99 + i88.8}
+\end{LaTeXdemo}
+
+\DescribeOption{output-complex-root}
+The output complex root symbol is independent of the input and can be changed
+using the \opt{output-complex-root} setting.
+\begin{LaTeXdemo}
+  \complexnum[output-complex-root = i]{1+2i} \\
+  \complexnum[output-complex-root = j]{1+2i}
+\end{LaTeXdemo}
+
+\DescribeOption{complex-root-position}
+ The position of the complex root can be adjusted to place it
+ either before or after the associated numeral in a complex number
+ using the \opt{complex-root-position} option.
+\begin{LaTeXdemo}
+  \complexnum{67-0.9i} \\
+  \complexnum[complex-root-position = before-number]{67-0.9i} \\
+  \complexnum[complex-root-position = after-number]{67-0.9i}
+\end{LaTeXdemo}
+
+\DescribeOption{complex-angle-unit}
+\DescribeOption{complex-symbol-angle}
+\DescribeOption{complex-symbol-degree}
+When printing or converting to polar form, the angle may be interpreted in
+units set by \opt{complex-angle-unit}: one of \opt{degrees} or \opt{radians}.
+The symbol used to denote the angle, and that used for units of degrees,
+are controlled by the options \opt{complex-symbol-angle} and
+\opt{complex-symbol-degree}, respectively.
+\begin{LaTeXdemo}
+  \complexqty{1:1}{\ohm} \\
+  \complexqty[complex-angle-unit = radians]{1:1}{\ohm} \\
+  \complexqty[complex-symbol-angle = \mathrm{A}]{1:1}{\ohm} \\
+  \complexqty[complex-symbol-degree = d]{1:1}{\ohm}
+\end{LaTeXdemo}
+
+\DescribeOption{print-complex-unity}
+When the complex part of a number is exactly \num{1}, it is possible to either
+print or suppress the value. This is controlled by the switch
+\opt{print-complex-unity}.
+\begin{LaTeXdemo}
+  \complexqty{1i}{\ohm} \\
+  \complexqty[print-complex-unity]{1i}{\ohm}
+\end{LaTeXdemo}
+
+\subsection{Angles}
+
+Angle processing provided by the \cs{ang} function has a set of options which
+apply in addition to the general ones set up for number processing.
+\begin{table}
+  \caption{Angle options.%
+    \label{tab:opt:ang}}
+  \begin{tabular}{@{}>{\ttfamily}ll>{\ttfamily}l@{}}
+    \toprule
+      \multicolumn{1}{@{}l}{Option name} &
+      Type &
+      \multicolumn{1}{l@{}}{Default} \\
+    \midrule
+      angle-mode                & Choice  & input          \\
+      angle-symbol-degree       & Literal & \cs{degree}    \\
+      angle-symbol-minute       & Literal & \cs{arcminute} \\
+      angle-symbol-over-decimal & Switch  & false          \\
+      angle-symbol-second       & Literal & \cs{arcsecond} \\
+      angle-separator           & Literal & \meta{empty}   \\
+      fill-angle-degrees        & Switch  & false          \\
+      fill-angle-minutes        & Switch  & false          \\
+      fill-angle-seconds        & Switch  & false          \\
+      number-angle-product      & Literal & \meta{empty}   \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\DescribeOption{angle-mode}
+The format in which angles are printed can be set using the \opt{angle-mode}
+option. With the standard setting (\opt{input}), the angle is printed as-given.
+By setting the option to \opt{arc} or \opt{decimal}, the output format can
+be set to an arc (degrees/minutes/seconds) or decimal value. Conversion uses
+the \LaTeX3 floating-point unit, so is limited to $16$ decimal places.
+\begin{LaTeXdemo}
+  \ang{2.67} \\
+  \ang{2;3;4} \\
+  \ang[angle-mode = arc]{2.67} \\
+  \ang[angle-mode = arc]{2;3;4} \\
+  \ang[angle-mode = decimal]{2.67} \\
+  \ang[angle-mode = decimal]{2;3;4} \\
+\end{LaTeXdemo}
+
+\DescribeOption{number-angle-product}
+The separator between the number and angle symbol (degrees, minutes or seconds)
+can be set using the \opt{number-angle-product} option, independent of the
+related \opt{quantity-product} option used by the \cs{qty} command.
+\begin{LaTeXdemo}
+  \ang{2.67} \\
+  \ang[number-angle-product = \,]{2.67}
+\end{LaTeXdemo}
+
+\DescribeOption{angle-separator}
+When angles are printed in arc format, the separation of the different parts is
+set up using the \opt{arc-separator} option.
+\begin{LaTeXdemo}
+  \ang{6;7;6.5} \\
+  \ang[angle-separator = \,]{6;7;6.5}
+\end{LaTeXdemo}
+
+\DescribeOption{fill-angle-degrees}
+\DescribeOption{fill-angle-minutes}
+\DescribeOption{fill-angle-seconds}
+Zero-filling for the degree, minute or second parts of an arc is controlled
+using the \opt{fill-angle-degrees}, \opt{fill-angle-minutes} and
+\opt{fill-angle-seconds} options. All are off as standard.
+\begin{LaTeXdemo}
+  \ang{-1;;} \\
+  \ang{;-2;} \\
+  \ang{;;-3} \\
+  {
+    \sisetup{fill-angle-degrees}
+    \ang{-1;;} \\
+    \ang{;-2;} \\
+    \ang{;;-3} \\
+  }
+  {
+    \sisetup{fill-angle-minutes}
+    \ang{-1;;} \\
+    \ang{;-2;} \\
+    \ang{;;-3} \\
+  }
+  {
+    \sisetup{fill-angle-seconds}
+    \ang{-1;;} \\
+    \ang{;-2;} \\
+    \ang{;;-3}
+  }
+\end{LaTeXdemo}
+
+\DescribeOption{angle-symbol-degree}
+\DescribeOption{angle-symbol-minute}
+\DescribeOption{angle-symbol-second}
+With the standard settings, the symbols used for arc angles are the unit
+commands \cs{degree}, \cs{arcminute} and \cs{arcsecond}. These can be altered
+using \opt{angle-symbol-degree}, \opt{angle-symbol-minute} and
+\opt{angle-symbol-second}. This is most likely to be used when the definition
+of the unit macros is altered, for example to set \cs{arcsecond} as
+\texttt{as}.
+\begin{LaTeXdemo}
+  \ang{6;7;6.5} \\
+  \sisetup{
+    angle-symbol-degree = d ,
+    angle-symbol-minute = m ,
+    angle-symbol-second = s
+  }
+  \ang{6;7;6.5}
+\end{LaTeXdemo}
+
+\DescribeOption{angle-symbol-over-decimal}
+In some subject areas, most notably astronomy, the angle symbols are given over
+the decimal marker, rather than at the end of the number. This behaviour is
+available using the \opt{angle-symbol-over-decimal} option.
+\begin{LaTeXdemo}
+  \ang{45.697}  \\
+  \ang{6;7;6.5} \\
+  \ang[angle-symbol-over-decimal]{45.697} \\
+  \ang[angle-symbol-over-decimal]{6;7;6.5}
+\end{LaTeXdemo}
+
+\subsection{Creating units%
+  \label{sec:units:creating}}
+
+The various macro units are created at the start of the document. \pkg{siunitx}
+can define these such that they are only available for use within the \cs{unit}
+and \cs{qty} functions, or can make the unit macros available throughout the
+document body. There are a number of settings which control this creation
+process (Table~\ref{tab:opt:units:def}). As a result, these options all apply
+in the preamble only.
+\begin{table}
+  \caption{Unit creation options.%
+    \label{tab:opt:units:def}}
+  \begin{tabular}{@{}>{\ttfamily}ll>{\ttfamily}l@{}}
+    \toprule
+      \multicolumn{1}{@{}l}{Option name} &
+      Type &
+      \multicolumn{1}{l@{}}{Default} \\
+    \midrule
+      free-standing-units    & Switch & false \\
+      overwrite-command      & Switch & false \\
+      space-before-unit      & Switch & false \\
+      unit-optional-argument & Switch & false \\
+      use-xspace             & Switch & false \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\DescribeOption{free-standing-units}
+\DescribeOption{overwrite-functions}
+The \opt{free-standing-units} option controls whether the unit macros exist
+outside of the \cs{unit} and \cs{qty} arguments. When this option is
+\opt{true}, \pkg{siunitx} creates the macros for general use. The standard
+method to achieve this does not overwrite any existing macros: this behaviour
+can be altered using the \opt{overwrite-commands} switch.
+
+When using the approach of \enquote{free-standing} unit commands, only macros
+created using \cs{DeclareSIUnit} are defined generally. Thus prefixes and
+powers should be combined with the desired unit into a single free-standing
+command, for example
+\begin{LaTeXdemo}[code only]
+  \DeclareSIUnit\kilometre{\kilo\metre}
+\end{LaTeXdemo}
+
+\DescribeOption{space-before-unit}
+\DescribeOption{unit-optional-argument}
+\DescribeOption{use-xspace}
+When \enquote{free standing} unit macros are created, their behaviour can be
+adjusted by a number of options. These are mainly intended for emulating the
+input syntax of older packages. The option \opt{unit-optional-argument} gives
+the same behaviour for the inputs
+\begin{LaTeXdemo}[code only]
+  \qty{10}{\metre}
+\end{LaTeXdemo}
+and
+\begin{LaTeXdemo}[code only]
+  \metre[10].
+\end{LaTeXdemo}
+The \opt{space-before-unit} and \opt{use-xspace} options control the behaviour
+at the \enquote{ends} of the unit macros. Activating \opt{space-before-unit}
+inserts the number--unit space before the unit is printed. This is suitable for
+the input syntax
+\begin{LaTeXdemo}[code only]
+  30\metre
+\end{LaTeXdemo}
+but does mean that the unit macros are incorrectly spaced in running text. On
+the other hand, the \opt{use-xspace} option attempts to correctly space input
+such as
+\begin{LaTeXdemo}[code only]
+  \metre is the symbol for metres.
+\end{LaTeXdemo}
+
+\subsection{Using units}
+
+Part of the power of \pkg{siunitx} is the ability to alter the output format
+for units without changing the input. The behaviour of units is therefore
+controlled by a number of options which alter either the processing of units or
+the output directly (Table~\ref{tab:opt:units:out}).
+\begin{table}
+  \centering
+  \caption{Unit output options.%
+    \label{tab:opt:units:out}}
+  \begin{tabular}{@{}>{\ttfamily}ll>{\ttfamily}l@{}}
+    \toprule
+      \multicolumn{1}{@{}l}{Option name} &
+      Type &
+      \multicolumn{1}{l@{}}{Default} \\
+    \midrule
+      bracket-unit-denominator     & Switch  & true         \\
+      forbid-literal-units         & Switch  & false        \\
+      fraction-command             & Literal & \cs{frac}    \\
+      inter-unit-product           & Literal & \cs{,}       \\
+      parse-units                  & Switch  & true         \\
+      per-mode                     & Choice  & power        \\
+      per-symbol-script-correction & Literal & \cs{!}       \\
+      per-symbol                   & Literal & /            \\
+      power-half-as-sqrt           & Switch  & false        \\
+      qualifier-mode               & Choice  & subscript    \\
+      qualifier-phrase             & Literal & \meta{empty} \\
+      sticky-per                   & Switch  & false        \\
+      unit-font-command            & Literal & \cs{mathrm}  \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\DescribeOption{inter-unit-product}
+The separator between each unit is stored using the \opt{inter-unit-product}
+option. The standard setting is a thin space: another common choice is a
+centred dot. To get the correct spacing it is necessary to use
+|\ensuremath{{}\cdot{}}| in the latter case.
+\begin{LaTeXdemo}
+  \unit{\farad\squared\lumen\candela} \\
+  \unit[inter-unit-product = \ensuremath{{}\cdot{}}]
+    {\farad\squared\lumen\candela}
+\end{LaTeXdemo}
+
+\DescribeOption{per-mode}
+\DescribeOption{display-per-mode}
+\DescribeOption{inline-per-mode}
+\DescribeOption{per-symbol}
+\DescribeOption{fraction-command}
+\DescribeOption{bracket-unit-denominator}
+The handling of \cs{per} is altered using the \opt{per-mode} choice option. The
+standard setting is \opt{power}, meaning that \cs{per} generates reciprocal
+powers for units. Setting the option to \opt{fraction} uses the |\frac|
+function to typeset the positive and negative powers of a unit separately.
+The exact function can be adjusted using the \opt{fraction-command} option.
+\begin{LaTeXdemo}
+  \unit{\joule\per\mole\per\kelvin} \\
+  \unit{\metre\per\second\squared} \\
+  \unit[per-mode = fraction]{\joule\per\mole\per\kelvin} \\
+  \unit[per-mode = fraction]{\metre\per\second\squared}
+\end{LaTeXdemo}
+The closely-related \opt{power-positive-first} setting acts in the same way but
+places all of the positive powers before any negative ones.
+\begin{LaTeXdemo}
+  \unit{\ampere\per\mole\second} \\
+  \unit[per-mode = power-positive-first]
+    {\ampere\per\mole\second}
+\end{LaTeXdemo}
+It is possible to use a symbol (usually |/|) to separate the two parts of a
+unit by setting \opt{per-mode} to \opt{symbol}; the symbol used is stored using
+the setting \opt{per-symbol}. This method for displaying units can be
+ambiguous, and so brackets are added unless \opt{bracket-unit-denominator} is
+set to \opt{false}. Notice that \opt{bracket-unit-denominator} only applies
+when \opt{per-mode} is set to \opt{symbol}.
+\begin{LaTeXdemo}
+  \sisetup{per-mode = symbol}%
+  \unit{\joule\per\mole\per\kelvin} \\
+  \unit{\metre\per\second\squared} \\
+  \unit[per-symbol = \ \text{div}\ ]{\joule\per\mole\per\kelvin} \\
+  \unit[bracket-unit-denominator = false]{\joule\per\mole\per\kelvin}
+\end{LaTeXdemo}
+The often-requested (but mathematically invalid) \opt{repeated-symbol} option
+is also available to repeat the symbol for each \cs{per}.
+\begin{LaTeXdemo}
+  \unit[per-mode = repeated-symbol]{\joule\per\mole\per\kelvin}
+\end{LaTeXdemo}
+The use of a symbol can be restricted to the case where exactly one is
+required: the setting \opt{single-symbol}  will use a symbol if and only
+if there are one or more positive powers and exactly one negative power.
+In other cases, powers are used.
+\begin{LaTeXdemo}
+  \sisetup{per-mode = single-symbol}
+  \qty{10}{\per\metre} \\
+  \qty{20}{\metre\per\second} \\
+  \qty{30}{\joule\per\mole\per\kelvin}
+\end{LaTeXdemo}
+It is possible for the behaviour of the \cs{per} function to depend on the
+prevailing math style. Setting either \opt{display-per-mode} or
+\opt{inline-per-mode} independently can be used to achieve this. For example,
+the following example will will use the \opt{symbol} setting for in line math,
+and the \opt{fraction} setting when used in display math.
+\begin{LaTeXdemo}
+  \sisetup{
+    display-per-mode = fraction ,
+    inline-per-mode = symbol
+  }%
+  $ \unit{\joule\per\mole\per\kelvin} $
+  \[ \unit{\joule\per\mole\per\kelvin} \]
+     \unit{\joule\per\mole\per\kelvin} \\
+  $
+    \displaystyle
+    \unit{\joule\per\mole\per\kelvin}
+  $
+  \[
+    \textstyle
+    \unit{\joule\per\mole\per\kelvin}
+  \]
+\end{LaTeXdemo}
+
+\DescribeOption{per-symbol-script-correction}
+When using the \opt{symbol} setting for \opt{per-mode}, there may the need to
+adjust spacing between a superscript power and the symbol. This is provided as
+a command to be inserted between the two items: the standard value is a thin
+negative space, \cs{!}.
+\begin{LaTeXdemo}
+  \sisetup{per-mode = symbol}%
+  \unit{\cm\cubed\per\gram} \\
+  \unit[per-symbol-script-correction = ]{\cm\cubed\per\gram}
+\end{LaTeXdemo}
+
+\DescribeOption{sticky-per}
+By default, \cs{per} applies only to the next unit given.\footnote{This is the
+standard method of reading units in English: for example,
+\unit{\joule\per\mole\per\kelvin} is pronounced \enquote{joules per mole per
+kelvin}.} By setting the \opt{sticky-per} flag, this behaviour is changed so
+that \cs{per} applies to all subsequent units.
+\begin{LaTeXdemo}
+  \unit{\pascal\per\gray\henry} \\
+  \unit[sticky-per]{\pascal\per\gray\henry}
+\end{LaTeXdemo}
+
+\DescribeOption{qualifier-mode}
+\DescribeOption{qualifier-phrase}
+Unit qualifiers can be printed in three different formats, set by the
+\opt{qualifier-mode} option. The standard setting is \opt{subscript}, while the
+options \opt{bracket}, \opt{combine} and \opt{phrase} are also possible. With
+the last settings, powers can lead to ambiguity and are automatically detected
+and brackets added as appropriate.
+\begin{LaTeXdemo}
+  \unit{\kilogram\of{pol}\squared\per\mole\of{cat}\per\hour} \\
+  \unit[qualifier-mode = bracket]
+    {\kilogram\of{pol}\squared\per\mole\of{cat}\per\hour} \\
+  \unit[qualifier-mode = combine]
+    {\deci\bel\of{i}}
+\end{LaTeXdemo}
+The \opt{phrase} option is used with \opt{qualifier-phrase}, which allows for
+example a space or other linking text to be inserted.
+\begin{LaTeXdemo}
+  \sisetup{qualifier-mode = phrase, qualifier-phrase = \ }%
+  \unit{\kilogram\of{pol}\squared\per\mole\of{cat}\per\hour} \\
+  \sisetup{qualifier-phrase = \ \mbox{of}\ }%
+  \unit{\kilogram\of{pol}\squared\per\mole\of{cat}\per\hour}
+\end{LaTeXdemo}
+
+\DescribeOption{power-half-as-sqrt}
+In some cases, the power of $0.5$ is shown by giving the unit symbol as a
+square root. This can be enabled by setting \opt{power-half-as-sqrt} to
+\opt{true}
+\begin{LaTeXdemo}
+  \unit{\Hz\tothe{0.5}} \\
+  \unit[power-half-as-sqrt]{\Hz\tothe{0.5}}
+\end{LaTeXdemo}
+
+\DescribeOption{parse-units}
+Normally, \pkg{siunitx} is used with the unit parse enabled, and only prints
+units directly if there is literal input. However, if the input is known to be
+essentially consistent and high performance is desired, then the parser can be
+turned off using the \opt{parse-units} switch.
+\begin{LaTeXdemo}
+  \qty{300}{\MHz} \\
+  \qty[parse-units = false]{300}{\MHz}
+\end{LaTeXdemo}
+
+\DescribeOption{forbid-literal-units}
+Some users may prefer to completely disable the use of literal input in units,
+for example to enforce consistency. This can be accomplished by setting the
+\opt{forbid-literal-units} switch. With this option enabled, only macro-based
+units can be used in a document. This only applies when \opt{parse-units} is
+\opt{true}.
+
+\DescribeOption{unit-font-command}
+The command used to set unit themselves may be adjusted using the
+\opt{unit-font-command} option. This is typically set to |\mathrm|.
+\begin{LaTeXdemo}
+  \unit{\lumen} \\
+  \unit[unit-font-command = \mathit]{\lumen}
+\end{LaTeXdemo}
+
+\subsection{Quantities}
+
+Some options apply to quantities (the combination of a number and a unit),
+rather than to the numbers or units alone (Table~\ref{tab:opt:quantities}).
+\begin{table}
+  \centering
+  \caption{Options for quantities.%
+    \label{tab:opt:quantities}}
+  \begin{tabular}{@{}>{\ttfamily}ll>{\ttfamily}l@{}}
+    \toprule
+      \multicolumn{1}{@{}l}{Option name} &
+      Type &
+      \multicolumn{1}{@{}l}{Default} \\
+    \midrule
+      allow-quantity-breaks      & Switch  & false   \\
+      extract-mass-in-kilograms  & Switch  & true    \\
+      prefix-mode                & Choice  & input   \\
+      quantity-product           & Literal & \cs{,}  \\
+      separate-uncertainty-units & Choice  & bracket \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\DescribeOption{allow-quantity-breaks}
+Usually, the combination of a number and unit is regarded as a single
+mathematical entity which should not be split across lines. However, there are
+cases (very long units, narrow columns, \foreign{etc}.) where breaks may be
+needed. This can be turned on using the \opt{allow-quantity-breaks} option.
+\begin{LaTeXdemo}
+  \begin{minipage}{2.55cm}
+    % Gives an underfull hbox
+    Some filler text \qty{10}{\metre} \\
+    \sisetup{allow-quantity-breaks}
+    Some filler text \qty{10}{\metre}
+  \end{minipage}
+\end{LaTeXdemo}
+
+\DescribeOption{quantity-product}
+The product symbol between the number and unit is set using the
+\opt{quantity-product} option.
+\begin{LaTeXdemo}
+  \qty{2.67}{\farad} \\
+  \qty[quantity-product = \ ]{2.67}{\farad} \\
+  \qty[quantity-product = ]{2.67}{\farad}
+\end{LaTeXdemo}
+
+\DescribeOption{prefix-mode}
+\DescribeOption{extract-mass-in-kilograms}
+The unit prefixes (\cs{kilo}, \foreign{etc}.) are normally given as letters.
+However, the package can convert these into numerical powers. This is
+controlled by the \opt{prefix-mode} option, which takes the values \opt{input},
+\opt{combine-exponent} and \opt{extract-exponent}. The \opt{input} setting
+leaves the prefixes unchanged. Using \opt{combine-exponent} will add any
+exponent amount from the number to the first unit: this will modify any
+existing prefix. Finally, using \opt{extract-exponent} will remove all prefixes
+and express them as an exponent. The treatment of kilograms in this case can be
+set using \opt{extract-mass-in-kilograms}: when \opt{true}, the \emph{kilo}
+prefix is retained as part of the unit. This will mean that all grams are
+converted to kilograms.
+\begin{LaTeXdemo}
+  \qty{1e3}{\metre\second} \\
+  \qty[prefix-mode = combine-exponent]{1e3}{\metre\second} \\
+  \qty{10}{\kilo\gram\squared\deci\second} \\
+  \qty[prefix-mode = extract-exponent]{10}{\kilo\gram\squared\deci\second}\\
+  \qty[prefix-mode = extract-exponent]{7.5}{\gram} \\
+  \sisetup{extract-mass-in-kilograms = false}
+  \qty{10}{\kilo\gram\squared\deci\second} \\
+  \qty[prefix-mode = extract-exponent]{10}{\kilo\gram\squared\deci\second} \\
+  \qty[prefix-mode = extract-exponent]{7.5}{\gram} \\
+\end{LaTeXdemo}
+
+\DescribeOption{separate-uncertainty-units}
+When a number has multiple parts (such as a separate uncertainty) then the unit
+must apply to all parts of the number. How this is shown is controlled using
+the \opt{separate-uncertainty-units} options. The standard setting is
+\opt{brackets}, which will place the entire numerical part in brackets and use
+a single unit symbol. Alternative options are \opt{repeat} (print the unit for
+each part of the number) and \opt{single} (print only one unit symbol:
+mathematically incorrect).
+\begin{LaTeXdemo}
+  \sisetup{separate-uncertainty}
+  \qty{12.3(4)}{\kilo\gram} \\
+  \qty[separate-uncertainty-units = bracket]{12.3(4)}{\kilo\gram} \\
+  \qty[separate-uncertainty-units = repeat]{12.3(4)}{\kilo\gram}  \\
+  \qty[separate-uncertainty-units = single]{12.3(4)}{\kilo\gram}
+\end{LaTeXdemo}
+
+\subsection{Tabular material}
+
+Processing of material in tables obeys the same settings as described for the
+functions already described. However, there are some settings which apply only
+to the layout of tabular material (Table~\ref{tab:opt:tables}).
+\begin{table}
+  \caption{Options for tabular material.%
+    \label{tab:opt:tables}}
+  \begin{tabular}{@{}>{\ttfamily}ll>{\ttfamily}l@{}}
+    \toprule
+      \multicolumn{1}{@{}l}{Option name} &
+      Type &
+      \multicolumn{1}{l@{}}{Default} \\
+    \midrule
+      table-align-comparator    & Switch  & true   \\
+      table-align-exponent      & Switch  & true   \\
+      table-align-text-after    & Switch  & true   \\
+      table-align-text-before   & Switch  & true   \\
+      table-align-uncertainty   & Switch  & true   \\
+      table-alignment           & Meta    & center \\
+      table-alignment-mode      & Choice  & marker \\
+      table-auto-round          & Switch  & false  \\
+      table-column-width        & Length  & 0pt    \\
+      table-fixed-width         & Switch  & false  \\
+      table-format              & Special & 2.2    \\
+      table-number-alignment    & Choice  & center \\
+      table-text-alignment      & Choice  & center \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\DescribeOption{table-alignment-mode}
+The method used by \pkg{siunitx} to align numbers is selected using the
+\opt{table-alignment-mode} option, which may be one of \opt{marker},
+\opt{format} or \meta{none}. With the standard setting, \opt{marker}, the
+package centers the decimal marker in a tabular column, potentially leaving
+white space at the shorter end of a number. The \opt{format} mode uses
+information from the \opt{table-format} key to construct a model: this is then
+used to define the space available to a number. For asymmetrical numbers, this
+method is strongly preferable. Finally, \opt{none} disables alignment entirely:
+numbers are simply parsed.
+
+\DescribeOption{table-number-alignment}
+When \opt{table-alignment-mode} is set to \opt{format} or \opt{none}, the
+placement of the number \enquote{block} within the cell as a whole is set by
+the \opt{table-number-alignment} option, which may be one of \opt{left},
+\opt{center} or \opt{right}. (When \opt{table-alignment-mode} is set to
+\opt{marker}, the decimal marker is always centered in the cell.) The
+different alignment choices are illustrated in Table~\ref{tab:S:align}, which
+uses somewhat exaggerated column headings to show the relative position of the
+cell contents.
+\begin{LaTeXdemo}[code and float]
+  \begin{table}
+    \caption{Aligning the \texttt{S} column.%
+      \label{tab:S:align}}
+    \centering
+    \sisetup{table-format = 2.4, table-alignment-mode = format}
+    \begin{tabular}{@{}
+      S[table-alignment-mode = marker]
+      S[table-number-alignment = center]
+      S[table-number-alignment = left]
+      S[table-number-alignment = right]
+    @{}}
+    \toprule
+    {Some Values} & {Some Values} & {Some Values} & {Some Values} \\
+    \midrule
+       2.3456  &  2.3456  &  2.3456 &  2.3456 \\
+      34.2345  & 34.2345  & 34.2345 & 34.2345 \\
+      56.7835  & 56.7835  & 56.7835 & 56.7835 \\
+      90.473   & 90.473   & 90.473  & 90.473  \\
+    \bottomrule
+    \end{tabular}
+  \end{table}
+\end{LaTeXdemo}
+When the alignment mode is set to \opt{none}, number are simply collected and
+parsed without any further processing, as illustrated in
+Table~\ref{tab:S:parse}.
+\begin{LaTeXdemo}[code and float]
+  \begin{table}
+    \caption{Parsing without aligning in an \texttt{S} column.%
+      \label{tab:S:parse}}
+    \begin{tabular}
+      {@{}
+        S
+        S[table-alignment-mode = none]
+      @{}}
+      \toprule
+        {Decimal-centred} &
+        {Simple centring} \\
+      \midrule
+        12.345   & 12.345   \\
+        6,78     & 6,78     \\
+        -88.8(9) & -88.8(9) \\
+        4.5e3    & 4.5e3    \\
+      \bottomrule
+    \end{tabular}
+  \end{table}
+\end{LaTeXdemo}
+
+\DescribeOption{table-format}
+When the \opt{table-alignment-mode} is set to \opt{format}, \pkg{siunitx} uses
+the information set in \opt{table-format} to construct a \enquote{model} which
+defines the space to reserve for a number. The \opt{table-format} key is
+interpreted in much the same way as a table cell. The numerical part should
+consist of a number showing how many figures to reserve in each part of the
+input, plus any comparators, signs, \foreign{etc.} A variety of examples are
+given in Table~\ref{tab:S:format}.
+\begin{LaTeXdemo}[code and float]
+  \begin{table}
+    \caption{Reserving space in \texttt{S} columns.%
+      \label{tab:S:format}}
+    \sisetup{
+      table-alignment-mode   = format,
+      table-number-alignment = center,
+    }
+    \begin{tabular}{@{}
+      S[table-format = 2.2]
+      S[table-format = 2.2, table-number-alignment = right]
+      S[table-format = 2.2(1)]
+      S[table-format = 2.2(1), separate-uncertainty]
+      S[table-format = +2.2]
+      S[table-format = 2.2e1]
+     @{}}
+    \toprule
+        {Values}
+      & {Values}
+      & {Values}
+      & {Values}
+      & {Values}
+      & {Values} \\
+    \midrule
+       2.3  &  2.3  &  2.3(5)  &  2.3(5)  &   2.3  &  2.3e8  \\
+      34.23 & 34.23 & 34.23(4) & 34.23(4) &  34.23 & 34.23   \\
+      56.78 & 56.78 & 56.78(3) & 56.78(3) & -56.78 & 56.78e3 \\
+       3,76 &  3,76 &  3,76(2) &  3.76(2) & +-3.76 &      e6 \\
+    \bottomrule
+    \end{tabular}
+  \end{table}
+\end{LaTeXdemo}
+It is important to note that any parts of a number \emph{not} specified in the
+table format argument are set to be absent (the number of figures is set to
+zero). Setting the \opt{table-format} option also resets
+\opt{table-alignment-mode} to \opt{format}.
+
+Space for material before and after the \texttt{S} column can be reserved by
+giving model text as part of the \opt{table-format} key. This is then used to
+provide the necessary gap while maintaining alignment (Table~\ref{tab:S:ends}).
+\begin{LaTeXdemo}[code and float]
+  \begin{table}
+    \caption{Text before and after numbers.%
+      \label{tab:S:ends}}
+    \sisetup{table-format = {now }2.4{\textsuperscript{\emph{a}}}}
+    \begin{tabular}{@{}S@{}}
+    \toprule
+    {Values} \\
+    \midrule
+            2.3456  \\
+           34.2345  \textsuperscript{\emph{a}}\\
+           56.7835  \\
+      now~ 90.473   \\
+    \bottomrule
+    \end{tabular}
+  \end{table}
+\end{LaTeXdemo}
+
+\DescribeOption{table-align-exponent}
+\DescribeOption{table-align-uncertainty}
+When printing exponents in tables, there is a choice of aligning the exponent
+parts or having these close up to the mantissa. This is controlled by the
+\opt{table-align-exponent} option (Table~\ref{tab:align:exp}). Similarly,
+uncertainty parts which are printed separately from the mantissa can be aligned
+or closed up. This is set by the \opt{table-align-uncertainty} option
+(Table~\ref{tab:align:uncert}). Finally, the same approach is available for the
+comparator with the \opt{table-align-comparator} option
+(Table~\ref{tab:align:comp}).
+\begin{LaTeXdemo}[code and float]
+  \begin{table}
+    \caption{The \opt{table-align-exponent} option.%
+      \label{tab:align:exp}}
+    \sisetup{table-format = 1.3e2}
+    \begin{tabular}{@{}SS[table-align-exponent = false]@{}}
+      \toprule
+        {Header} & {Header} \\
+      \midrule
+        1.2e3    & 1.2e3    \\
+        1.234e56 & 1.234e56 \\
+      \bottomrule
+    \end{tabular}
+  \end{table}
+\end{LaTeXdemo}
+\begin{LaTeXdemo}[code and float]
+  \begin{table}
+    \caption{The \opt{table-align-uncertainty} option.%
+      \label{tab:align:uncert}}
+    \sisetup{
+      separate-uncertainty,
+      table-format = 1.3(1),
+    }
+    \begin{tabular}{@{}SS[table-align-uncertainty = false]@{}}
+      \toprule
+        {Header} & {Header} \\
+      \midrule
+        1.2(1)   & 1.2(3)    \\
+        1.234(5) & 1.234(5) \\
+      \bottomrule
+    \end{tabular}
+  \end{table}
+\end{LaTeXdemo}
+\begin{LaTeXdemo}[code and float]
+  \begin{table}
+    \caption{The \opt{table-align-comparator} option.%
+      \label{tab:align:comp}}
+    \sisetup{table-format = >2.2}
+    \begin{tabular}{@{}SS[table-align-comparator = false]@{}}
+      \toprule
+        {Header} & {Header} \\
+      \midrule
+        >  1.2  & >  1.2  \\
+        < 12.34 & < 12.34 \\
+      \bottomrule
+    \end{tabular}
+  \end{table}
+\end{LaTeXdemo}
+
+\DescribeOption{table-align-text-before}
+\DescribeOption{table-align-text-after}
+Note markers are often given in tables after the numerical content. It may be
+desirable for these to close up to the numbers. Whether this takes place is
+controlled by the \opt{table-align-text-before} and \opt{\ldots-after}
+ option (Table~\ref{tab:S:notes}).
+\begin{LaTeXdemo}[code and float]
+  \begin{table}
+    \caption{Closing notes up to text.%
+      \label{tab:S:notes}}
+    \newrobustcmd\NoteMark[1]{%
+      \textsuperscript{\emph{#1}}%
+    }
+    \sisetup{table-format = {\NoteMark{a}}2.4}
+    \begin{tabular}{@{}
+      S
+      S[table-align-text-before = false]
+    @{}}
+    \toprule
+      {Values}             & {Values} \\
+    \midrule
+                    2.3456 &               2.3456 \\
+      \NoteMark{a}  4.234  & \NoteMark{a}  4.234 \\
+      \NoteMark{b}   .78   & \NoteMark{b}   .78  \\
+      \NoteMark{d} 88      & \NoteMark{d} 88     \\
+    \bottomrule
+    \end{tabular}
+    \hspace{\fill}%
+    \sisetup{table-format = 2.4\NoteMark{a}}
+    \begin{tabular}{@{}
+      S
+      S[table-align-text-after = false]
+    @{}}
+    \toprule
+      {Values}             & {Values} \\
+    \midrule
+       2.3456              & 2.3456 \\
+      34.234  \NoteMark{a} & 34.234 \NoteMark{a} \\
+      56.78   \NoteMark{b} & 56.78  \NoteMark{b} \\
+      90.4    \NoteMark{c} & 90.4   \NoteMark{c} \\
+      88      \NoteMark{d} & 88     \NoteMark{d} \\
+    \bottomrule
+    \end{tabular}
+  \end{table}
+\end{LaTeXdemo}
+
+\DescribeOption{table-auto-round}
+The contents of table cells can automatically be rounded or zero-filled to the
+number of decimal digits given for the decimal part of the \opt{table-format}
+option. This mode is activated using the \opt{table-auto-round} switch, as
+illustrated in Table~\ref{tab:S:auto}.
+\begin{LaTeXdemo}[code and float]
+  \begin{table}
+    \centering
+    \caption{The \opt{table-auto-round} option.%
+      \label{tab:S:auto}}
+    \sisetup{table-format = 1.3}
+    \begin{tabular}{@{}SS[table-auto-round]@{}}
+      \toprule
+        {Header} & {Header} \\
+      \midrule
+        1.2    & 1.2    \\
+        1.2345 & 1.2345 \\
+      \bottomrule
+    \end{tabular}
+  \end{table}
+\end{LaTeXdemo}
+
+\DescribeOption{parse-numbers}
+When the \opt{parse-numbers} option is set to \opt{false}, then the alignment
+code for tables takes a different approach. The output is always set in math
+mode, and alignment takes place at the first decimal marker. This is achieved
+by making it active in math mode. When reserving space for content only the
+integer and decimal values for the mantissa are considered
+(Table~\ref{tab:S:nonparsed}).
+\begin{LaTeXdemo}[code and float]
+  \begin{table}
+    \caption{Aligning without parsing.%
+      \label{tab:S:nonparsed}}
+    \sisetup{
+      parse-numbers = false,
+      table-format  = 3.3
+    }
+    \centering
+    \begin{tabular}{@{}
+      S
+      S[table-number-alignment = center]
+      S[table-number-alignment = right]
+      S[table-number-alignment = left]
+      @{}}
+    \toprule
+        {Some values}
+      & {Some values}
+      & {Some values}
+      & {Some values} \\
+    \midrule
+       2.35  &    2.35  &    2.35  &   2.35   \\
+      34.234 &   34.234 &   34.234 &  34.234  \\
+      56.783 &   56.783 &   56.783 &  56.783  \\
+       3,762 &    3,762 &    3,762 &   3.762  \\
+    \sqrt{2} & \sqrt{2} & \sqrt{2} & \sqrt{2} \\
+    \bottomrule
+    \end{tabular}
+  \end{table}
+\end{LaTeXdemo}
+
+\DescribeOption{drop-exponent}
+In cases where data cover a range of values, printing using a fixed exponent in
+a table may make presentation clearer. In these cases, dropping the exponent
+value from the table is useful. The general numerical options \opt{drop-exponent}
+combined with \opt{exponent-mode = fixed} can be used to achieve this
+(Table~\ref{tab:exp:omit}).
+\begin{LaTeXdemo}[code and float]
+  \begin{table}
+    \caption{The \opt{drop-exponent} option.%
+      \label{tab:exp:omit}}
+    \begin{tabular}{@{}
+      S[table-format = 1.1e1]
+      S[
+        drop-exponent  = true,
+        exponent-mode  = fixed,
+        fixed-exponent = 3,
+        table-format   = 2.1,
+      ]
+    @{}}
+      \toprule
+        {Header} &
+          \multicolumn{1}{c@{}}{Header / \num[print-unity-mantissa = false]{e3}} \\
+      \midrule
+        1.2e3 & 1.2e3 \\
+         3e2  &   3e2 \\
+       1.0e4  & 1.0e4 \\
+      \bottomrule
+    \end{tabular}
+  \end{table}
+\end{LaTeXdemo}
+
+\DescribeOption{table-column-width}
+\DescribeOption{table-fixed-width}
+Usually, the width of the numerical column is allowed to vary depending on the
+content. However, there are cases where a strictly fixed width is desirable.
+For these cases, the \opt{table-fixed-width} and \opt{table-column-width}
+options are available. The \opt{table-fixed-width} option activates fixed-width
+columns, whilst \opt{table-column-width} defines the target width
+(Table~\ref{tab:width:fixed}). Setting \opt{table-column-width} to a positive
+value automatically enables \opt{table-fixed-width}.
+\begin{LaTeXdemo}[code and float]
+  \begin{table}
+    \caption{Fixed-width columns.%
+      \label{tab:width:fixed}}
+    \begin{tabular}
+      {@{}
+        S
+        S[table-column-width = 2cm]
+      @{}}
+      \toprule
+        {Flexible} &
+        {Fixed}    \\
+      \midrule
+        1.23 & 1.23 \\
+        45.6 & 45.6 \\
+      \bottomrule
+    \end{tabular}
+  \end{table}
+\end{LaTeXdemo}
+
+The \opt{table-column-width} option can also be used to achieve special
+effects. One example is centring a column of numbers under a wide heading, with
+the numbers themselves right-aligned (Table~\ref{tab:width:special}).
+\begin{LaTeXdemo}[code and float]
+  \begin{table}
+    \centering
+    \caption{Right-aligning under a heading.%
+      \label{tab:width:special}}
+    \settowidth{\mylength}{Long header}
+    \sisetup{
+      table-alignment-mode   = none      ,
+      table-column-width     = \mylength ,
+      table-number-alignment = right
+    }
+    \begin{tabular}{@{}S@{}}
+    \toprule
+    {Long header} \\
+    \midrule
+        12.33 \\
+         2    \\
+      1234    \\
+     \bottomrule
+    \end{tabular}
+  \end{table}
+\end{LaTeXdemo}
+
+\DescribeOption{table-text-alignment}
+\DescribeOption{table-alignment}
+Cell contents which are not part of a number can be protected using braces, as
+illustrated. Cells which contain no numerical data at all are aligned using the
+setting specified by the \opt{table-text-alignment} option, which recognises
+the values \opt{center}, \opt{left}, \opt{none} and \opt{right}
+(Table~\ref{tab:S:text}). The setting \opt{none} is intended for use with
+the package \pkg{tabularray}, which carries out its own alignment of textual
+values.
+\begin{LaTeXdemo}[code and float]
+  \begin{table}
+    \caption{Aligning text in \texttt{S} columns.%
+      \label{tab:S:text}}
+    \sisetup{table-format = 4.4}
+    \centering
+    \begin{tabular}{@{}
+      S
+      S[table-text-alignment = left]
+      S[table-text-alignment = right]
+    @{}}
+    \toprule
+        {Values}
+      & {Values}
+      & {Values} \\
+    \midrule
+      992.435  &  992.435  &  992.435  \\
+     7734.2344 & 7734.2344 & 7734.2344 \\
+       56.7834 &   56.7834 &   56.7834 \\
+        3,7462 &    3,7462 &    3,7462 \\
+    \bottomrule
+    \end{tabular}
+  \end{table}
+\end{LaTeXdemo}
+
+\DescribeOption{table-alignment}
+The table alignment options \opt{table-number-alignment} and
+\opt{table-text-alignment} can be set to the same value using the
+\opt{table-alignment} option. This will set all three alignment options to the
+same value (one of \opt{center}, \opt{right} or \opt{left}).
+
+\subsection{Locale options}
+
+\DescribeOption{locale}
+\pkg{siunitx} allows the user to switch between the typographic conventions of
+different (geographical) areas by using locales. Currently, the package is
+supplied with configurations for locales \opt{UK}, \opt{US}, \opt{DE}
+(Germany), \opt{PL} (Poland), \opt{FR} (French), \opt{SI} (Slovene) and \opt{ZA} (South Africa).
+The \opt{locale}
+option is used to switch to a particular locale.
+\begin{LaTeXdemo}
+  \qty{1.234}{\metre}\\
+  \qty[locale = DE]{6.789}{\metre}
+\end{LaTeXdemo}
+
+\subsection{Preamble-only options}
+
+\DescribeOption{table-column-type}
+The letter(s) used to create table columns can be adjusted using the
+\opt{table-column-type} option. The standard setting is |S|, but one or more
+letters may be used: these must be single tokens. For example, provided the
+\pkg{numprint} package has not been loaded, the letter |n| could be used as
+this would suggest a numerical column.
+
+\section{Upgrading from version~\texorpdfstring{$2$}{2}%
+  \label{sec:upgrading}}
+
+The package has been largely re-written internally between versions $2$ and
+$3$. A significant number of key--value settings have new, more descriptive,
+names. Where possible, older names are mapped to newer ones internally: you
+will be warned in the log if this is the case.
+
+It is possible to use the \LaTeXe{} kernel mechanism to load the last
+version~$2$ release for documents that cannot be successfully processed using
+version~$3$. This can be achieved using
+\begin{LaTeXdemo}[code only]
+  \usepackage{siunitx}[=2021-04-09]
+\end{LaTeXdemo}
+or
+\begin{LaTeXdemo}[code only]
+  \usepackage{siunitx}[=v2]
+\end{LaTeXdemo}
+This approach will work with older systems which still have version~$2$
+installed, meaning that you can reliably use it to work between systems
+with different versions of \pkg{siunitx}.
+
+\begin{function}{\SI, \SIlist, \SIrange, \si}
+  In version~$3$, the document commands have been revised to be more
+  descriptive. As such, the commands \cs{SI}, \cs{SIlist}, \cs{SIrange}
+  and \cs{si} remain available but are not recommended for use in new
+  documents. Use the new \cs{qty\ldots} commands instead: they are clearer
+  and in some cases very slightly faster.
+\end{function}
+
+Some changes have been made to the semantics of commands or options. Most
+notably
+\begin{itemize}
+  \item prefixes cannot now be given without units;
+  \item prefixes can only be interconverted with numbers as part
+    of a quantity, not as stand-alone units.
+\end{itemize}
+See Section~\ref{sec:hint:prefixes} for how to work with the new approach
+if you want to print prefix information.
+
+The font control system has been completely re-written for version~$3$. The
+method used is entirely different from version~$2$. Emulation is therefore not
+provided for all outcomes: if you need non-standard font settings, you will
+need to adjust your source. See Section~\ref{sec:print} for more details on the
+options available in this area.
+
+The input approach for version~$3$ is slightly more structured and restricted
+than for version~$2$. As well as the updated names for document commands,
+this means that
+\begin{itemize}
+  \item Products of numbers must now be given using the dedicated
+    \cs{numproduct} and \cs{qtyproduct} commands;
+  \item Quotients of numbers are only supported as literals;
+  \item Complex values need to be given using the dedicated command
+    \cs{complexnum}.
+\end{itemize}
+The option \opt{round-integer-to-decimal = false} has been removed, and whilst
+there is not a direct replacement, users are likely to find that \opt{round-pad
+= false} offers the desired outcome.
+
+A new approach has been taken to providing non-Latin symbols for use in
+units: these are now handled directly where needed, for example in the
+definition of the \cs{micro} prefix.
+
+Translation of fixed strings is now carried out using the \pkg{translations}
+package. If you have manually set up translations in version~$2$ using
+\pkg{translator}, you will need to load it manually.
+
+The letter used for a numerical tabular column can now be selected by the
+user: the letter |S| has been retained as the standard interface. The unit
+column (|s|) has been removed from this release. It can be emulated using
+the \pkg{collcell} package, for example
+\begin{LaTeXdemo}[code only]
+  \usepackage{collcell}
+  \newcolumntype{s}{>{\collectcell\unit}c<{\endcollectcell}}
+\end{LaTeXdemo}
+or
+\begin{LaTeXdemo}[code only]
+  \usepackage{collcell}
+  \newcolumntype{s}{>{\collectcell\si}c<{\endcollectcell}}
+\end{LaTeXdemo}
+
+If you are using \opt{table-column-width} to have fixed-width columns, you
+also now need \opt{table-fixed-width} to set this option active.
+
+Direct support for loading a local configuration file, \texttt{siunitx.cfg},
+has been removed. However, the approach described in
+Section~\ref{sec:hint:config} may be used to achieve the same effect with the
+additions more clearly shown in document sources.
+
+The command \cs{SendSettingsToPgf} is deprecated, and should be replaced
+simply by setting the appropriate \cs{pgfkeys} in parallel to \cs{sisetup}.
+
+\section{Unit changes made by \acro{BIPM}%
+  \label{sec:BIPM8}}
+
+In addition to the changes in the \pkg{siunitx} package described in
+Section~\ref{sec:upgrading}, there are changes in the units defined by the
+\acro{BIPM} in the 9th Edition of the \acro{SI} Brochure which are reflected
+here. There are two major areas of change.
+
+The first is in respect of units accepted for use with \acro{SI} units. In the
+8th Edition of the \acro{SI} Brochure, the following units were listed as
+accepted for use in specialist fields
+\begin{itemize}
+  \item ångström (\cs{angstrom})
+  \item bar (\cs{bar})
+  \item barn (\cs{barn})
+  \item knot (\cs{knot})
+  \item millimetre of mercury (\cs{mmHg})
+  \item nautical mile (\cs{nauticalmile})
+\end{itemize}
+These are no longer listed in the 9th Edition, and so are deprecated as
+pre-defined units by \pkg{siunitx}. These units will issue a warning on first
+use, and users should add their own definitions to the start of their sources
+to avoid this.
+
+Secondly, the move to a new definition of base units means that the table of
+units determined experimentally has been removed from the \acro{SI} Brochure.
+This covers the following units defined by \pkg{siunitx} in previous releases
+\begin{itemize}
+  \item \cs{bohr}
+  \item \cs{clight}
+  \item \cs{electronmass}
+  \item \cs{elementarycharge}
+  \item 	\cs{hartree}
+  \item \cs{planckbar}
+\end{itemize}
+These are also deprecated in \pkg{siunitx} and users should provide their own
+definitions.
+
+In addition to these two major blocks, the unit \cs{atomicmassunit} has similar
+deprecated status: this was listed as with experimentally-determined units in
+the 8th Edition of the \acro{SI} Brochure but is equivalent to the dalton, a
+unit which remains accepted.
+
+\section{Localisation}
+
+The \pkg{translations} package provides a structured framework for
+localisation of words and phrases. In particular, it offers the
+\cs{GetTranslation} macro, which will provide appropriate translations based
+on the current \pkg{babel} or \pkg{polyglossia} language setting.
+
+If \pkg{translations} is available, \pkg{siunitx} will load it and alter the
+standard settings for the \opt{list-final-separator} and \opt{range-phrase}
+options to read:
+\begin{LaTeXdemo}[code only]
+  \sisetup{
+    list-final-separator = { \GetTranslation{and} },
+    list-pair-separator  = { \GetTranslation{and} },
+    range-phrase         = { \GetTranslation{to (numerical range)} },
+  }
+\end{LaTeXdemo}
+If the current language is known to the \pkg{translations} package then the
+result will be localised text. The preamble for this manual loads English,
+French, German, Polish, Spanish, Catalan, Portuguese and Brazilian as options,
+and also loads the \pkg{babel} package:
+\begin{LaTeXdemo}
+  % In English by default
+  \numlist{1;2;3} \\
+  \numrange{1}{10} \\
+  \selectlanguage{french}%
+  \numlist{1;2;3} \\
+  \numrange{1}{10} \\
+  \selectlanguage{german}%
+  \numlist{1;2;3} \\
+  \numrange{1}{10} \\
+  \selectlanguage{polish}%
+  \numlist{1;2;3} \\
+  \numrange{1}{10} \\
+  \selectlanguage{spanish}%
+  \numlist{1;2;3} \\
+  \numrange{1}{10} \\
+  \selectlanguage{catalan}%
+  \numlist{1;2;3} \\
+  \numrange{1}{10} \\
+  \selectlanguage{portuguese}%
+  \numlist{1;2;3} \\
+  \numrange{1}{10} \\
+  \selectlanguage{brazilian}%
+  \numlist{1;2;3} \\
+  \numrange{1}{10}
+\end{LaTeXdemo}
+
+\section{Compatibility with other packages}
+
+In general, \pkg{siunitx} should be usable with other packages without
+interference.
+
+When the \pkg{physics} package is loaded before \pkg{siunitx}, the command
+\cs{qty} is not defined. Users may use the version~$2$ command \cs{SI},
+which can be used as a drop-in replacement for \cs{qty}. Alternatively,
+if the \pkg{siunitx} definition is preferred, you may use
+\begin{LaTeXdemo}[code only]
+  \AtBeginDocument{\RenewCommandCopy\qty\SI}
+\end{LaTeXdemo}
+and use the longer name \cs{quantity} to access the functionality of the
+\pkg{physics} package.
+
+\section{Hints for using \pkg{siunitx}}
+
+\subsection{Problematic font encodings%
+  \label{sec:hint:encoding}}
+
+The standard settings in \pkg{siunitx} assume that \enquote{sensible} input and
+font encoding values prevail. The input encoding is assumed to be \acro{UTF-8}
+in all cases. With pdf\LaTeX{}, the font encoding should be \texttt{T1},
+whereas for Xe\LaTeX{} and Lua\LaTeX{}, \texttt{TU} (Unicode font encoding) is
+expected.
+
+Some packages, for example \pkg{newtxtext} or \pkg{stix2}, either force
+\texttt{T1} or do not anticipate \texttt{TU} correctly with Xe\LaTeX{} and
+Lua\LaTeX{}. In these cases, the symbols used by \pkg{siunitx} may be
+incorrect. If correcting the font encoding is not possible, you will need to
+re-declare the relevant units using symbol definitions which account for this
+non-standard setup.
+
+\subsection{Adjusting \cs{litre} and \cs{liter}%
+  \label{sec:hint:litre}}
+
+As detailed earlier, the unit macros \cs{litre} and \cs{liter} are both
+available for litres. With the standard settings, \cs{liter} is defined as
+\begin{LaTeXdemo}[code only]
+  \DeclareSIUnit\liter{\litre}
+\end{LaTeXdemo}
+meaning that \cs{litre} is the \enquote{canonical} unit. This follows the same
+relationship as exists between \cs{metre} and \cs{meter}.
+
+In contrast to metres, however, there is more likelihood of users wishing to
+adjust the appearance of litres: both \enquote{\unit{l}} and \enquote{\unit{L}}
+are commonly used. The recommended approach to adjustment is to re-declare
+the \cs{litre} macro, as \cs{liter} will follow automatically.
+\begin{LaTeXdemo}[code only]
+  \DeclareSIUnit\litre{l}
+\end{LaTeXdemo}
+
+\subsection{Ensuring text or math output%
+  \label{sec:hint:text-math}}
+
+The macros \cs{ensuremath} and \cs{text} should be used to ensure that a
+particular item is always printed in the desired mode. Some mathematical output
+does not work well in \cs{mathrm} (the font setting used by \pkg{siunitx} for
+printing units). The easiest way to solve this is to use the construction
+"\text{\ensuremath{...}}", which will print the material in the standard
+mathematics font without affecting the rest of the output. In some cases,
+simply forcing \cs{mathnormal} will suffice, but this is less reliable with
+non-Latin characters.
+
+\subsection{Including a literal hyphen inside \cs{text}%
+  \label{sec:hint:hyphen-minus}}
+
+In most cases, a "-" character inside \cs{text} will represent a minus. The
+package will therefore replace it with \cs{textminus}. However, this may be
+problematic if you want a hyphen, or if you are using "-" in a piece of \TeX{}
+syntax. You can prevent this by using a second set of braces
+\begin{LaTeXdemo}[code only]
+  \DeclareSIUnit\electronvolt{\text{{e\kern -0.1em V}}}
+\end{LaTeXdemo}
+or by defining a protected command that will yield a hyphen on typesetting
+\begin{LaTeXdemo}[code only]
+  \usepackage{etoolbox}
+  \newrobustcmd*\hyphenminus{-}
+  \DeclareSIUnit\electronvolt{\text{e\kern \hyphenminus0.1em V}}
+\end{LaTeXdemo}
+
+\subsection{Expanding content in tables%
+  \label{sec:hint:expanding}}
+
+When processing tables, \pkg{siunitx} will expand anything stored inside a
+macro, unless it is long or protected. \LaTeXe{} robust commands are also
+detected and are not expanded (Table~\ref{tab:xmpl:macro}). Values which would
+otherwise be expanded can be protected by wrapping them in a set of braces. As
+\TeX{} itself will expand the first token in a table cell before \pkg{siunitx}
+can act on it, using the \eTeX{} protected mechanism is the recommended course
+of action to prevent expansion of macros in table cells. (As is shown in the
+table, \TeX's expansion of \LaTeXe{} robust commands can lead to unexpected
+results.)
+\begin{LaTeXdemo}[code and float]
+  \begin{table}
+    \caption{Values as macros in \texttt{S} columns.%
+      \label{tab:xmpl:macro}}
+    \newcommand*\myvaluea{1234}
+    \newcommand\myvalueb{1234}
+    \DeclareRobustCommand*\myvaluec{1234}
+    \protected\def\myvalued{1234}
+    \begin{tabular}{@{}S@{}}
+    \toprule
+      {Some Values} \\
+    \midrule
+       \myvaluea  8.8 \myvaluea  \\ % Both expanded
+       \myvalueb  8.8 \myvalueb  \\ % First expanded by TeX
+                                    % to numbers
+       \myvaluec  8.8 \myvaluec  \\ % First expanded by TeX
+                                    % but not to numbers!
+       \myvalued  8.8 \myvalued  \\ % Neither expanded
+      {\myvaluea\ 8.8 \myvaluea} \\ % Neither expanded
+    \bottomrule
+    \end{tabular}
+  \end{table}
+\end{LaTeXdemo}
+
+It is possible to use calculated values in tables. For this to work, the
+calculation must take place before attempting to parse the number (the parser
+cannot \enquote{know} all of the possible values inside an expression). This is
+most conveniently handled using the \pkg{xfp} package, which is distributed as
+part of the required support for \pkg{siunitx}. The general approach is
+illustrated in Table~\ref{tab:xmpl:calc}
+\begin{LaTeXdemo}[code and float]
+  \begin{table}
+    \caption{Calculated values.%
+      \label{tab:xmpl:calc}}
+    \newcommand{\valuea}{66.7012}
+    \newcommand{\valueb}{66.0212}
+    \newcommand{\valuec}{64.9026}
+    \begin{tabular}{
+      @{}
+      S[table-format = 2.4]
+      S[table-format = 3.4]
+      @{}
+    }
+      \toprule
+        {Value} & {Doubled} \\
+      \midrule
+        \valuea & \fpeval{\valuea * 2} \\
+        \valueb & \fpeval{\valueb * 2} \\
+        \valuec & \fpeval{\valuec * 2} \\
+      \bottomrule
+    \end{tabular}
+  \end{table}
+\end{LaTeXdemo}
+
+A more sophisticated approach is to generate the rows themselves from a
+database: this is illustrated in Section~\ref{sec:hint:datatool}.
+
+\subsection{Using \pkg{siunitx} with \pkg{datatool}%
+  \label{sec:hint:datatool}}
+
+As illustrated in Table~\ref{tab:xmpl:calc}, \pkg{siunitx} can be used to
+typeset data stored using \pkg{datatool}. For quickly displaying the contents
+of tables, \pkg{datatool} offers the \cs{DTLshowtable} macro. This will only
+work with \texttt{S} columns if number parsing is turned off
+(Table~\ref{tab:xmpl:datatool}).
+\begin{LaTeXdemo}[code and float]
+  \DTLnewdb{moredata}
+  \DTLnewrow{moredata}\DTLnewdbentry{moredata}{value}{ 6.7012}
+  \DTLnewrow{moredata}\DTLnewdbentry{moredata}{value}{66.0212}
+  \DTLnewrow{moredata}\DTLnewdbentry{moredata}{value}{64.902 }
+  \begin{table}
+    \caption{Displaying a \textsf{datatool} table.%
+      \label{tab:xmpl:datatool}}
+    \sisetup{parse-numbers= false, table-format = 2.4}
+    \renewcommand*\dtlrealalign{S}
+    \DTLdisplaydb{moredata}
+  \end{table}
+\end{LaTeXdemo}
+
+The \pkg{datatool} package may also be used to create on-the-fly tables using
+calculations. For example, the demonstration in Table~\ref{tab:xmpl:calc} may
+be achieved without needing to write out each row, as shown in
+Table~\ref{tab:xmpl:datatool-calc}. An extra column is used to contain the
+calculations in this case.
+\begin{LaTeXdemo}[code and float]
+  \begin{table}
+    \caption{Calculated values using \pkg{datatool}.%
+      \label{tab:xmpl:datatool-calc}}
+    \DTLnewdb{data}
+    \DTLnewrow{data}\DTLnewdbentry{data}{value}{66.7012}
+    \DTLnewrow{data}\DTLnewdbentry{data}{value}{66.0212}
+    \DTLnewrow{data}\DTLnewdbentry{data}{value}{64.9026}
+    \begin{tabular}{
+      @{}
+      S[table-format = 2.4]
+      S[table-format = 3.4]
+      @{}l
+      @{}
+    }
+      \toprule
+        {Value} & {Doubled} &
+      \DTLforeach{data}{\myvalue=value}{%
+        \DTLiffirstrow {\\ \midrule}{\\}%
+        \myvalue &            % First column
+        \fpeval{\myvalue * 2} % second column
+        & }\\
+      \bottomrule
+    \end{tabular}
+  \end{table}
+\end{LaTeXdemo}
+
+\subsection{Using units in section headings and bookmarks%
+  \label{sec:hint:bookmarks}}
+
+The \pkg{siunitx} code is designed to work correctly with functions in
+headings. They will print correctly in headings and in the table of contents.
+As illustrated here, the standard behaviour is to ignore font changes. When the
+\pkg{hyperref} package is loaded, the functions automatically \enquote{degrade
+gracefully} to produce useful information in \acro{pdf} bookmarks. If you want
+more control over the bookmark text, use the \cs{texorpdfstring} function from
+\pkg{hyperref}, for example:
+\begin{LaTeXdemo}[code only]
+  \section{Some text
+    \texorpdfstring
+      {\unit{\joule\per\mole\per\kelvin}}
+      {J mol-1 K-1}%
+    }
+\end{LaTeXdemo}
+
+You may find it useful to load \pkg{hyperref} with the \opt{unicode} option,
+as this will allow \unit{\ohm} to appear in bookmarks. Without the option,
+the encoding used by \pkg{hyperref} does not support this symbol.
+
+\subsection{A left-aligned column visually centred under a heading%
+  \label{sec:hint:left-column}}
+
+When you have a column of non-related numbers, the usual advice is to make
+these left-aligned and then centre the resulting column under the heading. With
+the \pkg{dcolumn} package, that would be done with something like
+|D{x}{}{5.0}|. This is something of an abuse of the nature of a number, but can
+also be done using \pkg{siunitx} (Table~\ref{tbl:xmpl:unrel}).
+\begin{LaTeXdemo}[code and float]
+  \begin{table}
+    \caption{Formatting unrelated numbers.%
+      \label{tbl:xmpl:unrel}}
+    \centering
+    \begin{tabular}
+      {
+        @{}
+        S[
+          table-format = 5.0,
+          parse-numbers = false,
+          input-decimal-markers = x
+        ]
+        @{}
+      }
+      \toprule
+      \multicolumn{1}{@{}c@{}}{Header} \\
+      \midrule
+      120   \\
+      12.3  \\
+      12340 \\
+      12.02 \\
+      123   \\
+      1     \\
+      \bottomrule
+    \end{tabular}
+  \end{table}
+\end{LaTeXdemo}
+
+\subsection{Regression tables%
+  \label{sec:hint:regression}}
+
+In some subject areas, it is common to present regression values or similar,
+which feature an uncertainty value in parenthesis on the line below the main
+value. As these are separate cells, they cannot be entered using \pkg{siunitx}
+in one value. There are a couple of ways of formatting them using the package,
+depending on whether the values also need to be parsed.
+
+Where parsing is not required, the most straight-forward method is available:
+provide a model format allowing space for an extra \enquote{digit} at each end,
+which will then allow for the parenthesis. If a sign is applied to the number,
+it may not be necessary to add a \enquote{digit} for the leading bracket. If
+parsing is also required, this approach cannot be employed. Instead, the
+parsing needs to be adjusted such that |(| and |)| are not treated as part of
+the number, and \opt{table-align-text-before} is set to |false| such that these
+will be placed next to the numerical part. These methods are illustrated in
+Table~\ref{tab:regression}.
+
+\begin{LaTeXdemo}[code and float]
+  \begin{table}
+    \caption{Regression tables%
+      \label{tab:regression}
+    }
+    \begin{tabular}
+      {
+        @{}
+        S[table-format = 2.4, parse-numbers = false]
+        S[table-format = +1.4, parse-numbers = false]
+        S[
+          input-open-uncertainty  = ,
+          input-close-uncertainty = ,
+          minimum-decimal-digits  = 3, % (
+          table-format            = +1.3),
+          table-align-text-before = false
+          ]
+        @{}
+      }
+      \toprule
+      {Header} &{Header} & {Header} \\
+      \midrule
+      1.234   & -1.234  & -1.23   \\
+      (0.053) & (0.053) & (0.053) \\
+      \bottomrule
+    \end{tabular}
+  \end{table}
+\end{LaTeXdemo}
+
+\subsection{Maximising performance%
+  \label{sec:hint:performance}}
+
+Both the number and unit parsers require significant effort in terms of \TeX{}
+programming. For input that does not require such processing, the maximum
+performance for \pkg{siunitx} can therefore be obtained by turning off both
+systems:
+\begin{LaTeXdemo}
+  \qty{7.3}{\Hz} \\
+  \qty[parse-units = false]{7.3}{\Hz} \\
+  \qty[
+    parse-numbers = false,
+    parse-units   = false
+  ]{7.3}{\Hz}
+\end{LaTeXdemo}
+
+For tables, any settings that can be given before the table are only parsed once,
+whereas given in the optional argument to |S| they are read in every cell. As such,
+you should favour
+\begin{LaTeXdemo}[code only]
+  \begin{table}
+    \sisetup{...}
+    \begin{tabular}{S}
+    ...
+\end{LaTeXdemo}
+for common settings.
+
+\subsection{Special considerations for the \cs{kWh} unit%
+  \label{sec:hint:kWh}}
+
+The standard settings provide the \cs{kWh} unit set up with no spacing between
+the \enquote{\unit{\kilo\watt}} and the \enquote{\unit{\hour}} unit to give
+\enquote{\unit{\kWh}}. However, this only applies when the unit is given on its
+own: combinations will follow the normal rules
+\begin{LaTeXdemo}
+  \unit{\kWh} \\
+  \unit{\kWh\per\metre}
+\end{LaTeXdemo}
+This is because the unit \cs{kWh} is defined so that it can still be varied by
+altering \cs{kilo}, \cs{watt} and \cs{hour}, and so that the prefix can still
+be turned into a number. However, some users may prefer to have a non-flexible
+macro which never adds a space. This can be achieved by redefining \cs{kWh}
+with \cs{DeclareSIUnit}, by added an alternative definition
+\begin{LaTeXdemo}[code only]
+  \DeclareSIUnit\kWh{kWh}
+  \DeclareSIUnit\KWH{kWh}
+\end{LaTeXdemo}
+ or of course by using literal unit input.
+\begin{LaTeXdemo}
+  \unit{\KWH\per\metre}\\
+  \unit{kWh.m^{-1}}
+\end{LaTeXdemo}
+
+Another point to notice is that the \cs{per} macro applies to the next unit,
+and not an entire unit combination. Thus in
+\begin{LaTeXdemo}
+  \unit{\candela\per\kWh}
+\end{LaTeXdemo}
+\cs{per} applies to the watts but not to the hours. In this case, the units
+need to be written out in full or the \opt{sticky-per} option should be used.
+\begin{LaTeXdemo}
+  \unit{\candela\per\kilo\watt\per\hour} \\
+  \unit[sticky-per]{\candela\per\kWh}
+\end{LaTeXdemo}
+
+\subsection{Creating a column with numbers and units%
+  \label{sec:hint:mixed}}
+
+Usually, numbers in a table should be given with the units in the column
+heading. However, there are cases where a series of data are best presented in
+a table but have different units. There are two ways to do this
+(Table~\ref{tab:xmpl:mixed}). The first is to place the units in the first
+column of the table, which makes sense if there are several related items in
+the table. The second method is to generate two columns, one for numbers and a
+second for units, and then to format these to give the visual effect of a
+single column. The later effect is most appropriate when only one set of
+numbers are presented in a table. This method requires cell content is
+collected, easiest to do using the \pkg{collcell} package.
+\begin{LaTeXdemo}[code and float]
+  \begin{table}
+    \caption{Tables where numbers have different units.%
+      \label{tab:xmpl:mixed}}
+    \hspace{\fill}%
+    \begin{tabular}
+      {
+        @{}
+        >{$}l<{$}
+        S[table-format = 3.3(1)]
+        S[table-format = 3.3(1)]
+        @{}
+      }
+      \toprule
+        & {One} & {Two} \\
+      \midrule
+      a / \unit{\pm}         &  123.4(2) &   567.8(4) \\
+      \beta / \unit{\degree} & 90.34(4)  & 104.45(5)  \\
+      \mu / \unit{\per\mm}   &  0.532    &   0.894    \\
+      \bottomrule
+    \end{tabular}
+    \hspace{\fill}%
+    \begin{tabular}
+      {
+        @{}
+        S[table-format=1.3]@{\,}
+        >{\collectcell\unit}l<{\endcollectcell}
+        @{}
+      }
+      \toprule
+      \multicolumn{2}{@{}c}{Heading} \\
+      \midrule
+      1.234 & \metre   \\
+      0.835 & \candela \\
+      4.23  & \joule\per\mole \\
+      \bottomrule
+    \end{tabular}
+    \hspace{\fill}%
+  \end{table}
+\end{LaTeXdemo}
+
+\subsection{Tables with heading rows%
+  \label{sec:hint:heading}}
+
+A common format for tables is to make the heading row visually distinct using a
+background color and bold text. If numbers appear in such a heading row within
+an \texttt{S} column then getting the appearance right can be challenging. The
+best approach is to make the \cs{bfseries} macro \enquote{robust} (as
+demonstrated in Section~\ref{sec:hint:expanding}), then to use this macro to
+make the heading cells bold. This approach is illustrated in
+Table~\ref{tab:xmpl:headers}, along with the use of \cs{rowcolor} to provide a
+background color.
+\begin{LaTeXdemo}[code and float]
+  \begin{table}
+    \caption{Header row in a table.%
+      \label{tab:xmpl:headers}}
+    \robustify\bfseries
+    \centering
+    \begin{tabular}
+      {@{}S[text-series-to-math, table-format = 3.3]@{}}
+      \rowcolor[gray]{0.9}
+      \bfseries 123.456 \\
+       23.45  \\
+      123.4   \\
+        3.456 \\
+    \end{tabular}
+  \end{table}
+\end{LaTeXdemo}
+
+\subsection{Associating a locale with a \pkg{babel} language%
+  \label{sec:hint:babel}}
+
+It is possible to instruct the \pkg{babel} package to switch to a particular
+\pkg{siunitx} locale when changing language. This can be done using the
+\pkg{babel} \cs{extras\meta{language}} system. For example, to associate the
+\texttt{DE} locale with the \texttt{german} \pkg{babel} language, the
+appropriate code would be
+\begin{LaTeXdemo}[code only]
+  \addto\extrasgerman{\sisetup{locale = DE}}
+\end{LaTeXdemo}
+
+\subsection{Symbolic \enquote{digits}%
+  \label{sec:hint:symbols}}
+
+In some cases you may want to use \enquote{digits} which do not fall within the
+usual set |0123456789|. This can be done by setting the \opt{input-digits}
+option, but bearing in mind that this will affect (prevent) for example
+rounding.
+\begin{LaTeXdemo}
+  \sisetup{input-digits = 0123456789\pi}%
+  \num{4\pi e-7}
+\end{LaTeXdemo}
+Each extra entry should be a single token, and should either have a definition
+which is safe in both math and text mode, or should only be used when the
+output mode is known. It may be necessary to make some tokens robust using
+\pkg{etoolbox} for this to work, for example
+\begin{LaTeXdemo}
+  \robustify\dots
+  \sisetup{input-digits = 0123456789\dots}%
+  \qty{0,4066\dots}{\metre\squared}
+\end{LaTeXdemo}
+
+\subsection{Demonstrating prefixes%
+  \label{sec:hint:prefixes}}
+
+As \pkg{siunitx} contains data about the numerical values of unit prefixes,
+you may wish to print this in an automated way. Prefixes cannot be given
+on their own, but it is possible to create a \enquote{do nothing} unit.
+\begin{LaTeXdemo}[code only]
+  \DeclareSIUnit\noop{\relax}
+\end{LaTeXdemo}
+which can then be used to show just the prefix symbol.
+\begin{LaTeXdemo}
+  \unit{\yotta\noop}
+\end{LaTeXdemo}
+To show just the numerical value of a prefix, you will need to use \cs{qty}
+and appropriate settings.
+\begin{LaTeXdemo}
+  \qty[prefix-mode = extract-exponent, print-unity-mantissa = false]%
+    {1}{\yotta\noop}
+\end{LaTeXdemo}
+This may be conveniently wrapped up inside a document command, for example
+\begin{LaTeXdemo}[code only]
+  \NewDocumentCommand\prefixvalue{m}{%
+    \qty[prefix-mode=extract-exponent,print-unity-mantissa=false]{1}{#1\noop}
+  }
+\end{LaTeXdemo}
+
+\subsection{Creating a set of pre-defined units%
+  \label{sec:hint:config}}
+
+There are many units which sit outside of those defined in the (current)
+\acro{SI} Brochure which are of use to many people. Most obvious are those
+which have been detailed in previous editions of the Brochure, as described
+in Section~\ref{sec:BIPM8}, but there are many others.
+
+It is often convenient to have a pre-defined set of useful units available
+without needing to copy the full set of definitions into each source file. At
+the same time, it is important that such sources do show that they are using
+units not defined by the core part of \pkg{siunitx}. The most straight-forward
+way to achieve this is to create a separate file, for example
+\texttt{siunitx-local-units.tex}, and place it in your local \TeX{} tree
+(usually \verb|~/texmf/tex/latex/| on Linux, \verb|~/Library/texmf/tex/latex/|
+on macOS or \verb|C:\Users\<name>\texmf\tex\latex| on Windows). This can then
+be loaded in the preamble using
+\begin{LaTeXdemo}[code only]
+  % Load useful 'local' units
+  \input{siunitx-local-units}
+\end{LaTeXdemo}
+
+\section{Using (\acro{SI}) units}
+
+Consistent and logical units are a necessity for scientific work, and have
+applicability everywhere. Historically, a number of systems have been used for
+physical units. \acro{SI} units were introduced by the \foreign{Conférence
+Générale des Poids et Mesures} (\acro{CGPM}) in 1960. \acro{SI} units are a
+coherent system based on seven base units, from which all other units may be
+derived.
+
+At the same time, physical quantities with units are mathematical entities, and
+as such way that they are typeset is important. In mathematics, changes of type
+(such as using bold, italic, sans serif typeface and so on) convey information.
+This means that rules exist not only for the type of units to be used under the
+\acro{SI} system, but also the way they should appear in print. Advice on best
+practice has been made available by the \emph{National Institute of Standards
+and Technology} (\acro{NIST})~\cite{NIST}.
+
+As befits an agreed international standard, the full rules are detailed. It is
+not appropriate to reproduce these in totality here; instead, a useful summary
+of the key points is provided. The full details are available from the
+\foreign{Bureau International des Poids et Mesures}~\cite{BIPM}.
+
+The \pkg{siunitx} package takes account of the information given here, so far
+as is possible. Thus the package defaults follow the recommendations made for
+typesetting numbers and units. Spacing and so forth is handled in such a way as
+to make implementing the rules (relatively) easy.
+
+\subsection{Units}
+
+There are seven base \acro{SI} units, listed in Table~\ref{tab:unit:base}.%
+\footnote{Some base units need others defined first; there is therefore a
+required order of definition.} The base units have been chosen such that all
+physical quantities can be expressed using an appropriative combination of
+these units, needing no others and with no redundancy.
+
+All other units within the \acro{SI} system are regarded as \enquote{derived}
+from the seven base units. At the most basic, all other \acro{SI} units can be
+expressed as combinations of the base units. However, many units (listed in
+Table~\ref{tab:unit:derived}) have a special name and symbol. Most of these
+units are simple combinations of one or more base units (raised to powers as
+appropriate).
+
+A series of \acro{SI} prefixes for decimal multiples and sub-multiples are
+provided, and can be used as modifiers for any \acro{SI} unit (either base or
+derived units) with the exception of the kilogram. The prefixes are listed in
+Table~\ref{tab:unit:prefix}. No space should be used between a prefix and the
+unit, and only a single prefix should be used. Even the degree Celsius can be
+given a prefix, for example \qty{1}{\milli\degreeCelsius}.
+
+It is important to note that the kilogram is the only \acro{SI} unit with a
+prefix as part of its name and symbol. Only single prefix may be used, and so
+in the case of the kilogram prefix names are used with the unit name
+\enquote{gram} and the prefix symbols are used with the unit symbol
+\unit{\gram}. For example $\qty{1e-6}{\kilo\gram} = \qty{1e-3}{\gram} =
+\qty{1}{\milli\gram}$.
+
+The application of \acro{SI} units is meant to provide a single set of units
+which ensure consistency and clarity across all areas. However, other units are
+common is many areas, and are not without merit. The units provided by
+\pkg{siunitx} by default do not include any of these; only units which are part
+of the \acro{SI} set or are accepted for use with \acro{SI} units are defined.
+However, several other sets of units can be loaded as optional modules. The
+binary prefixes and units (Table~\ref{tab:unit:binary}) are the most obvious
+example. These are \emph{not} part of the \acro{SI} specifications, but the
+prefix names are derived from those in Table~\ref{tab:unit:prefix}.
+
+Other units are normally to be avoided where possible. \acro{SI} units should,
+in the main, be preferred due to the advantages of clear definition and
+self-consistency this brings. However, there will probably always be a place
+for specialist or non-standard units. This is particularly true of units
+derived from basic physical constants.
+
+There are also many areas where non-standard units are used so commonly that to
+do otherwise is difficult or impossible. For example, most synthetic chemists
+measure the pressure inside vacuum apparatus in \unit{\millimetremercury},
+partly because the most common gauge for the task still uses a column of
+mercury metal. For these reasons, \pkg{siunitx} allows definition of such
+units.
+
+\subsection{Mathematical meaning}
+
+As explained earlier, a quantity combination is a single mathematical entity.
+This has implications for how both the number and the unit should be printed.
+Firstly, the two parts should not be separated: a quantity is a product of the
+number and the unit. With the exception of the symbols for plane angles
+(\unit{\degree}, \unit{\arcminute} and \unit{\arcsecond}), the \acro{BIPM}
+specifies either a space or half-height (centred) dot should be
+used~\cite{BIPM}.
+\begin{LaTeXdemo}
+  A space for \qty{10}{\percent}\\
+  and also for \qty{100}{\degreeCelsius}\\
+  but not for \ang{1.23}.
+\end{LaTeXdemo}
+
+The mathematical meaning of units also means that the shape, weight and family
+are important. Units are supposed to be typeset in an upright, medium weight
+font. Italic, bold and sans serif are all used mathematically to convey other
+meanings. (In an all sanserif document, using sans serif for units is
+reasonable.) The \pkg{siunitx} package defaults again follow this convention:
+any local settings are ignored, and uses the current upright math font.
+However, there are occasions where this may not be the most desirable
+behaviour. A classic example would be in an all-bold section heading. As the
+surrounding text is bold, some people feel that any units should follow this.
+\begin{LaTeXdemo}
+  Units should \textbf{not be bold: \qty{54}{\farad}}\\
+  \textbf{But perhaps in a running block,\\
+  it might look better:
+    \qty[text-series-to-math]{54}{\farad}}
+\end{LaTeXdemo}
+
+Symbols for units formed from other units by multiplication are indicated by
+means of either a half-height (that is, centred) dot or a (thin) space.
+\begin{LaTeXdemo}
+  $\unit{\metre\second} = \text{metre second}$ \\
+  $\unit{\milli\second} = \text{millisecond}$ \\
+  \sisetup{inter-unit-product = \ensuremath { { } \cdot { } } }
+  $\unit{\metre\second} = \text{metre second}$ \\
+  $\unit{\milli\second} = \text{millisecond}$
+\end{LaTeXdemo}
+There are some circumstances under which it is common practice to omit any
+spaces. The classic example is \unit{\kWh}, where
+\enquote{\unit[inter-unit-product = \,]{\kWh}} does not add any useful
+information. If using such a unit repeatedly, users of \pkg{siunitx} are
+advised to create a custom unit to ensure consistency. It is important to note
+that while this is common practice, it is \emph{not} allowed by the
+\acro{BIPM}~\cite{BIPM}.
+
+Symbols for units formed from other units by division are indicated by means of
+a virgule (oblique stroke, slash, "/"), a horizontal line, or negative
+exponents.\footnote{Notice that a virgule and a solidus are not the same
+symbol.} However, to avoid ambiguity, the virgule must not be repeated on the
+same line unless parentheses are used. This is ensured when using named unit
+macros in \pkg{siunitx}, which will \enquote{trap} repeated division and format
+it correctly. In complicated cases, negative exponents are to be preferred over
+other formats.
+\begin{LaTeXdemo}
+  \unit{\joule\per\mole\per\kelvin} \\
+  \unit[per-mode = fraction]{\joule\per\mole\per\kelvin} \\
+  \unit[per-mode = symbol]{\joule\per\mole\per\kelvin}
+\end{LaTeXdemo}
+
+Products and errors should show what unit applies to each number given. Thus
+\qtyproduct[product-units = bracket]{2x3}{\metre} is an ordered set of lengths
+of a geometric area, whereas \qtyproduct[product-units = single]{2x3}{\metre}
+is a length (and equal to \qty{6}{\metre}). Thus, $\times$ is not a product but
+is a mathematical operator; in the same way, a $2 \times 3$ matrix is not a $6$
+matrix! In some areas, areas and volumes are given with separated units but a
+unit raised to the appropriate power: \qtyproduct[product-units = power]{2 x
+3}{\metre}. Although this does display the correct overall units, it is
+potentially-confusing and is not encouraged.
+
+Care must be taken when writing ranges of numbers. For purely numerical values,
+it is common to use an en-dash to show a range, for example \enquote{see pages
+1--5}. On the other hand, physical quantities could be misinterpret as negative
+values if written in this way. As the quantity is a single mathematical entity,
+writing the values with an en-dash followed by a single unit is also incorrect.
+As a result, using the word \enquote{to} is strongly recommended.
+\begin{LaTeXdemo}
+  \qtyrange{1}{5}{\metre} long.
+\end{LaTeXdemo}
+
+\subsection{Graphs and tables}
+
+In graphs and tables, repetition of the units following each entry or axis mark
+is confusing and repetitive. It is therefore best to place the unit in the
+label part of the information. Placing the unit in square brackets is common
+but mathematically poor.\footnote{For example, for an acceleration \(a\), the
+expression $[a]$ is the dimensions of $a$, \foreign{i.e.}~length per time
+squared in this case.} Much better is to show division of all quantities by the
+unit, which leaves the entries as unitless ratios. This is illustrated in
+Table~\ref{tab:xmpl:unitless} and Figure~\ref{fig:xmpl:unitless}.
+\begin{LaTeXdemo}[code and float]
+  \begin{table}
+    \caption{An example of table labelling.%
+      \label{tab:xmpl:unitless}}
+    \sisetup{
+      table-number-alignment = center,
+      table-format = 1.4
+    }
+    \begin{tabular}{@{}cS@{}}
+      \toprule
+        Entry & {Length/\unit{\metre}} \\
+      \midrule
+        1 & 1.1234 \\
+        2 & 1.1425 \\
+        3 & 1.7578 \\
+        4 & 1.9560 \\
+      \bottomrule
+    \end{tabular}
+  \end{table}
+\end{LaTeXdemo}
+\begin{LaTeXdemo}[code and float]
+  \begin{figure}
+    \begin{tikzpicture}
+      \begin{axis}[
+        xlabel = $t/\unit{\second}$,
+        xmax   = 6,
+        xmin   = 0,
+        ylabel = $d/\unit{\metre}$,
+        ymin   = 0
+      ]
+        \addplot[smooth,mark=*]
+          plot coordinates {
+            (0,0)
+            (1,5)
+            (2,8)
+            (3,9)
+            (4,8)
+            (5,5)
+            (6,0)
+           };
+      \end{axis}
+    \end{tikzpicture}
+    \caption{An example of graph labelling.%
+      \label{fig:xmpl:unitless}}
+  \end{figure}
+\end{LaTeXdemo}
+
+ In most cases, adding exponent values in the body of a table is
+ less desirable than adding a fixed exponent to column headers.  An
+ example is shown in Table~\ref{tab:good}.  The use of \cs{multicolumn} is
+ needed here due to the \enquote{\texttt{<}}; without \cs{multicolumn},
+ the titles are followed by \enquote{\unit{\kilo\gram}}!
+\begin{LaTeXdemo}[code and float]
+  \begin{table}
+    \caption{Bad and good columns.%
+      \label{tab:good}}
+    \sisetup{table-number-alignment = center}
+    \begin{tabular}{
+      @{}
+      c
+      S[table-format = 1.3e1]
+      @{\,\unit{\kilogram}}
+      S[table-format = 2.2]
+      @{}
+    }
+      \toprule
+        Entry & \multicolumn{1}{c}{Mass} &
+          {Mass/\qty[print-unity-mantissa = false]{e3}{\kilogram}} \\
+      \midrule
+        1 & 4.56e3  & 4.56 \\
+        2 & 2.40e3  & 2.40 \\
+        3 & 1.345e4 & 13.45 \\
+        4 & 4.5e2   & 0.45 \\
+      \bottomrule
+    \end{tabular}
+  \end{table}
+\end{LaTeXdemo}
+
+\section{Installation}
+
+For most users, there will be no need to explicitly install \pkg{siunitx}:
+it is available from the package management system in current \TeX{} Live
+and MiK\TeX{} systems.
+
+For manual installation, the package is available from
+\href{http://ctan.org/pkg/siunitx}{\acro{CTAN}}. As well as the raw source
+files, \acro{CTAN} hold the package as a pre-extracted zip file,
+\file{siunitx.tds.zip}. The later is most convenient for most users: simply
+unzip this in your local \path{texmf} directory.
+
+The package requires \LaTeX3 support as provided in the \pkg{l3kernel} and
+\pkg{l3packages} bundles. Both of these are included in \TeX{} Live and
+MiK\TeX{}, or are again available in ready-to-install form from \acro{CTAN}.
+
+\section{Thanks}
+
+Many users have provided feedback, bug reports and ideas for new features for
+\pkg{siunitx}: thanks to all of them. Particular thanks to Stefan Pinnow, who
+has taken the lead role as beta tester for \pkg{siunitx}, finding incorrect
+output, bad documentation and the odd spelling mistake in the documentation.
+Thanks also to Enrico Gregorio for encouraging me to complete a fully
+\pkg{expl3}-compliant version of the package. Thanks also to Danie Els and
+Marcel Heldoorn for the \pkg{SIstyle} and \pkg{SIunits} packages, respectively,
+which provided the starting point for the development of \pkg{siunitx}.
+
+\section{Making suggestions and reporting bugs}
+
+Feedback on \pkg{siunitx} is always welcome, either to make suggestions or to
+report problems. When sending feedback, it is always useful if a small example
+file is included, showing the bug being reported or illustrating the desired
+output. It is helpful if a \enquote{reference rendering} is included, showing
+what the output should look like. A typical example file might read
+\begin{verbatim}
+  \listfiles
+  % Use the article class unless the problem is class-dependent
+  \documentclass{article}
+  \usepackage{siunitx}
+  % Other packages loaded as required
+  \begin{document}
+  Reference output: $1.23\,\mathrm{m}$
+
+  \textsf{siunitx} output: \qty{1.23}{\metre}
+  \end{document}
+\end{verbatim}
+As illustrated, it is usually best to use the \cls{article} class and to only
+load packages which are needed to show the issue. It is also useful to include
+a copy of the log file generate by \LaTeX{} when reporting a bug (as the
+versions of packages can be important to solving the issue).
+
+Feedback can be sent in a range of ways. The development code and issue tracker
+are hosted on GitHub: \url{https://github.com/josephwright/siunitx/}. Issues
+opened there are visible to other users and makes sure that they cannot be
+forgotten.
+
+\end{documentation}
+
+\begin{thebibliography}{10}
+  \bibitem{BIPM}
+    \emph{The International System of Units (\acro{SI})},
+    \url{https://www.bipm.org/en/measurement-units/}.
+  \bibitem{NIST}
+    \emph{International System of Units from \acro{NIST}},
+    \url{http://physics.nist.gov/cuu/Units/index.html}.
+\end{thebibliography}
+
+\PrintIndex
+
+\end{document}

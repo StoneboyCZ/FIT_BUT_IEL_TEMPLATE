@@ -1,0 +1,189 @@
+% \iffalse meta-comment
+%
+% File: siunitx-locale.dtx Copyright (C) 2020-2022 Joseph Wright
+%
+% It may be distributed and/or modified under the conditions of the
+% LaTeX Project Public License (LPPL), either version 1.3c of this
+% license or (at your option) any later version.  The latest version
+% of this license is in the file
+%
+%    https://www.latex-project.org/lppl.txt
+%
+% This file is part of the "siunitx bundle" (The Work in LPPL)
+% and all files in that bundle must be distributed together.
+%
+% The released version of this bundle is available from CTAN.
+%
+% -----------------------------------------------------------------------
+%
+% The development version of the bundle can be found at
+%
+%    https://github.com/josephwright/siunitx
+%
+% for those people who are interested.
+%
+% -----------------------------------------------------------------------
+%
+%<*driver>
+\documentclass{l3doc}
+% The next line is needed so that \GetFileInfo will be able to pick up
+% version data
+\usepackage{siunitx}
+\begin{document}
+  \DocInput{\jobname.dtx}
+\end{document}
+%</driver>
+% \fi
+%
+% \GetFileInfo{siunitx.sty}
+%
+% \title{^^A
+%   \pkg{siunitx-locale} -- Localisation^^A
+%   \thanks{This file describes \fileversion,
+%     last revised \filedate.}^^A
+% }
+%
+% \author{^^A
+%  Joseph Wright^^A
+%  \thanks{^^A
+%    E-mail:
+%    \href{mailto:joseph.wright@morningstar2.co.uk}
+%      {joseph.wright@morningstar2.co.uk}^^A
+%   }^^A
+% }
+%
+% \date{Released \filedate}
+%
+% \maketitle
+%
+% \begin{documentation}
+%
+% This submodule is concerned with localisation of \pkg{siunitx} output
+% based on the locale. If the \pkg{translations} package is available, this
+% is loaded here and used to provide various fixed strings for output.
+%
+% \begin{function}{locale}
+%   \begin{syntax}
+%     |locale| = \meta{locale}
+%   \end{syntax}
+%   Selects the \meta{locale} used to apply standard settings for other
+%   keys, principally |exponent-product|, |inter-unit-product|
+%   and |output-decimal-marker|.
+% \end{function}
+%
+% \end{documentation}
+%
+% \begin{implementation}
+%
+% \section{\pkg{siunitx-locale} implementation}
+%
+% Start the \pkg{DocStrip} guards.
+%    \begin{macrocode}
+%<*package>
+%    \end{macrocode}
+%
+% Identify the internal prefix (\LaTeX3 \pkg{DocStrip} convention): only
+% internal material in this \emph{submodule} should be used directly.
+%    \begin{macrocode}
+%<@@=siunitx_locale>
+%    \end{macrocode}
+%
+% \subsection{Locales}
+%
+% The basics for defining locales are easy: these are just meta keys.
+%    \begin{macrocode}
+\keys_define:nn { siunitx }
+  {
+    locale .choice: ,
+    locale / DE .meta:n =
+      {
+        exponent-product      = \cdot ,
+        inter-unit-product    = \,    ,
+        output-decimal-marker = { , }
+      } ,
+    locale / PL .meta:n =
+      {
+        exponent-product      = \cdot ,
+        inter-unit-product    = \cdot ,
+        output-decimal-marker = { , }
+      } ,
+    locale / FR .meta:n =
+      {
+        exponent-product      = \times ,
+        inter-unit-product    = \,     ,
+        output-decimal-marker = { , }
+      } ,
+    locale / SI .meta:n =
+      {
+        exponent-product      = \times ,
+        inter-unit-product    = \,     ,
+        output-decimal-marker = { , }
+      } ,
+    locale / UK .meta:n =
+      {
+        exponent-product      = \times ,
+        inter-unit-product    = \,     ,
+        output-decimal-marker = .
+      },
+    locale / US .meta:n =
+      {
+        exponent-product      = \times ,
+        inter-unit-product    = \,     ,
+        output-decimal-marker = .
+      } ,
+    locale / ZA .meta:n =
+      {
+        exponent-product      = \times ,
+        inter-unit-product    = \cdot  ,
+        output-decimal-marker = { , }
+      }
+  }
+%    \end{macrocode}
+%
+% \subsection{Localisation}
+%
+% Localisation makes use of the \pkg{translations} package. This only happens
+% if it is available, and is transparent to the user.
+%    \begin{macrocode}
+\file_if_exist:nT { translations.sty }
+  {
+    \RequirePackage { translations }
+    \DeclareTranslation { Catalan }    { and } { i }
+    \DeclareTranslation { Slovene }    { and } { in }
+    \DeclareTranslation { Portuguese } { and } { e }
+    \DeclareTranslation { Catalan }    { to~(numerical~range) } { a }
+    \DeclareTranslation { English }    { to~(numerical~range) } { to }
+    \DeclareTranslation { French }     { to~(numerical~range) } { à }
+    \DeclareTranslation { German }     { to~(numerical~range) } { bis }
+    \DeclareTranslation { Polish }     { to~(numerical~range) } { do }
+    \DeclareTranslation { Slovene }    { to~(numerical~range) } { do }
+    \DeclareTranslation { Spanish }    { to~(numerical~range) } { a }
+    \DeclareTranslation { Brazilian }  { to~(numerical~range) } { a }
+    \DeclareTranslation { Portuguese } { to~(numerical~range) } { a }
+    \keys_set:nn { siunitx }
+      {
+        list-final-separator =
+          {
+            \ifmmode \  \else \space \fi
+            \text { \GetTranslation { and } }
+            \ifmmode \  \else \space \fi
+          } ,
+        list-pair-separator  =
+          {
+            \ifmmode \  \else \space \fi
+            \text { \GetTranslation { and } }
+            \ifmmode \  \else \space \fi
+          } ,
+        range-phrase         =
+          {
+            \ifmmode \  \else \space \fi
+            \text { \GetTranslation { to~(numerical~range) } }
+            \ifmmode \  \else \space \fi
+          }
+      }
+  }
+%    \end{macrocode}
+%
+% \end{implementation}
+%
+% \PrintIndex

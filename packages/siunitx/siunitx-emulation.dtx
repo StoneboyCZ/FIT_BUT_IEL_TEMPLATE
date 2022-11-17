@@ -1,0 +1,1190 @@
+% \iffalse meta-comment
+%
+% File: siunitx-emulation.dtx Copyright (C) 2016-2019,2021,2022 Joseph Wright
+%
+% It may be distributed and/or modified under the conditions of the
+% LaTeX Project Public License (LPPL), either version 1.3c of this
+% license or (at your option) any later version.  The latest version
+% of this license is in the file
+%
+%    https://www.latex-project.org/lppl.txt
+%
+% This file is part of the "siunitx bundle" (The Work in LPPL)
+% and all files in that bundle must be distributed together.
+%
+% The released version of this bundle is available from CTAN.
+%
+% -----------------------------------------------------------------------
+%
+% The development version of the bundle can be found at
+%
+%    https://github.com/josephwright/siunitx
+%
+% for those people who are interested.
+%
+% -----------------------------------------------------------------------
+%
+%<*driver>
+\documentclass{l3doc}
+% The next line is needed so that \GetFileInfo will be able to pick up
+% version data
+\usepackage{siunitx}
+\begin{document}
+  \DocInput{\jobname.dtx}
+\end{document}
+%</driver>
+% \fi
+%
+% \GetFileInfo{siunitx.sty}
+%
+% \title{^^A
+%   \pkg{siunitx-emulation} -- Emulation^^A
+%   \thanks{This file describes \fileversion,
+%     last revised \filedate.}^^A
+% }
+%
+% \author{^^A
+%  Joseph Wright^^A
+%  \thanks{^^A
+%    E-mail:
+%    \href{mailto:joseph.wright@morningstar2.co.uk}
+%      {joseph.wright@morningstar2.co.uk}^^A
+%   }^^A
+% }
+%
+% \date{Released \filedate}
+%
+% \maketitle
+%
+% \begin{documentation}
+%
+% \end{documentation}
+%
+% \begin{implementation}
+%
+% \section{\pkg{siunitx-emulation} implementation}
+%
+% Identify the internal prefix (\LaTeX3 \pkg{DocStrip} convention). In contrast
+% to other parts of the bundle, the functions here may need to redefine those
+% from various submodules.
+%    \begin{macrocode}
+%<@@=siunitx>
+%    \end{macrocode}
+%
+% Start the \pkg{DocStrip} guards.
+%    \begin{macrocode}
+%<*package>
+%    \end{macrocode}
+%
+%    \begin{macrocode}
+%<*options>
+%    \end{macrocode}
+%
+% Some messages.
+%    \begin{macrocode}
+\msg_new:nnn { siunitx } { option-removed }
+  { Option~"#1"~has~been~removed~in~this~release. }
+%    \end{macrocode}
+%
+% \begin{macro}{\@@_option_deprecated:nn}
+% \begin{macro}{\@@_option_deprecated:nnn, \@@_option_deprecated:nnV}
+%   Abstract out a simple wrapper.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_option_deprecated:nn #1#2
+  {
+    \@@_deprecated_info:nn {#1} {#2}
+    \keys_set:nn { siunitx } {#2}
+  }
+\cs_new_protected:Npn \@@_option_deprecated:nnn #1#2#3
+  {
+    \str_if_eq:nnTF {#3} { true }
+      { \@@_option_deprecated:nn {#1} {#2} }
+      {
+        \@@_deprecated_info:nn {#1} { #2 ~=~ #3 }
+        \keys_set:nn { siunitx } { #2 = #3 }
+       }
+  }
+\cs_generate_variant:Nn \@@_option_deprecated:nnn { nnV }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\@@_option_removed:n, \@@_option_removed:V}
+%   Abstract out a simple wrapper.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_option_removed:n #1
+  {
+    \msg_warning:nnx { siunitx } { option-removed }
+      {#1}
+  }
+\cs_generate_variant:Nn \@@_option_removed:n { V }
+%    \end{macrocode}
+% \end{macro}
+%
+% \subsection{Load-time option}
+%
+%    \begin{macrocode}
+\clist_map_inline:nn
+  {
+    abbreviations           ,
+    binary-units            ,
+    load-configurations     ,
+    version-1-compatibility
+  }
+  {
+    \keys_define:nn { siunitx } { #1 .code:n = \@@_option_removed:n {#1} }
+  }
+%    \end{macrocode}
+%
+% \subsection{Angle options}
+%
+%  All straight-forward emulation.
+%    \begin{macrocode}
+\keys_define:nn { siunitx }
+  {
+    add-arc-degree-zero .code:n =
+      {
+        \@@_option_deprecated:nnV
+          { add-arc-degree-zero }
+          { fill-angle-degrees }
+          \l_keys_value_tl
+      } ,
+    add-arc-degree-zero .default:n = true ,
+    add-arc-minute-zero .code:n =
+      {
+        \@@_option_deprecated:nnV
+          { add-arc-minute-zero }
+          { fill-angle-minutes }
+          \l_keys_value_tl
+      } ,
+    add-arc-minute-zero .default:n = true ,
+    add-arc-second-zero .code:n =
+      {
+        \@@_option_deprecated:nnV
+          { add-arc-second-zero }
+          { fill-angle-seconds }
+          \l_keys_value_tl
+      } ,
+    add-arc-second-zero .default:n = true ,
+    arc-separator .code:n =
+      {
+        \@@_option_deprecated:nnV
+          { arc-separator }
+          { angle-separator }
+          \l_keys_value_tl
+      }
+  }
+%    \end{macrocode}
+%
+% \subsection{Combination functions options}
+%
+%    \begin{macrocode}
+\keys_define:nn { siunitx }
+  {
+    list-units / brackets .code:n =
+      {
+        \@@_option_deprecated:nn
+          { list-units~=~brackets }
+          { list-units~=~bracket }
+      } ,
+    range-units / brackets .code:n =
+      {
+        \@@_option_deprecated:nn
+          { range-units~=~brackets }
+          { range-units~=~bracket }
+      } ,
+    product-units / brackets .code:n =
+      {
+        \@@_option_deprecated:nn
+          { product-units~=~brackets }
+          { product-units~=~bracket }
+      }
+  }
+%    \end{macrocode}
+%
+% \subsection{Command options}
+%
+%    \begin{macrocode}
+\keys_define:nn { siunitx }
+  {
+    overwrite-functions .code:n =
+      {
+        \@@_option_deprecated:nnV
+          { overwrite-functions }
+          { overwrite-commands }
+          \l_keys_value_tl
+      } ,
+    overwrite-functions .default:n = true
+  }
+%    \end{macrocode}
+%
+% \subsection{Print options}
+%
+%    \begin{macrocode}
+\keys_define:nn { siunitx }
+  {
+    detect-all .code:n =
+      {
+        \@@_option_deprecated:nn
+          { detect-all }
+          {
+            mode~=~match , ~
+            propagate-math-font~=~true , ~
+            reset-math-version~=~false , ~
+            reset-text-family~=~false , ~
+            reset-text-series~=~false , ~
+            reset-text-shape~=~false , ~
+            text-family-to-math~=~true , ~
+            text-series-to-math~=~true
+          }
+      } ,
+    detect-family .code:n =
+      {
+        \@@_option_deprecated:nn
+          { detect-family }
+          {
+            reset-text-family~=~false , ~
+            text-family-to-math~=~true
+          }
+      } ,
+    detect-mode .code:n =
+      {
+        \@@_option_deprecated:nn
+          { detect-mode }
+          { mode~=~match }
+      } ,
+    detect-none .code:n =
+      {
+        \@@_option_deprecated:nn
+          { detect-none }
+          {
+            mode~=~math , ~
+            propagate-math-font~=~false , ~
+            reset-math-version~=~true , ~
+            reset-text-family~=~true , ~
+            reset-text-series~=~true , ~
+            text-family-to-math~=~false , ~
+            text-series-to-math~=~false
+          }
+      } ,
+    detect-shape .code:n =
+      {
+        \@@_option_deprecated:nn
+          { detect-shape }
+          { reset-text-shape~=~false }
+      } ,
+    detect-weight .code:n =
+      {
+        \@@_option_deprecated:nn
+          { detect-weight }
+          {
+            reset-text-series~=~false , ~
+            text-series-to-math~=~true
+          }
+      }
+  }
+\clist_map_inline:nn
+  {
+    detect-display-math  ,
+    detect-inline-family ,
+    detect-inline-weight
+  }
+  {
+    \keys_define:nn { siunitx } { #1 .code:n = \@@_option_removed:n {#1} }
+  }
+%    \end{macrocode}
+%
+% The old font insertion options.
+%    \begin{macrocode}
+\clist_map_inline:nn
+  {
+    math-rm        ,
+    math-sf        ,
+    math-tt        ,
+    number-math-rm ,
+    number-math-sf ,
+    number-math-tt ,
+    number-text-rm ,
+    number-text-sf ,
+    number-text-tt ,
+    text-rm        ,
+    text-sf        ,
+    text-tt        ,
+    unit-math-rm   ,
+    unit-math-sf   ,
+    unit-math-tt   ,
+    unit-text-rm   ,
+    unit-text-sf   ,
+    unit-text-tt
+  }
+  {
+    \keys_define:nn { siunitx } { #1 .code:n = \@@_option_removed:n {#1} }
+  }
+%    \end{macrocode}
+%
+% \subsection{Symbol options}
+%
+%    \begin{macrocode}
+\clist_map_inline:nn
+  {
+    math-angstrom  ,
+    math-arcminute ,
+    math-arcsecond ,
+    math-celsius   ,
+    math-degree    ,
+    math-micro     ,
+    math-ohm       ,
+    text-angstrom  ,
+    text-arcminute ,
+    text-arcsecond ,
+    text-celsius   ,
+    text-degree    ,
+    text-micro     ,
+    text-ohm       ,
+  }
+  {
+    \keys_define:nn { siunitx } { #1 .code:n = \@@_option_removed:n {#1} }
+  }
+%    \end{macrocode}
+%
+% \subsection{Number options}
+%
+%    \begin{macrocode}
+\keys_define:nn { siunitx }
+  {
+    group-digits / false .code:n =
+      {
+        \@@_option_deprecated:nn
+          { group-digits ~ = ~ false }
+          { group-digits ~ = ~ none }
+      } ,
+    group-digits / true .code:n =
+      {
+        \@@_option_deprecated:nn
+          { group-digits ~ = ~ true }
+          { group-digits ~ = ~ all }
+      } ,
+    input-symbols .code:n =
+      {
+        \msg_info:nnnn { siunitx } { option-deprecated }
+          { input-symbols } { input-digits }
+        \tl_put_right:Nn \l_@@_number_input_digit_tl {#1}
+      } ,
+    separate-uncertainty .choice: ,
+    separate-uncertainty / false .code:n =
+      {
+        \@@_option_deprecated:nn
+          { separate-uncertainty }
+          { uncertainty-mode~=~compact }
+      } ,
+    separate-uncertainty / true .code:n =
+      {
+        \@@_option_deprecated:nn
+          { separate-uncertainty }
+          { uncertainty-mode~=~separate }
+      } ,
+    separate-uncertainty .default:n = true
+  }
+%    \end{macrocode}
+%
+% A small number of removed options.
+%    \begin{macrocode}
+\clist_map_inline:nn
+  {
+    input-protect-tokens ,
+    input-quotient       ,
+    output-product       ,
+    quotient-mode
+  }
+  {
+    \keys_define:nn { siunitx } { #1 .code:n = \@@_option_removed:n {#1} }
+  }
+%    \end{macrocode}
+%
+% Options for number processing: largely removals.
+%    \begin{macrocode}
+\keys_define:nn { siunitx }
+  {
+    add-decimal-zero .choice: ,
+    add-decimal-zero / false .code:n =
+      {
+        \@@_option_deprecated:nn
+          { add-decimal-zero }
+          { minimum-decimal-digits~=~0 }
+      } ,
+    add-decimal-zero / true .code:n =
+      {
+        \@@_option_deprecated:nn
+          { add-decimal-zero }
+          { minimum-decimal-digits~=~1 }
+      } ,
+    add-decimal-zero .default:n = true ,
+    add-integer-zero .code:n =
+      {
+        \@@_option_deprecated:nn
+          { add-integer-zero }
+          { print-zero-integer }
+      } ,
+    close-bracket .code:n =
+      { \@@_option_removed:V \l_keys_key_tl } ,
+    bracket-numbers .choice: ,
+    bracket-numbers / false .code:n =
+      {
+        \@@_option_deprecated:nn
+          { bracket-numbers }
+          { bracket-ambiguous-numbers~=~false }
+      } ,
+    bracket-numbers / true .code:n =
+      {
+        \@@_option_deprecated:nn
+          { bracket-numbers }
+          { bracket-ambiguous-numbers~=~true }
+      } ,
+    bracket-numbers .default:n = true ,
+    explicit-sign .code:n =
+      {
+        \str_if_eq:nnTF {#1} { + }
+          {
+            \@@_option_deprecated:nn
+              { explicit-sign }
+              { print-implicit-plus~=~true  }
+          }
+          { \@@_option_removed:V \l_keys_key_tl }
+      } ,
+    group-four-digits .choice: ,
+    group-four-digits / false .code:n =
+      {
+        \@@_option_deprecated:nn
+          { group-four-digits~=~false }
+          { group-minimum-digits~=~5 }
+      } ,
+    group-four-digits / true .code:n =
+      {
+        \@@_option_deprecated:nn
+          { group-four-digits~=~false }
+          { group-minimum-digits~=~4 }
+      } ,
+    bracket-numbers .default:n = true ,
+    omit-uncertainty .code:n =
+      {
+        \@@_option_deprecated:nnV
+          { omit-uncertainty }
+          { drop-uncertainty }
+          \l_keys_value_tl
+      } ,
+    omit-uncertainty .default:n = true ,
+    open-bracket .code:n =
+      { \@@_option_removed:V \l_keys_key_tl } ,
+    retain-unity-mantissa .code:n =
+      {
+        \@@_option_deprecated:nnV
+          { retain-unity-mantissa }
+          { print-unity-mantissa }
+          \l_keys_value_tl
+      } ,
+    retain-unity-mantissa .default:n = true ,
+    retain-zero-exponent .code:n =
+      {
+        \@@_option_deprecated:nnV
+          { retain-zero-exponent }
+          { print-zero-exponent }
+          \l_keys_value_tl
+      } ,
+    retain-zero-exponent .default:n = true ,
+    round-integer-to-decimal .code:n =
+      { \@@_option_removed:V \l_keys_key_tl } ,
+    scientific-notation .choice: ,
+    scientific-notation / engineering .code:n =
+      {
+        \@@_option_deprecated:nn
+          { scientific-notation~=~engineering }
+          { exponent-mode~=~engineering }
+      } ,
+    scientific-notation / fixed .code:n =
+      {
+        \@@_option_deprecated:nn
+          { scientific-notation~=~fixed }
+          { exponent-mode~=~fixed }
+      } ,
+    scientific-notation / false .code:n =
+      {
+        \@@_option_deprecated:nn
+          { scientific-notation~=~false }
+          { exponent-mode~=~input }
+      } ,
+    scientific-notation / true .code:n =
+      {
+        \@@_option_deprecated:nn
+          { scientific-notation~=~true }
+          { exponent-mode~=~scientific }
+      } ,
+    scientific-notation .default:n = true ,
+    zero-decimal-to-integer .code:n =
+      {
+        \@@_option_deprecated:nnV
+          { zero-decimal-to-integer }
+          { drop-zero-decimal }
+          \l_keys_value_tl
+      } ,
+    zero-decimal-to-integer .default:n = true
+  }
+%    \end{macrocode}
+%
+% \subsubsection{Table options}
+%
+%  All straight-forward emulation.
+%    \begin{macrocode}
+\keys_define:nn { siunitx }
+  {
+    table-align-text-post .code:n =
+      {
+        \@@_option_deprecated:nnV
+          { table-align-text-post }
+          { table-align-text-after }
+          \l_keys_value_tl
+      } ,
+    table-align-text-post .default:n = true ,
+    table-align-text-pre .code:n =
+      {
+        \@@_option_deprecated:nnV
+          { table-align-text-pre }
+          { table-align-text-before }
+          \l_keys_value_tl
+      } ,
+    table-align-text-pre .default:n = true ,
+    table-number-alignment / center-decimal-marker .code:n =
+      {
+        \msg_info:nnnn { siunitx } { option-deprecated }
+          { table-number-alignment~=~center-decimal-marker }
+          { table-alignment-mode~=~marker }
+        \keys_set:nn
+          { siunitx }
+          { table-alignment-mode = marker }
+      } ,
+    table-omit-exponent .code:n =
+      {
+        \msg_info:nnnn { siunitx } { option-deprecated }
+          { table-omit-exponent } { drop-exponent }
+        \str_if_eq:VnTF \l_keys_value_tl { true }
+          {
+            \keys_set:nn
+              { siunitx }
+              { drop-exponent = true , exponent-mode = fixed }
+          }
+          {
+            \keys_set:nn
+              { siunitx }
+              { drop-exponent = false }
+          }
+      } ,
+    table-omit-exponent .default:n = true ,
+    table-parse-only .code:n =
+      {
+        \msg_info:nnnn { siunitx } { option-deprecated }
+          { table-parse-only }
+          { table-alignment-mode~=~none }
+        \str_if_eq:VnTF \l_keys_value_tl { false }
+          {
+            \keys_set:nn
+              { siunitx }
+              { table-alignment-mode = marker }
+          }
+          {
+            \keys_set:nn
+              { siunitx }
+              { table-alignment-mode = none }
+          }
+      } ,
+    table-space-text-post .code:n =
+      {
+        \msg_info:nnnn { siunitx } { option-deprecated }
+          { table-space-text-post }
+          { table-format }
+        \tl_set:Nn \l_@@_table_after_model_tl {#1}
+      } ,
+    table-space-text-pre .code:n =
+      {
+        \msg_info:nnnn { siunitx } { option-deprecated }
+          { table-space-text-post }
+          { table-format }
+        \tl_set:Nn \l_@@_table_before_model_tl {#1}
+      }
+  }
+%    \end{macrocode}
+%
+% \begin{macro}{\@@_option_table_format:n}
+% \begin{macro}
+%   {
+%     \@@_option_table_comparator:nnnnnnn           ,
+%     \@@_option_table_figures-decimal:nnnnnnnn     ,
+%     \@@_option_table_figures-exponent:nnnnnnnn    ,
+%     \@@_option_table_figures-integer:nnnnnnnn     ,
+%     \@@_option_table_figures-uncertainty:nnnnnnnn ,
+%     \@@_option_table_sign-exponent:nnnnnnnn       ,
+%     \@@_option_table_sign-mantissa:nnnnnnnn
+%   }
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_option_table_format:n #1
+  {
+    \msg_info:nnnn { siunitx } { option-deprecated }
+      { table- #1 }
+      { table-format }
+    \tl_set:Nx \l_@@_table_format_tl
+      {
+        \cs:w @@_option_table_ #1 :nnnnnnnn
+          \exp_after:wN \exp_after:wN \exp_after:wN \cs_end:
+          \exp_after:wN \l_@@_table_format_tl
+          \exp_after:wN { \l_keys_value_tl }
+      }
+    \exp_after:wN \@@_table_generate_model:nnnnnnn
+      \l_@@_table_format_tl
+  }
+\cs_new:Npn \@@_option_table_comparator:nnnnnnnn #1#2#3#4#5#6#7#8
+  { \exp_not:n { {#8} {#2} {#3} {#4} {#5} {#6} {#7} } }
+\cs_new:cpn { @@_option_table_figures-decimal:nnnnnnnn }
+  #1#2#3#4#5#6#7#8
+  { \exp_not:n { {#1} {#2} {#3} {#8} {#5} {#6} {#7} } }
+\cs_new:cpn { @@_option_table_figures-exponent:nnnnnnnn }
+  #1#2#3#4#5#6#7#8
+  { \exp_not:n { {#1} {#2} {#3} {#4} {#5} {#6} {#8} } }
+\cs_new:cpn { @@_option_table_figures-integer:nnnnnnnn }
+  #1#2#3#4#5#6#7#8
+  { \exp_not:n { {#1} {#2} {#8} {#4} {#5} {#6} {#7} } }
+\cs_new:cpn { @@_option_table_figures-uncertainty:nnnnnnnn }
+  #1#2#3#4#5#6#7#8
+  { \exp_not:n { {#1} {#2} {#3} {#4} { { S } {#8} } {#6} {#7} } }
+\cs_new:cpn { @@_option_table_sign-exponent:nnnnnnnn }
+  #1#2#3#4#5#6#7#8
+  { \exp_not:n { {#1} {#2} {#3} {#4} {#5} {#8} {#7} } }
+\cs_new:cpn { @@_option_table_sign-mantissa:nnnnnnnn }
+  #1#2#3#4#5#6#7#8
+  { \exp_not:n { {#1} {#8} {#3} {#4} {#5} {#6} {#7} } }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% Options which all use the same emulation set up.
+%    \begin{macrocode}
+\keys_define:nn { siunitx }
+  {
+    table-comparator .code:n =
+      { \@@_option_table_format:n { comparator } } ,
+    table-figures-decimal .code:n =
+      { \@@_option_table_format:n { figures-decimal } } ,
+    table-figures-exponent .code:n =
+      { \@@_option_table_format:n { figures-exponent } } ,
+    table-figures-integer .code:n =
+      { \@@_option_table_format:n { figures-integer } } ,
+    table-figures-uncertainty .code:n =
+      { \@@_option_table_format:n { figures-uncertainty } } ,
+    table-sign-exponent .code:n =
+      { \@@_option_table_format:n { sign-exponent } } ,
+    table-sign-mantissa .code:n =
+      { \@@_option_table_format:n { sign-mantissa } }
+  }
+%    \end{macrocode}
+%
+% \subsection{Unit options}
+%
+%    \begin{macrocode}
+\keys_define:nn { siunitx }
+  {
+    fraction-function .code:n =
+      {
+        \@@_option_deprecated:nnV
+          { fraction-function }
+          { fraction-command }
+          \l_keys_value_tl
+      } ,
+    literal-superscript-as-power .code:n =
+      { \@@_option_removed:V \l_keys_key_tl } ,
+    power-font .code:n =
+      { \@@_option_removed:V \l_keys_key_tl } ,
+    qualifier-mode / brackets .code:n =
+      {
+        \@@_option_deprecated:nn
+          { qualifier-mode~=~brackets }
+          { qualifier-mode~=~bracket }
+      } ,
+    qualifier-mode / space .code:n =
+      {
+        \msg_info:nnnn { siunitx } { option-deprecated }
+          { qualifier-mode~=~space }
+          { qualifier-mode~=~phrase"~plus~"qualifier-phrase=\  }
+        \keys_set:nn
+          { siunitx }
+          { qualifier-mode = phrase, qualifier-phrase = \  }
+      } ,
+    qualifier-mode / text .code:n =
+      {
+        \@@_option_deprecated:nn
+          { qualifier-mode~=~text }
+          { qualifier-mode~=~combine }
+      }
+  }
+%    \end{macrocode}
+%
+% The deprecated settings for |per-mode| have to be handled manually as
+% |per-mode| is no longer a choice.
+%    \begin{macrocode}
+\keys_define:nn { siunitx }
+  {
+    display-per-mode / reciprocal .code:n =
+      {
+        \@@_option_deprecated:nn
+          { per-mode~=~reciprocal }
+          { per-mode~=~power }
+      } ,
+    inline-per-mode / reciprocal .code:n =
+      {
+        \@@_option_deprecated:nn
+          { per-mode~=~reciprocal }
+          { per-mode~=~power }
+      } ,
+    display-per-mode / reciprocal-positive-first .code:n =
+      {
+        \@@_option_deprecated:nn
+          { per-mode~=~reciprocal-positive-first }
+          { per-mode~=~power-positive-first }
+      } ,
+    inline-per-mode / reciprocal-positive-first .code:n =
+      {
+        \@@_option_deprecated:nn
+          { per-mode~=~reciprocal-positive-first }
+          { per-mode~=~power-positive-first }
+      }
+  }
+%    \end{macrocode}
+%
+% \subsection{Quantity units}
+%
+%    \begin{macrocode}
+\keys_define:nn { siunitx }
+  {
+    allow-number-unit-breaks .code:n =
+      {
+        \@@_option_deprecated:nnV
+          { allow-number-unit-breaks  }
+          { allow-quantity-breaks }
+          \l_keys_value_tl
+      } ,
+    allow-number-unit-breaks .default:n = true ,
+    exponent-to-prefix .choice: ,
+    exponent-to-prefix / false .code:n =
+      {
+        \@@_option_deprecated:nn
+          { exponent-to-prefix~=~false }
+          { prefix-mode~=~input }
+      } ,
+    exponent-to-prefix / true .code:n =
+      {
+        \@@_option_deprecated:nn
+          { exponent-to-prefix~=~true }
+          { prefix-mode~=~combine-exponent }
+      } ,
+    exponent-to-prefix .default:n = true ,
+    multi-part-units .choice: ,
+    multi-part-units / brackets . code:n =
+      {
+        \@@_option_deprecated:nn
+          { multi-part-units~=~brackets }
+          { separate-uncertainty-units~=~bracket }
+      } ,
+    multi-part-units / repeat . code:n =
+      {
+        \@@_option_deprecated:nn
+          { multi-part-units~=~repeat }
+          { separate-uncertainty-units~=~repeat }
+      } ,
+    multi-part-units / single . code:n =
+      {
+        \@@_option_deprecated:nn
+          { multi-part-units~=~single }
+          { separate-uncertainty-units~=~single }
+      } ,
+    number-unit-product .code:n =
+      {
+        \@@_option_deprecated:nnV
+          { number-unit-product }
+          { quantity-product }
+          \l_keys_value_tl
+      } ,
+    number-unit-separator .code:n =
+      {
+        \@@_option_deprecated:nnV
+          { number-unit-separator }
+          { quantity-product }
+          \l_keys_value_tl
+      } ,
+    prefixes-as-symbols .choice: ,
+    prefixes-as-symbols / false . code:n =
+      {
+        \@@_option_deprecated:nn
+          { prefixes-as-symbols~=~false }
+          { prefix-mode~=~extract-exponent }
+      } ,
+    prefixes-as-symbols / true . code:n =
+      {
+        \@@_option_deprecated:nn
+          { prefixes-as-symbols~=~true }
+          { prefix-mode~=~input }
+      } ,
+    prefixes-as-symbols .default:n = true
+  }
+%    \end{macrocode}
+%
+%    \begin{macrocode}
+%</options>
+%    \end{macrocode}
+%
+% \subsection{Preamble commands}
+%
+%    \begin{macrocode}
+%<*interfaces>
+%    \end{macrocode}
+%
+% \begin{macro}{\DeclareBinaryPrefix}
+%   We simply drop |#3|.
+%    \begin{macrocode}
+\NewDocumentCommand \DeclareBinaryPrefix { +m m m }
+  {
+    \siunitx_declare_prefix:Nn #1 {#2}
+  }
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\DeclareSIPrePower, \DeclareSIPostPower}
+%   Simply use a throw-away command for the part we do not need: this can
+%   be followed by some clean-up.
+%    \begin{macrocode}
+\NewDocumentCommand \DeclareSIPrePower { +m m }
+  {
+    \siunitx_declare_power:NNn #1 \@@_tmp:w {#2}
+    \seq_remove_all:Nn \l_siunitx_unit_symbolic_seq { \@@_tmp:w }
+  }
+\NewDocumentCommand \DeclareSIPostPower { +m m }
+  {
+    \siunitx_declare_power:NNn \@@_tmp:w #1 {#2}
+    \seq_remove_all:Nn \l_siunitx_unit_symbolic_seq { \@@_tmp:w }
+  }
+%    \end{macrocode}
+% \end{macro}
+%
+% \subsection{Document commands}
+%
+% \begin{macro}{\si}
+%   A straight copy of \cs{unit}.
+%    \begin{macrocode}
+\NewDocumentCommand \si { O { } > { \TrimSpaces } m }
+  {
+    \mode_leave_vertical:
+    \group_begin:
+      \siunitx_unit_options_apply:n {#2}
+      \keys_set:nn { siunitx } {#1}
+      \siunitx_unit_format:nN {#2} \l_@@_tmp_tl
+      \siunitx_print_unit:V \l_@@_tmp_tl
+    \group_end:
+  }
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\SI}
+%   Almost the same as \cs{qty}, but with the addition pre-unit.
+%    \begin{macrocode}
+\NewDocumentCommand \SI { O { } m o > { \TrimSpaces } m }
+  {
+    \mode_leave_vertical:
+    \group_begin:
+      \siunitx_unit_options_apply:n {#4}
+      \keys_set:nn { siunitx } {#1}
+      \IfNoValueF {#3}
+        {
+          \siunitx_unit_format:nN {#3} \l_@@_tmp_tl
+          \siunitx_print_unit:V \l_@@_tmp_tl
+          \nobreak
+        }
+      \siunitx_quantity:nn {#2} {#4}
+    \group_end:
+  }
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\SIlist, \SIrange}
+%   Straight copies.
+%    \begin{macrocode}
+\NewDocumentCommand \SIlist
+  { O { } > { \SplitList { ; } } m > { \TrimSpaces } m }
+  {
+    \mode_leave_vertical:
+    \group_begin:
+      \siunitx_unit_options_apply:n {#3}
+      \keys_set:nn { siunitx } {#1}
+      \siunitx_quantity_list:nn {#2} {#3}
+    \group_end:
+  }
+\NewDocumentCommand \SIrange { O { } m m > { \TrimSpaces } m }
+  {
+    \mode_leave_vertical:
+    \group_begin:
+      \siunitx_unit_options_apply:n {#4}
+      \keys_set:nn { siunitx } {#1}
+      \siunitx_quantity_range:nnn {#2} {#3} {#4}
+    \group_end:
+  }
+%    \end{macrocode}
+% \end{macro}
+%
+% \subsection{Symbol commands}
+%
+%    \begin{macrocode}
+%<@@=siunitx_emulation>
+%    \end{macrocode}
+%
+% \begin{macro}{\@@_non_latin:n}
+% \begin{macro}{\@@_non_latin:nnnn}
+%   As in \pkg{siunitx-unit}, but internal in both cases as it's rather
+%   specialised.
+%    \begin{macrocode}
+\bool_lazy_or:nnTF
+  { \sys_if_engine_luatex_p: }
+  { \sys_if_engine_xetex_p: }
+  {
+    \cs_new:Npn \@@_non_latin:n #1
+      {
+        \exp_after:wN \exp_after:wN \exp_after:wN
+          \exp_not:N \char_generate:nn {#1} { \char_value_catcode:n {#1} }
+      }
+  }
+  {
+    \cs_new:Npn \@@_non_latin:n #1
+      {
+        \exp_last_unbraced:Nf \@@_non_latin:nnnn
+          { \char_to_utfviii_bytes:n {#1} }
+      }
+    \cs_new:Npn \@@_non_latin:nnnn #1#2#3#4
+      {
+        \exp_after:wN \exp_after:wN \exp_after:wN
+          \exp_not:N \char_generate:nn {#1} { 13 }
+        \exp_after:wN \exp_after:wN \exp_after:wN
+          \exp_not:N \char_generate:nn {#2} { 13 }
+      }
+  }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}
+%   {
+%     \SIUnitSymbolAngstrom  ,
+%     \SIUnitSymbolArcminute ,
+%     \SIUnitSymbolArcsecond ,
+%     \SIUnitSymbolCelsius   ,
+%     \SIUnitSymbolDegree    ,
+%     \SIUnitSymbolMicro     ,
+%     \SIUnitSymbolOhm
+%   }
+%     The same setup as elsewhere but localised to the emulation module
+%    \begin{macrocode}
+\AtBeginDocument
+  {
+    \cs_new_protected:Npn \SIUnitSymbolArcminute
+       { \ensuremath { { } ' } }
+    \cs_new_protected:Npn \SIUnitSymbolArcsecond
+       { \ensuremath { { } '' } }
+    \@ifpackageloaded { fontspec }
+      {
+        \cs_new_protected:Npx \SIUnitSymbolAngstrom
+           { \@@_non_latin:n { "00C5 } }
+        \cs_new_protected:Npx \SIUnitSymbolDegree
+           { \@@_non_latin:n { "00B0 } }
+        \cs_new_protected:Npx \SIUnitSymbolCelsius
+           { \@@_non_latin:n { "00B0 } C }
+      }
+      {
+        \cs_new_protected:Npx \SIUnitSymbolAngstrom
+          {
+            \siunitx_print_text:n
+              { \@@_non_latin:n { "00C5 } }
+          }
+        \cs_new_protected:Npx \SIUnitSymbolCelsius
+          {
+            \siunitx_print_text:n
+              { \@@_non_latin:n { "00B0 } } C
+          }
+        \cs_new_protected:Npx \SIUnitSymbolDegree
+          {
+            \siunitx_print_text:n
+              { \@@_non_latin:n { "00B0 } }
+          }
+      }
+    \cs_new_protected:Npx \SIUnitSymbolMicro
+       {
+          \siunitx_print_text:n
+            {
+              \bool_lazy_or:nnTF
+                { \sys_if_engine_luatex_p: }
+                { \sys_if_engine_xetex_p: }
+                { \@@_non_latin:n { "00B5 } }
+                { \exp_not:N \textmu }
+            }
+       }
+    \cs_new_protected:Npx \SIUnitSymbolOhm
+       {
+          \exp_not:N \ifmmode
+            \cs_if_exist:NTF \upOmega
+              { \exp_not:N \upOmega }
+              { \exp_not:N \Omega }
+          \exp_not:N \else
+            \siunitx_print_text:n
+              {
+                \bool_lazy_or:nnTF
+                  { \sys_if_engine_luatex_p: }
+                  { \sys_if_engine_xetex_p: }
+                  { \@@_non_latin:n { "03A9 } }
+                  { \exp_not:N \textohm }
+              }
+          \exp_not:N \fi
+       }
+  }
+%    \end{macrocode}
+% \end{macro}
+%
+% \subsection{Unit commands}
+%
+% \begin{macro}{\celsius}
+%   Deprecated but should work.
+%    \begin{macrocode}
+\siunitx_declare_unit:Nn \celsius { \degreeCelsius }
+%    \end{macrocode}
+% \end{macro}
+%
+% Units that have been removed: to avoid issues, we mark them as deprecated.
+%    \begin{macrocode}
+\msg_new:nnn { siunitx } { unit-deprecated }
+  {
+    Unit~macro~#1~has~been~deprecated~in~this~release. \\ \\
+    The~BIPM~have~removed~this~unit~from~the~SI~Brochure.~
+    You~should~define~it~yourself~using~\token_to_str:N \DeclareSIUnit\ %
+    in~your~source.~The~current~definition~is\\ \\
+    \token_to_str:N \DeclareSIUnit #1 \{ #2 \}
+  }
+\cs_gset_protected:Npn \@@_tmp:w #1#2
+  {
+    \quark_if_recursion_tail_stop:N #1
+    \bool_new:c { g_@@_unit_warning_ \token_to_str:N #1 _bool }
+    \siunitx_declare_unit:Nx #1
+      {
+        \exp_not:N \bool_if:NF
+          \exp_not:c { g_@@_unit_warning_ \token_to_str:N #1 _bool  }
+          {
+            \exp_not:N \bool_gset_true:N 
+              \exp_not:c { g_@@_unit_warning_ \token_to_str:N #1 _bool  }
+            \msg_warning:nnnn { siunitx } { unit-deprecated }
+              { \token_to_str:N #1 } {#2}
+          }
+        #2
+      }
+    \@@_tmp:w
+  }
+\@@_tmp:w
+  \atomicmassunit   { u }
+  \bar              { bar }
+  \barn             { b }
+  \bohr
+    {
+      \exp_not:N \text
+        { \exp_not:N \ensuremath { a } } \char_generate:nn { `\_ } { 8 } { 0 }
+    }
+  \clight
+    {
+      \exp_not:N \text
+        { \exp_not:N \ensuremath { c } } \char_generate:nn { `\_ } { 8 } { 0 }
+    }
+  \electronmass
+    {
+      \exp_not:N \text { \exp_not:N \ensuremath { m } }
+      \char_generate:nn { `\_ } { 8 } { \exp_not:N \mathrm { e } }
+    }
+  \elementarycharge { \text { \ensuremath { e } } }
+  \hartree
+    {
+      \exp_not:N \text { \exp_not:N \ensuremath { E } }
+      \char_generate:nn { `\_ } { 8 } { \exp_not:N \mathrm { h } }
+    }
+  \knot             { kn }
+  \mmHg             { mmHg }
+  \nauticalmile     { M }
+  \planckbar
+    { \exp_not:N \text { \exp_not:N \ensuremath { \exp_not:N \hbar } } }
+  \q_recursion_tail { }
+  \q_recursion_stop
+\@ifpackageloaded { fontspec }
+  {
+    \@@_tmp:w \angstrom { \@@_non_latin:n { "00C5 } }
+  }
+  {
+    \@@_tmp:w \angstrom
+      { \exp_not:N \text { \@@_non_latin:n { "00C5 } } }
+  }
+  \q_recursion_tail { }
+  \q_recursion_stop
+%    \end{macrocode}
+%
+% \subsection{Communication with \pkg{pgf}}
+%
+%    \begin{macrocode}
+%<@@=siunitx_number>
+%    \end{macrocode}
+%
+% \begin{macro}{\SendSettingsToPgf}
+%    \begin{macrocode}
+\NewDocumentCommand \SendSettingsToPgf { }
+  {
+    \use:x
+      {
+        \exp_not:N \pgfqkeys { /pgf/number~format }
+          {
+            \str_if_eq:VnT \l_@@_round_mode_tl { figures }
+              {
+                fixed ,
+                fixed~zerofill = true ,
+              }
+            precision = \int_use:N \l_@@_round_precision_int ,
+            set~decimal~separator =
+              \str_if_eq:VnTF \l_siunitx_number_output_decimal_tl { , }
+                { \exp_not:N \mathord }
+                { \use:n }
+                  { \exp_not:V \l_siunitx_number_output_decimal_tl } ,
+            set~thousands~separator =
+            set~decimal~separator =
+              \str_if_eq:VnTF \l_@@_group_separator_tl { , }
+                { \exp_not:N \mathord }
+                { \use:n }
+                  { \exp_not:V \l_@@_group_separator_tl } ,
+            min~exponent~for~1000~sep =
+              \int_eval:n { \l_@@_group_minimum_int - 1 } ,
+            \bool_lazy_or:nnF
+              { \l_@@_group_decimal_bool }
+              { \l_@@_group_integer_bool }
+              { min~exponent~for~1000~sep = 999 , }
+            showpos = 
+              \bool_if:NTF \l_@@_implicit_plus_bool
+                { true }
+                { false }
+          }
+      }
+  }
+%    \end{macrocode}
+% \end{macro}
+%
+%    \begin{macrocode}
+%</interfaces>
+%    \end{macrocode}
+%
+%    \begin{macrocode}
+%</package>
+%    \end{macrocode}
+%
+% \end{implementation}
+%
+% \PrintIndex

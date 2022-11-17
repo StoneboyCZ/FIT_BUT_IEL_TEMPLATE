@@ -1,0 +1,1593 @@
+% \iffalse meta-comment
+%
+% File: siunitx-table.dtx Copyright (C) 2016-2019,2021,2022 Joseph Wright
+%
+% It may be distributed and/or modified under the conditions of the
+% LaTeX Project Public License (LPPL), either version 1.3c of this
+% license or (at your option) any later version.  The latest version
+% of this license is in the file
+%
+%    https://www.latex-project.org/lppl.txt
+%
+% This file is part of the "siunitx bundle" (The Work in LPPL)
+% and all files in that bundle must be distributed together.
+%
+% The released version of this bundle is available from CTAN.
+%
+% -----------------------------------------------------------------------
+%
+% The development version of the bundle can be found at
+%
+%    https://github.com/josephwright/siunitx
+%
+% for those people who are interested.
+%
+% -----------------------------------------------------------------------
+%
+%<*driver>
+\documentclass{l3doc}
+\ProvideDocumentCommand\foreign{m}{\textit{#1}}
+% The next line is needed so that \GetFileInfo will be able to pick up
+% version data
+\usepackage{siunitx}
+\begin{document}
+  \DocInput{\jobname.dtx}
+\end{document}
+%</driver>
+% \fi
+%
+% \GetFileInfo{siunitx.sty}
+%
+% \title{^^A
+%   \pkg{siunitx-table} -- Formatting numbers in tables^^A
+%   \thanks{This file describes \fileversion,
+%     last revised \filedate.}^^A
+% }
+%
+% \author{^^A
+%  Joseph Wright^^A
+%  \thanks{^^A
+%    E-mail:
+%    \href{mailto:joseph.wright@morningstar2.co.uk}
+%      {joseph.wright@morningstar2.co.uk}^^A
+%   }^^A
+% }
+%
+% \date{Released \filedate}
+%
+% \maketitle
+%
+% \begin{documentation}
+%
+% \section{Numbers in tables}
+%
+% This submodule is concerned with formatting numbers in table cells or
+% similar fixed-width contexts. The main function, \cs{siunitx_cell_begin:w},
+% is designed to work with the normal \LaTeXe{} tablular cell construct
+% featuring \cs{ignorespaces}. Therefore, if used outside of a \LaTeXe{}
+% tabular, it is necessary to provide this token.
+%
+% \begin{function}{\siunitx_cell_begin:w, \siunitx_cell_end:}
+%   \begin{syntax}
+%     \cs{siunitx_cell_begin:w} \meta{preamble} \cs{ignorespaces}
+%       \meta{content}
+%     \cs{siunitx_cell_end:}
+%   \end{syntax}
+%   Collects the \meta{preamble} and \meta{content} tokens, and determines
+%   if it is text or a number (as parsed by \cs{siunitx_number_parse:nN}).
+%   It produces output of a fixed width suitable for alignment in a table,
+%   although it is not \emph{required} that the code is used within a cell.
+%   Note that |\ignorespaces| must occur in the \enquote{cell}: it marks
+%   the end of the \TeX{} |\halign| template.
+% \end{function}
+%
+% \subsection{Key--value options}
+%
+% The options defined by this submodule are available within the \pkg{l3keys}
+% |siunitx| tree.
+%
+% \begin{function}{table-align-comparator}
+%   \begin{syntax}
+%     |table-align-comparator| = |true|\verb"|"|false|
+%   \end{syntax}
+%   Switch which determines whether alignment of comparators is attempted
+%   within table cells. The standard setting is |true|.
+% \end{function}
+%
+% \begin{function}{table-align-exponent}
+%   \begin{syntax}
+%     |table-align-exponent| = |true|\verb"|"|false|
+%   \end{syntax}
+%   Switch which determines whether alignment of exponents is attempted
+%   within table cells. The standard setting is |true|.
+% \end{function}
+%
+% \begin{function}{table-align-text-after}
+%   \begin{syntax}
+%     |table-align-text-after| = |true|\verb"|"|false|
+%   \end{syntax}
+%   Switch which determines whether alignment of text falling after a number
+%   is attempted within table cells. The standard setting is |true|.
+% \end{function}
+%
+% \begin{function}{table-align-text-before}
+%   \begin{syntax}
+%     |table-align-text-before| = |true|\verb"|"|false|
+%   \end{syntax}
+%   Switch which determines whether alignment of text falling before a number
+%   is attempted within table cells. The standard setting is |true|.
+% \end{function}
+%
+% \begin{function}{table-align-uncertainty}
+%   \begin{syntax}
+%     |table-align-uncertainty| = |true|\verb"|"|false|
+%   \end{syntax}
+%   Switch which determines whether alignment of separated uncertainty values
+%   is attempted within table cells. The standard setting is |true|.
+% \end{function}
+%
+% \begin{function}{table-alignment}
+%   \begin{syntax}
+%     |table-alignment| = |center|\verb"|"|left|\verb"|"|right|
+%   \end{syntax}
+%   Selects the alignment of all tabular content with the margins of the table
+%   cell (or other boundary). See also |table-number-alignment| and
+%   |table-text-alignment|. The standard setting is |center|.
+% \end{function}
+%
+% \begin{function}{table-alignment-mode}
+%   \begin{syntax}
+%     |table-alignment-mode| = |format|\verb"|"|marker|\verb"|"|none|
+%   \end{syntax}
+%   Selects the method used to align numbers with the desired position in the
+%   cell (set by |table-alignment|). When set to |format|, a dedicated
+%   amount of space is calculated from the |table-format|. When |marker|
+%   is selected, alignment is carried out symmetrically around the decimal
+%   marker. Finally, |none| switches off all alignment: numbers are parsed
+%   and formatted but with no attempt at placement within the cell. The
+%   standard setting is |marker|.
+% \end{function}
+%
+% \begin{function}{table-auto-round}
+%   \begin{syntax}
+%     |table-auto-round| = |true|\verb"|"|false|
+%   \end{syntax}
+%   Switch which determines whether numbers are rounded to fit within
+%   the |table-format| specification (if possible). The standard
+%   setting is |false|.
+% \end{function}
+%
+% \begin{function}{table-column-width}
+%   \begin{syntax}
+%     |table-column-width| = \meta{width}
+%   \end{syntax}
+%   Sets the width of the table column used for numbers. This is only used
+%   when |table-fixed-width| is |true|.
+% \end{function}
+%
+% \begin{function}{table-fixed-width}
+%   \begin{syntax}
+%     |table-fixed-width| = |true|\verb"|"|false|
+%   \end{syntax}
+%   Switch which determines whether a fixed-width column is used for numbers
+%   in tables. When |true|, the width is taken from |table-column-width|. The
+%   standard setting is |false|.
+% \end{function}
+%
+% \begin{function}{table-format}
+%   \begin{syntax}
+%     |table-format| = \meta{format}
+%   \end{syntax}
+%   Describes the amount of space that should be reserved when
+%   |table-alignment-mode| is set to |format|. The \meta{format} takes the
+%   same general form as input for a table cell, with the numerical parts
+%   describing how many digits to reserve space for. For example, |1.2e3|
+%   would allow space for one digit in the integer part, two in the decimal
+%   part and three in the exponent part. Signs can be allowed for using any
+%   valid input sign, so for example |+1.2 \pm 1.2| would allow for a sign,
+%   a number with one integer and two decimal digits and an uncertainty of
+%   the same size.
+% \end{function}
+%
+% \begin{function}{table-number-alignment}
+%   \begin{syntax}
+%     |table-number-alignment| = |center|\verb"|"|left|\verb"|"|right|
+%   \end{syntax}
+%   Selects the alignment of numerical content with the margins of the table
+%   cell (or other boundary). See also |table-alignment| and
+%   |table-text-alignment|. The standard setting is |center|.
+% \end{function}
+%
+% \begin{function}{table-text-alignment}
+%   \begin{syntax}
+%     |table-text-alignment| = |center|\verb"|"|left|\verb"|"|none|\verb"|"|right|
+%   \end{syntax}
+%   Selects the alignment of non-numerical content with the margins of the
+%   table cell (or other boundary). See also |table-alignment| and
+%   |table-number-alignment|. Notice the additional support for |none| here.
+%   The standard setting is |center|.
+% \end{function}
+%
+% \end{documentation}
+%
+% \begin{implementation}
+%
+% \section{\pkg{siunitx-table} implementation}
+%
+% Start the \pkg{DocStrip} guards.
+%    \begin{macrocode}
+%<*package>
+%    \end{macrocode}
+%
+% Identify the internal prefix (\LaTeX3 \pkg{DocStrip} convention): only
+% internal material in this \emph{submodule} should be used directly.
+%    \begin{macrocode}
+%<@@=siunitx_table>
+%    \end{macrocode}
+%
+% \begin{variable}{\l_@@_tmp_box, \l_@@_tmp_dim, \l_@@_tmp_tl}
+%   Scratch space.
+%    \begin{macrocode}
+\box_new:N \l_@@_tmp_box
+\dim_new:N \l_@@_tmp_dim
+\tl_new:N \l_@@_tmp_tl
+%    \end{macrocode}
+% \end{variable}
+%
+% \subsection{Interface functions}
+%
+% \begin{variable}{\l_@@_text_bool}
+%   Used to track that a cell is purely text.
+%    \begin{macrocode}
+\bool_new:N \l_@@_text_bool
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{macro}{\siunitx_cell_begin:w}
+% \begin{macro}{\siunitx_cell_end:}
+%   The start and end of the cell need to deal with the possibility of
+%   a cell containing only text.
+%    \begin{macrocode}
+\cs_new_protected:Npn \siunitx_cell_begin:w
+  {
+    \bool_set_false:N \l_@@_text_bool
+    \bool_if:NTF \l_siunitx_number_parse_bool
+      { \@@_collect_begin: }
+      { \@@_direct_begin: }
+  }
+\cs_new_protected:Npn \siunitx_cell_end:
+  {
+    \bool_if:NF \l_@@_text_bool
+      {
+        \bool_if:NTF \l_siunitx_number_parse_bool
+          { \@@_collect_end: }
+          { \@@_direct_end: }
+      }
+  }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% \subsection{Collecting tokens}
+%
+% \begin{variable}{\l_@@_collect_tl}
+%   Space for tokens.
+%    \begin{macrocode}
+\tl_new:N \l_@@_collect_tl
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{macro}{\@@_collect_begin:}
+% \begin{macro}{\@@_collect_begin:w}
+%   Collecting a tabular cell means doing a token-by-token collection.
+%   In previous versions of \pkg{siunitx} that was done along with picking
+%   out the numerical part, but the code flow ends up very tricky. Here,
+%   therefore, we just collect up the unchanged tokens first. The definition of
+%   \cs{cr} is used to allow collection of any tokens
+%   inserted after the main content when dealing with the last cell of a row:
+%   the \enquote{group} around it is needed to avoid issues with the underlying
+%   |\halign|. (The approach is based on that in \pkg{collcell}.) Whilst the
+%   group formed by a cell will normally tidy up |\cr|, we add an extra one as
+%   the collected material could be a tabular in itself. We use an auxiliary to
+%   fish out the |\ignorespaces| from the template: that has to go to avoid
+%   issues with the peek-ahead code (everything before the |#| needs to be
+%   read \emph{before} the Appendix~D trick gets applied). Some packages
+%   add additional tokens before the |\ignorespaces|, which are dealt with by
+%   the delimited argument.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_collect_begin:
+  {
+    \group_begin:
+      \tl_clear:N \l_@@_collect_tl
+      \if_false: { \fi:
+      \cs_set_protected:Npn \cr
+        {
+          \@@_collect_loop:
+          \tex_cr:D
+        }
+      \if_false: } \fi:
+      \@@_collect_begin:w
+  }
+\cs_new_protected:Npn \@@_collect_begin:w #1 \ignorespaces
+  { \@@_collect_loop: #1 }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\@@_collect_loop:}
+% \begin{macro}{\@@_collect_group:n}
+% \begin{macro}{\@@_collect_token:N, \@@_collect_token_aux:N}
+% \begin{macro}{\@@_collect_relax:N}
+% \begin{macro}{\@@_collect_search:NnF}
+% \begin{macro}{\@@_collect_search_aux:NNn}
+%   Collecting up the cell content needs a loop: this is done using
+%   a |peek| approach as it's most natural. (A slower approach is possible
+%   using something like the |\text_lowercase:n| loop code.) The set of
+%   possible tokens is somewhat limited compared to an arbitrary cell
+%   (\foreign{cf.}~the approach in \pkg{collcell}): the special cases are
+%   pulled out for manual handling. The flexible lookup approach is more-or-less
+%   the same idea as in the kernel |case| functions. The |\relax| special case
+%   covers the case where |\\| has been expanded in an empty cell. This has to
+%   be an explicit token as we can get the same meaning from |\protect|.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_collect_loop:
+  {
+    \peek_remove_spaces:n
+      {
+        \peek_catcode:NTF \c_group_begin_token
+          { \@@_collect_group:n }
+          { \@@_collect_token:N }
+      }
+  }
+\cs_new_protected:Npn \@@_collect_group:n #1
+  {
+    \tl_put_right:Nn \l_@@_collect_tl { {#1} }
+    \@@_collect_loop:
+  }
+\cs_new_protected:Npn \@@_collect_token:N #1
+  {
+    \@@_collect_search:NnF #1
+      {
+        \unskip            { \@@_collect_loop: }
+        \end               { \tabularnewline \end }
+        \relax             { \@@_collect_relax:N #1 }
+        \tabularnewline    { \tabularnewline }
+        \siunitx_cell_end: { \siunitx_cell_end: }
+      }
+      { \@@_collect_token_aux:N #1 }
+  }
+\cs_new_protected:Npn \@@_collect_token_aux:N #1
+  {
+    \tl_put_right:Nn \l_@@_collect_tl {#1}
+    \@@_collect_loop:
+  }
+\cs_new_protected:Npn \@@_collect_relax:N #1
+  {
+    \str_if_eq:nnTF {#1} { \relax }
+      { \relax }
+      { \@@_collect_token_aux:N #1 }
+  }
+\AtBeginDocument
+  {
+    \@ifpackageloaded { mdwtab }
+      {
+        \cs_set_protected:Npn \@@_collect_token:N #1
+          {
+            \@@_collect_search:NnF #1
+              {
+                \@maybe@unskip     { \@@_collect_loop: }
+                \tab@setcr         { \@@_collect_loop: }
+                \unskip            { \@@_collect_loop: }
+                \end               { \tabularnewline \end }
+                \relax             { \@@_collect_relax:N #1 }
+                \tabularnewline    { \tabularnewline }
+                \siunitx_cell_end: { \siunitx_cell_end: }
+              }
+              { \@@_collect_token_aux:N #1 }
+          }
+      }
+      { }
+  }
+\cs_new_protected:Npn \@@_collect_search:NnF #1#2#3
+  {
+    \@@_collect_search_aux:NNn #1
+      #2
+      #1 {#3}
+    \q_stop
+  }
+\cs_new_protected:Npn \@@_collect_search_aux:NNn #1#2#3
+  {
+    \token_if_eq_meaning:NNTF #1 #2
+      { \use_i_delimit_by_q_stop:nw {#3} }
+      { \@@_collect_search_aux:NNn #1 }
+  }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \subsection{Separating collected material}
+%
+% The input needs to be divided into numerical tokens and those which appear
+% before and after them. This needs a second loop and validation.
+%
+% \begin{variable}{\l_@@_before_tl, \l_@@_number_tl, \l_@@_after_tl}
+%   Space for tokens.
+%    \begin{macrocode}
+\tl_new:N \l_@@_before_tl
+\tl_new:N \l_@@_number_tl
+\tl_new:N \l_@@_after_tl
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{macro}{\@@_collect_end:}
+% \begin{macro}{\@@_collect_end:n}
+% \begin{macro}[EXP]{\@@_collect_end_aux:n}
+% \begin{macro}[EXP]{\@@_collect_end:w}
+%   At the end of the cell, escape the group and check for expansion. We
+%   only do that if the entire content is not a brace group: there is more
+%   likely to be problematic content in the case of a header.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_collect_end:
+  {
+    \exp_args:NNV \group_end:
+    \@@_collect_end:n \l_@@_collect_tl
+    \exp_args:NV \@@_split:nNNN
+      \l_@@_collect_tl
+      \l_@@_before_tl
+      \l_@@_number_tl
+      \l_@@_after_tl
+    \tl_if_empty:NTF \l_@@_number_tl
+      { \@@_print_text:V \l_@@_before_tl }
+      {
+        \@@_print:VVV
+          \l_@@_before_tl
+          \l_@@_number_tl
+          \l_@@_after_tl
+      }
+  }
+%    \end{macrocode}
+%   To cover the use of REV\TeX{}, we need to allow for the insertion of
+%   \cs{array@row@rst} into cell content: that explodes inside
+%   \cs{protected@edef}. We use the classical solution of making locally
+%   equal to \cs{scan_stop:}.   
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_collect_end:n #1
+  {
+    \str_if_eq:eeTF { \exp_not:n {#1} }
+      { { \@@_collect_end_aux:n {#1} } }
+      { \tl_set:Nn }
+      {
+        \cs_if_exist:NT \array@row@rst
+          { \cs_set_eq:NN \array@row@rst \scan_stop: }
+        \protected@edef
+      }
+        \l_@@_collect_tl {#1}
+  }
+\cs_new:Npn \@@_collect_end_aux:n #1
+  { \exp_after:wN \@@_collect_end:w #1 \q_stop }
+\cs_new:Npn \@@_collect_end:w #1 \q_stop
+  { \exp_not:n {#1} }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\@@_split:nNNN}
+% \begin{macro}{\@@_split_loop:NNN}
+% \begin{macro}{\@@_split_group:NNNn}
+% \begin{macro}{\@@_split_token:NNNN}
+%   Splitting into parts uses the fact that numbers cannot contain groups
+%   and that we can track where we are up to based on the content of the
+%   token lists.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_split:nNNN #1#2#3#4
+  {
+    \tl_clear:N #2
+    \tl_clear:N #3
+    \tl_clear:N #4
+    \@@_split_loop:NNN #2#3#4 #1 \q_recursion_tail \q_recursion_stop
+    \@@_split_tidy:N #2
+    \@@_split_tidy:N #4
+  }
+\cs_new_protected:Npn \@@_split_loop:NNN #1#2#3
+  {
+    \peek_remove_spaces:n
+      {
+        \peek_catcode:NTF \c_group_begin_token
+          { \@@_split_group:NNNn #1#2#3 }
+          { \@@_split_token:NNNN #1#2#3 }
+      }
+  }
+\cs_new_protected:Npn \@@_split_group:NNNn #1#2#3#4
+  {
+    \tl_if_empty:NTF #2
+      { \tl_put_right:Nn #1 { {#4} } }
+      { \tl_put_right:Nn #3 { {#4} } }
+    \@@_split_loop:NNN #1#2#3
+  }
+\cs_new_protected:Npn \@@_split_token:NNNN #1#2#3#4
+  {
+    \quark_if_recursion_tail_stop:N #4
+    \tl_if_empty:NTF \l_@@_after_tl
+      {
+        \siunitx_if_number_token:NTF #4
+          { \tl_put_right:Nn #2 {#4} }
+          {
+            \tl_if_empty:NTF #2
+              { \tl_put_right:Nn #1 {#4} }
+              { \tl_put_right:Nn #3 {#4} }
+          }
+      }
+      { \tl_put_right:Nn #3 {#4} }
+    \@@_split_loop:NNN #1#2#3
+  }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\@@_split_tidy:N}
+% \begin{macro}{\@@_split_tidy:Nn, \@@_split_tidy:NV}
+%   A quick test for the entire content being surrounded by a set of braces:
+%   rather than look explicitly, use the fact that a string comparison can
+%   detect the same thing. The auxiliary is needed to avoid having to go
+%   \foreign{via} a |:D| function (for the expansion behaviour).
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_split_tidy:N #1
+  {
+    \tl_if_empty:NF #1
+      { \@@_split_tidy:NV #1 #1 }
+  }
+\cs_new_protected:Npn \@@_split_tidy:Nn #1#2
+  {
+    \str_if_eq:onT { \exp_after:wN { \use:n #2 } } {#2}
+      { \tl_set:No #1 { \use:n #2 } }
+  }
+\cs_generate_variant:Nn \@@_split_tidy:Nn { NV }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% \subsection{Printing numbers in cells: spacing}
+%
+% Getting the general alignment correct in tables is made more complex than one
+% would like by the \pkg{colortbl} package. In the original \LaTeXe{}
+% definition, cell material is centred by a construction of the (primitive)
+% form
+% \begin{verbatim}
+%   \hfil
+%   #
+%   \hfil
+% \end{verbatim}
+% which only uses \texttt{fil} stretch. That is altered by \pkg{colortbl} to
+% broadly
+% \begin{verbatim}
+%   \hskip 0pt plus 0.5fill
+%   \kern 0pt
+%   #
+%   \hskip 0pt plus 0.5fill
+% \end{verbatim}
+% which means there is \texttt{fill} stretch to worry about and the kern as
+% well.
+%
+% \begin{macro}{\@@_skip:n}
+%   To prevent combination of skips, a kern is inserted after each one.
+%   This is best handled as a short auxiliary.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_skip:n #1
+  {
+    \skip_horizontal:n {#1}
+    \tex_kern:D \c_zero_skip
+  }
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{variable}{\l_@@_column_width_dim, \l_@@_fixed_width_bool}
+%   Settings which apply to aligned columns in general.
+%    \begin{macrocode}
+\dim_new:N \l_@@_column_width_dim
+\keys_define:nn { siunitx }
+  {
+    table-column-width .code:n =
+      {
+        \dim_set:Nn \l_@@_column_width_dim {#1}
+        \dim_compare:nNnT \l_@@_column_width_dim > \c_zero_dim
+          { \bool_set_true:N \l_@@_fixed_width_bool }
+      } ,
+    table-fixed-width .bool_set:N =
+      \l_@@_fixed_width_bool
+  }
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{macro}
+%   {\@@_align_center:n, \@@_align_left:n, \@@_align_right:n, \@@_align_none:n}
+% \begin{macro}{\@@_align_auxi:nn, \@@_align_auxii:nn}
+%   The beginning and end of each table cell have to adjust the position of
+%   the content using glue. When \pkg{colortbl} is loaded the glue is done in
+%   two parts: one for our positioning and one to explicitly override that from
+%   the package. Using a two-step auxiliary chain avoids needing to repeat any
+%   code and the impact of the extra expansion should be trivial.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_align_center:n #1
+  { \@@_align_auxi:nn {#1} { 0pt~plus~0.5fill } }
+\cs_new_protected:Npn \@@_align_left:n #1
+  { \@@_align_auxi:nn {#1} { 0pt } }
+\cs_new_protected:Npn \@@_align_right:n #1
+  { \@@_align_auxi:nn {#1} { 0pt~plus~1fill } }
+\cs_new_protected:Npn \@@_align_none:n #1
+  {
+    \bool_if:NTF \l_@@_fixed_width_bool
+      { \hbox_to_wd:nn \l_@@_column_width_dim }
+      { \use:n }
+        {#1}
+  }
+\cs_new_protected:Npn \@@_align_auxi:nn #1#2
+  {
+    \bool_if:NTF \l_@@_fixed_width_bool
+      { \hbox_to_wd:nn \l_@@_column_width_dim }
+      { \use:n }
+        {
+          \@@_skip:n {#2}
+          #1
+          \@@_skip:n { 0pt~plus~1fill - #2 }
+        }
+  }
+\AtBeginDocument
+  {
+    \@ifpackageloaded { colortbl }
+      {
+        \cs_new_eq:NN
+          \@@_align_auxii:nn
+          \@@_align_auxi:nn
+        \cs_set_protected:Npn \@@_align_auxi:nn #1#2
+          {
+            \@@_skip:n{ 0pt~plus~-0.5fill }
+            \@@_align_auxii:nn {#1} {#2}
+            \@@_skip:n { 0pt~plus~-0.5fill }
+          }
+      }
+      { }
+  }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% \subsection{Printing just text}
+%
+% In cases where there is no numerical part, \pkg{siunitx} allows alignment
+% of the \enquote{escaped} text independent of the underlying column type.
+%
+% \begin{variable}{\l_@@_align_text_tl}
+%   Alignment is handled using a |tl| as this allows a fast lookup at the
+%   point of use.
+%    \begin{macrocode}
+\keys_define:nn { siunitx }
+  {
+    table-text-alignment .choices:nn =
+      { center , left , right , none }
+      { \tl_set:Nn \l_@@_align_text_tl {#1} } ,
+  }
+\tl_new:N \l_@@_align_text_tl
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{macro}{\@@_print_text:n, \@@_print_text:V}
+%   Printing escaped text is easy: just place it in correctly in the
+%   column.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_print_text:n #1
+  {
+    \bool_set_true:N \l_@@_text_bool
+    \use:c { @@_align_ \l_@@_align_text_tl :n } {#1}
+  }
+\cs_generate_variant:Nn \@@_print_text:n { V }
+%    \end{macrocode}
+% \end{macro}
+%
+% \subsection{Number alignment: core ideas}
+%
+% \begin{variable}{\l_@@_integer_box, \l_@@_decimal_box}
+%   Boxes for the content before and after the decimal marker.
+%    \begin{macrocode}
+\box_new:N \l_@@_integer_box
+\box_new:N \l_@@_decimal_box
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{macro}{\@@_fil:, \@@_fill:}
+%    Primitives renamed.
+%    \begin{macrocode}
+\cs_new_eq:NN \@@_fil: \tex_hfil:D
+\cs_new_eq:NN \@@_fill: \tex_hfill:D
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\@@_cleanup_decimal:w}
+%   To remove the excess marker tokens in a decimal part.
+%    \begin{macrocode}
+\cs_new:Npn \@@_cleanup_decimal:w
+  #1 \q_nil #2 \q_nil #3 \q_nil #4 \q_nil #5 \q_nil #6 \q_nil #7 \q_nil
+  { #1#2#3#4#5#6#7 }
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\@@_color_check:N}
+% \begin{macro}{\@@_color_check:w}
+% \begin{macro}{\@@_color_check:Nnw}
+%   Handle the fact that splitting a number can leave a negative color
+%   dangling.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_color_check:N #1
+  { \exp_after:wN \@@_color_check:w #1 \q_stop }
+\cs_new_protected:Npn \@@_color_check:w #1 \q_nil #2 \q_stop
+  {
+    \tl_if_head_eq_meaning:nNT {#1} \color
+      { \@@_color_check:Nnw #1 \q_stop }
+  }
+\cs_new_protected:Npn \@@_color_check:Nnw #1#2#3 \q_stop
+  { \keys_set:nn { siunitx } { number-color = #2 } }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\@@_center_marker:}
+%   When centering on the decimal marker, the easiest approach is to simply
+%   re-box the two parts. That is needed whether or not we are parsing numbers,
+%   so is best as a short auxiliary. Notice that we need to allow for the width
+%   of the decimal marker itself. When not aligning non-numerical material, we
+%   put the extra space into the boxes around the number.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_center_marker:
+  {
+    \hbox_set:Nn \l_@@_tmp_box
+      { \ensuremath { \mathord { \l_siunitx_number_output_decimal_tl } } }
+    \dim_compare:nNnTF
+      { \box_wd:N \l_@@_integer_box }
+        >
+          {
+              \box_wd:N \l_@@_decimal_box
+            - \box_wd:N \l_@@_tmp_box
+          }
+      {
+        \bool_if:NTF \l_@@_align_after_bool
+          {
+            \@@_center_marker_aux:Nnnn \l_@@_decimal_box
+              {
+                  \box_wd:N \l_@@_integer_box
+                + \box_wd:N \l_@@_tmp_box
+              }
+           }
+           {
+             \@@_center_marker_aux:Nnnn \l_@@_after_box
+               {
+                   \box_wd:N \l_@@_after_box
+                 + \box_wd:N \l_@@_integer_box
+                 - \box_wd:N \l_@@_decimal_box
+                 + \box_wd:N \l_@@_tmp_box
+               }
+           }
+               { } { \@@_fil: }
+      }
+      {
+        \bool_if:NTF \l_@@_align_before_bool
+          {
+            \@@_center_marker_aux:Nnnn \l_@@_integer_box
+              {
+                  \box_wd:N \l_@@_decimal_box
+                - \box_wd:N \l_@@_tmp_box
+              }
+          }
+          {
+            \@@_center_marker_aux:Nnnn \l_@@_before_box
+               {
+                   \box_wd:N \l_@@_before_box
+                 + \box_wd:N \l_@@_decimal_box
+                 - \box_wd:N \l_@@_integer_box
+                 - \box_wd:N \l_@@_tmp_box
+               }
+          }
+              { \@@_fil: } { }
+      }
+  }
+\cs_new_protected:Npn \@@_center_marker_aux:Nnnn #1#2#3#4
+  {
+    \hbox_set_to_wd:Nnn #1 {#2}
+      {
+        #3
+        \hbox_unpack:N #1
+        #4
+      }
+  }
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{variable}
+%   {\l_@@_auto_round_bool, \l_@@_align_mode_tl, \l_@@_align_number_tl}
+%   Options for tables with defined space.
+%    \begin{macrocode}
+\keys_define:nn { siunitx }
+  {
+    table-alignment .meta:n =
+      { table-number-alignment = #1 , table-text-alignment = #1 },
+    table-alignment-mode .choices:nn =
+      { none , format , marker }
+      { \tl_set_eq:NN \l_@@_align_mode_tl \l_keys_choice_tl } ,
+    table-auto-round .bool_set:N =
+      \l_@@_auto_round_bool ,
+    table-format .code:n =
+      {
+        \group_begin:
+          \protected@edef \l_@@_tmp_tl {#1}
+        \exp_args:NNV \group_end:
+        \@@_split:nNNN \l_@@_tmp_tl
+          \l_@@_before_model_tl
+          \l_@@_model_tl
+          \l_@@_after_model_tl
+        \exp_args:NV \@@_generate_model:n \l_@@_model_tl
+        \tl_set:Nn \l_@@_align_mode_tl { format }
+      } ,
+    table-number-alignment .choices:nn =
+      { center , left , right }
+      { \tl_set_eq:NN \l_@@_align_number_tl \l_keys_choice_tl }
+  }
+\tl_new:N \l_@@_align_mode_tl
+\tl_new:N \l_@@_align_number_tl
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{variable}{\l_@@_format_tl, \l_@@_model_tl}
+%   The input and output versions of the model entry in a table.
+%    \begin{macrocode}
+\tl_new:N \l_@@_format_tl
+\tl_new:N \l_@@_before_model_tl
+\tl_new:N \l_@@_model_tl
+\tl_new:N \l_@@_after_model_tl
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{macro}{\@@_generate_model:n}
+% \begin{macro}{\@@_generate_model:nnnnnnn}
+% \begin{macro}[EXP]{\@@_generate_model_S:nnw}
+% \begin{macro}[EXP]{\@@_generate_model_S:nnn}
+%   Creating a model for a table at this stage means parsing the format and
+%   converting that to an appropriate model. Things are quite straight-forward
+%   other than the uncertainty part. At this stage there is no point in
+%   formatting the model: that has to happen at point-of-use. Notice that
+%   the uncertainty part needs to allow for the case where we cross the
+%   decimal.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_generate_model:n #1
+  {
+    \group_begin:
+      \bool_set_true:N \l_siunitx_number_parse_bool
+      \keys_set:nn { siunitx } { retain-explicit-plus = true }
+      \siunitx_number_parse:nN {#1} \l_@@_format_tl
+    \exp_args:NNNV \group_end:
+    \tl_set:Nn \l_@@_format_tl \l_@@_format_tl
+    \tl_if_empty:NF \l_@@_format_tl
+      {
+        \exp_after:wN \@@_generate_model:nnnnnnn
+          \l_@@_format_tl
+      }
+  }
+\cs_new_protected:Npn \@@_generate_model:nnnnnnn #1#2#3#4#5#6#7
+  {
+    \tl_set:Nx \l_@@_model_tl
+      {
+        \exp_not:n { {#1} {#2} }
+        {
+          \int_compare:nNnTF {#3} = 0
+            { 0 }
+            { \prg_replicate:nn {#3} { 8 } }
+        }
+        { \prg_replicate:nn { 0 #4 } { 8 } }
+        {
+          \tl_if_blank:nF {#5}
+            {
+              \use:c { @@_generate_model_ \tl_head:n {#5} :nnw }
+                {#4} #5
+            }
+        }
+        \exp_not:n { {#6} }
+        {
+          \int_compare:nNnTF {#7} = 0
+            { 0 }
+            { \prg_replicate:nn {#7} { 8 } }
+        }
+      }
+  }
+\cs_new:Npn \@@_generate_model_S:nnw #1#2#3
+  {
+    { S }
+    {
+      \exp_args:Nff \@@_generate_model_S:nnn
+        { \tl_count:n {#1} } { \tl_count:n {#3} }
+        {#3}
+    }
+  }
+\cs_new:Npn \@@_generate_model_S:nnn #1#2#3
+  {
+    \prg_replicate:nn
+      {
+        \int_compare:nNnTF {#2} > {#1}
+          {
+            \str_range:nnn {#3} { 1 } {#1}
+            +
+            \str_range:nnn {#3} { 1 + #1 } {#2}
+          }
+          {#3}
+      }
+      { 8 }
+  }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \subsection{Directly printing without collection}
+%
+% Collecting the number allows for various effects but is not as fast
+% as simply aligning on the first token that is a decimal marker. The
+% strategy here is that used by \pkg{dcolumn}.
+%
+% \begin{macro}{\@@_direct_begin:}
+% \begin{macro}{\@@_direct_begin:w}
+% \begin{macro}{\@@_direct_end:}
+% \begin{macro}
+%   {
+%     \@@_direct_marker:        ,
+%     \@@_direct_marker_switch: ,
+%     \@@_direct_marker_end:
+%   }
+% \begin{macro}{\@@_direct_format:}
+% \begin{macro}[EXP]{\@@_direct_format:nnnnnnn}
+% \begin{macro}{\@@_direct_format:w}
+% \begin{macro}
+%   {
+%     \@@_direct_format_switch: ,
+%     \@@_direct_format_end:
+%   }
+% \begin{macro}{\@@_direct_none:, \@@_direct_none_end:}
+%   After removing the |\ignorespaces| at the start of the cell (see comments
+%   for \cs{@@_collect_begin:N}), check to see  if there is a |{| and branch
+%   as appropriate.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_direct_begin:
+  { \@@_direct_begin:w }
+\cs_new_protected:Npn \@@_direct_begin:w #1 \ignorespaces
+  {
+    #1
+    \peek_remove_spaces:n
+      {
+        \peek_catcode:NTF \c_group_begin_token
+          { \@@_print_text:n }
+          {
+            \m@th
+            \use:c { @@_direct_ \l_@@_align_mode_tl : }
+          }
+      }
+  }
+\cs_new_protected:Npn \@@_direct_end:
+  { \use:c { @@_direct_ \l_@@_align_mode_tl _end: } }
+%    \end{macrocode}
+%   When centring the content about a decimal marker, the trick is
+%   to collect everything into two boxes and then compare the sizes.
+%   As we are always in math mode, we can use a math active token
+%   to make the switch. The up-front setting of the |decimal| box deals
+%   with the case where there is no decimal part.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_direct_marker:
+  {
+    \hbox_set:Nn \l_@@_tmp_box
+      { \ensuremath { \mathord { \l_siunitx_number_output_decimal_tl } } }
+    \hbox_set_to_wd:Nnn \l_@@_decimal_box
+      { \box_wd:N \l_@@_tmp_box }
+      { \@@_fil: }
+    \hbox_set:Nw \l_@@_integer_box
+      \c_math_toggle_token
+      \tl_map_inline:Nn \l_siunitx_number_input_decimal_tl
+        {
+          \char_set_active_eq:NN ##1 \@@_direct_marker_switch:
+          \char_set_mathcode:nn { `##1 } { "8000 }
+        }
+  }
+\cs_new_protected:Npn \@@_direct_marker_switch:
+  {
+      \c_math_toggle_token
+    \hbox_set_end:
+    \hbox_set:Nw \l_@@_decimal_box
+      \c_math_toggle_token
+      \l_siunitx_number_output_decimal_tl
+  }
+%    \end{macrocode}
+%   We set the two alignment booleans here so that a single auxiliary can
+%   cover this case as well as the one for centering the marker when also
+%   parsing.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_direct_marker_end:
+  {
+      \c_math_toggle_token
+    \hbox_set_end:
+    \bool_set_true:N \l_@@_align_before_bool
+    \bool_set_true:N \l_@@_align_after_bool
+    \@@_center_marker:
+    \use:c { @@_align_ \l_@@_align_text_tl :n }
+      {
+        \box_use_drop:N \l_@@_integer_box
+        \box_use_drop:N \l_@@_decimal_box
+      }
+  }
+%    \end{macrocode}
+%   For the version where there is space reserved, first format and decompose
+%   that, then create appropriately-sized boxes.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_direct_format:
+  {
+    \tl_set:Nx \l_@@_tmp_tl
+      { \siunitx_number_output:NN \l_@@_model_tl \q_nil }
+    \exp_after:wN \@@_direct_format_aux:w
+      \l_@@_tmp_tl \q_stop
+  }
+\cs_new_protected:Npn \@@_direct_format_aux:w
+  #1 \q_nil #2 \q_nil #3 \q_nil #4 \q_stop
+  {
+    \hbox_set:Nn \l_@@_tmp_box
+      { \ensuremath { \@@_cleanup_decimal:w #4 } }
+    \hbox_set_to_wd:Nnn \l_@@_decimal_box
+      { \box_wd:N \l_@@_tmp_box }
+      { \@@_fil: }
+    \hbox_set:Nn \l_@@_tmp_box { \ensuremath { #1#2#3 } }
+    \hbox_set_to_wd:Nnw \l_@@_integer_box
+      { \box_wd:N \l_@@_tmp_box }
+      \c_math_toggle_token
+      \tl_map_inline:Nn \l_siunitx_number_input_decimal_tl
+        {
+          \char_set_active_eq:NN ##1 \@@_direct_format_switch:
+          \char_set_mathcode:nn { `##1 } { "8000 }
+        }
+      \@@_fill:
+  }
+\cs_new_protected:Npn \@@_direct_format_switch:
+  {
+      \c_math_toggle_token
+    \hbox_set_end:
+    \hbox_set_to_wd:Nnw \l_@@_decimal_box
+      { \box_wd:N \l_@@_decimal_box }
+      \c_math_toggle_token
+      \mathord { \l_siunitx_number_output_decimal_tl }
+  }
+\cs_new_protected:Npn \@@_direct_format_end:
+  {
+      \c_math_toggle_token
+      \@@_fil:
+    \hbox_set_end:
+    \use:c { @@_align_ \l_@@_align_number_tl :n }
+      {
+        \box_use_drop:N \l_@@_integer_box
+        \box_use_drop:N \l_@@_decimal_box
+      }
+  }
+%    \end{macrocode}
+%   No parsing and no alignment is easy.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_direct_none: { \c_math_toggle_token }
+\cs_new_protected:Npn \@@_direct_none_end: { \c_math_toggle_token }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \subsection{Printing numbers in cells: main functions}
+%
+% \begin{variable}{\l_@@_before_box, \l_@@_after_box}
+%   For alignment of text outside of a number.
+%    \begin{macrocode}
+\box_new:N \l_@@_before_box
+\box_new:N \l_@@_after_box
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{variable}{\l_@@_before_dim}
+%   Space reserved for any non-numerical text before the number: as we need
+%   to allow for this to be available after setting the integer part, we need
+%   to carry it along for a bit.
+%    \begin{macrocode}
+\dim_new:N \l_@@_before_dim
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{variable}{\l_@@_carry_dim}
+%   Used to \enquote{carry forward} the amount of white space which needs to
+%   be inserted after the decimal marker.
+%    \begin{macrocode}
+\dim_new:N \l_@@_carry_dim
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{variable}
+%   {
+%     \l_@@_align_comparator_bool  ,
+%     \l_@@_align_exponent_bool    ,
+%     \l_@@_align_after_bool       ,
+%     \l_@@_align_before_bool      ,
+%     \l_@@_align_uncertainty_bool
+%   }
+%    \begin{macrocode}
+\keys_define:nn { siunitx }
+  {
+    table-align-comparator .bool_set:N =
+      \l_@@_align_comparator_bool ,
+    table-align-exponent .bool_set:N =
+      \l_@@_align_exponent_bool ,
+    table-align-text-after .bool_set:N =
+      \l_@@_align_after_bool ,
+    table-align-text-before .bool_set:N =
+      \l_@@_align_before_bool ,
+    table-align-uncertainty .bool_set:N =
+      \l_@@_align_uncertainty_bool
+  }
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{macro}{\@@_print:nnn, \@@_print:VVV}
+% \begin{macro}{\@@_print_marker:nnn}
+% \begin{macro}{\@@_print_marker:w}
+% \begin{macro}[EXP]{\@@_print_marker_aux:w}
+% \begin{macro}{\@@_print_format:nnn}
+% \begin{macro}[EXP]{\@@_print_format:nnnnnn}
+% \begin{macro}
+%   {
+%     \@@_print_format_auxi:w   ,
+%     \@@_print_format_auxii:w  ,
+%     \@@_print_format_auxiii:w ,
+%     \@@_print_format_auxiv:w  ,
+%     \@@_print_format_auxv:w   ,
+%     \@@_print_format_auxvi:w  ,
+%     \@@_print_format_auxvii:w
+%   }
+% \begin{macro}{\@@_print_format_box:Nn}
+% \begin{macro}{\@@_print_format_after:N}
+% \begin{macro}{\@@_print_none:nnn}
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_print:nnn #1#2#3
+  { \use:c { @@_print_ \l_@@_align_mode_tl :nnn } {#1} {#2} {#3} }
+\cs_generate_variant:Nn \@@_print:nnn { VVV }
+%    \end{macrocode}
+%   When centering on the decimal marker, alignment is relatively simple, and
+%   close in concept to that used without parsing. First we need to deal with any
+%   text before or after the number. For text \emph{before}, there's the case
+%   where is has no width and might be a font or color change: that has to be
+%   filtered out first. Then we can adjust the size of this material and that
+%   after the number such that they are equal. The number itself can then be
+%   formatted, splitting at he decimal marker. A bit more size adjustment, then
+%   the number itself and any text at the end can be inserted.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_print_marker:nnn #1#2#3
+  {
+    \hbox_set:Nn \l_@@_before_box {#1}
+    \dim_compare:nNnT { \box_wd:N \l_@@_before_box } = { 0pt }
+      {
+        \box_clear:N \l_@@_before_box
+        #1
+      }
+    \hbox_set:Nn \l_@@_after_box {#3}
+    \dim_compare:nNnTF
+      { \box_wd:N \l_@@_after_box }
+       > { \box_wd:N \l_@@_before_box }
+      {
+        \hbox_set_to_wd:Nnn \l_@@_before_box
+          { \box_wd:N \l_@@_after_box }
+          {
+            \@@_fil:
+            \hbox_unpack:N \l_@@_before_box
+          }
+      }
+      {
+        \hbox_set_to_wd:Nnn \l_@@_after_box
+          { \box_wd:N \l_@@_before_box }
+          {
+            \hbox_unpack:N \l_@@_after_box
+            \@@_fil:
+          }
+      }
+    \siunitx_number_parse:nN {#2} \l_@@_tmp_tl
+    \siunitx_number_process:NN \l_@@_tmp_tl \l_@@_tmp_tl
+    \tl_set:Nx \l_@@_tmp_tl
+      { \siunitx_number_output:NN \l_@@_tmp_tl \q_nil }
+    \@@_color_check:N \l_@@_tmp_tl
+    \exp_after:wN \@@_print_marker:w
+      \l_@@_tmp_tl \q_stop
+  }
+\cs_new_protected:Npn \@@_print_marker:w
+  #1 \q_nil #2 \q_nil #3 \q_nil #4 \q_stop
+  {
+    \hbox_set:Nn \l_@@_integer_box
+      { \siunitx_print_number:n { #1#2#3 } }
+    \hbox_set:Nn \l_@@_decimal_box
+      {
+        \siunitx_print_number:x
+          { \@@_print_marker_aux:w #4 \q_stop }
+      }
+    \@@_center_marker:
+    \use:c { @@_align_ \l_@@_align_text_tl :n }
+      {
+            \box_use_drop:N \l_@@_before_box
+        \box_use_drop:N \l_@@_integer_box
+        \box_use_drop:N \l_@@_decimal_box
+            \box_use_drop:N \l_@@_after_box
+      }
+  }
+\cs_new:Npn \@@_print_marker_aux:w
+  #1 \q_nil #2 \q_nil #3 \q_nil #4 \q_nil #5
+     \q_nil #6 \q_nil #7 \q_nil #8 \q_stop
+  {
+    \exp_not:n {#1#2#3#4#5#6}
+    \tl_if_blank:nT {#1#2#3#4#5#6} { { } }
+    \exp_not:n {#7#8}
+  }
+%    \end{macrocode}
+%   For positioning based on a format, we have to work part-by-part as there
+%   are a number of alignment points to get right. As for the |marker| approach,
+%   first we check if the material before the numerical content is of zero
+%   width. Next we need to format the model and content numbers, before
+%   starting an auxiliary chain to pick out the various parts in order. We have
+%   to carry the amount of space for the non-numerical material before the cell
+%   forward: this may end up being enlarged by unused parts of the integer.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_print_format:nnn #1#2#3
+  {
+    \hbox_set:Nn \l_@@_tmp_box { \l_@@_before_model_tl }
+    \hbox_set:Nn \l_@@_before_box {#1}
+    \dim_compare:nNnT { \box_wd:N \l_@@_before_box } = { 0pt }
+      {
+        \box_clear:N \l_@@_before_box
+        #1
+      }
+    \dim_set:Nn \l_@@_before_dim { \box_wd:N \l_@@_tmp_box }
+    \siunitx_number_parse:nN {#2} \l_@@_tmp_tl
+    \group_begin:
+      \bool_if:NT \l_@@_auto_round_bool
+        {
+          \exp_args:Nx \keys_set:nn { siunitx }
+            {
+              round-mode      = places ,
+              round-pad       = true   ,
+              round-precision =
+                \exp_after:wN \@@_print_format:nnnnnn
+                  \l_@@_format_tl
+            }
+        }
+      \siunitx_number_process:NN \l_@@_tmp_tl \l_@@_tmp_tl
+    \exp_args:NNNV \group_end:
+    \tl_set:Nn \l_@@_tmp_tl \l_@@_tmp_tl
+    \tl_set:Nx \l_@@_tmp_tl
+      {
+        \siunitx_number_output:NN \l_@@_model_tl \q_nil
+        \exp_not:N \q_mark
+        \siunitx_number_output:NN \l_@@_tmp_tl \q_nil
+      }
+    \exp_after:wN \@@_print_format_auxi:w
+      \l_@@_tmp_tl \q_stop
+    \hbox_set:Nn \l_@@_tmp_box { \l_@@_after_model_tl }
+    \hbox_set_to_wd:Nnn \l_@@_after_box
+      { \box_wd:N \l_@@_tmp_box + \l_@@_carry_dim }
+      {
+        \bool_if:NT \l_@@_align_after_bool
+          { \skip_horizontal:n { \l_@@_carry_dim } }
+        #3
+        \@@_fil:
+      }
+    \use:c { @@_align_ \l_@@_align_number_tl :n }
+      {
+        \box_use_drop:N \l_@@_before_box
+        \box_use_drop:N \l_@@_integer_box
+        \box_use_drop:N \l_@@_decimal_box
+        \box_use_drop:N \l_@@_after_box
+      }
+  }
+\cs_new:Npn \@@_print_format:nnnnnn #1#2#3#4#5#6#7
+  { 0 #4 }
+%    \end{macrocode}
+%   The first numerical part to handle is the comparator. Any white space we
+%   need to add goes into the text part \emph{if} alignment is not active
+%   (\foreign{i.e.}~we are looking \enquote{backwards} to place this filler).
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_print_format_auxi:w
+  #1 \q_nil #2 \q_mark #3 \q_nil #4 \q_stop
+  {
+    \@@_color_check:w #3 \q_nil \q_stop
+    \@@_print_format_box:Nn \l_@@_tmp_box {#1}
+    \bool_if:NTF \l_@@_align_before_bool
+      {
+        \hbox_set_to_wd:Nnn \l_@@_integer_box
+          { \box_wd:N \l_@@_tmp_box }
+          {
+            \@@_fil:
+            \tl_if_blank:nF {#3}
+             { \siunitx_print_number:n {#3} }
+          }
+      }
+      {
+        \@@_print_format_box:Nn \l_@@_integer_box {#3}
+        \dim_add:Nn \l_@@_before_dim
+          {
+              \box_wd:N \l_@@_tmp_box
+            - \box_wd:N \l_@@_integer_box
+          }
+      }
+    \@@_print_format_auxii:w #2 \q_mark #4 \q_stop
+  }
+%    \end{macrocode}
+%   The integer part follows much the same pattern, except now it is control
+%   of the comparator alignment that determines where the white space goes.
+%   We want to make sure that \emph{if} the integer is too long, it pokes out
+%   to the left, and at the same time we want to issue exactly one overfull
+%   box warning. That is achieved using an explicit test, such that if there
+%   is an issue we force the size of the content appropriately. That process
+%   will lead to a hit but only for \enquote{defective} input.
+%
+%   As we already have content in the |integer| box, we need to measure how
+%   much \emph{extra} material has been added.
+%
+%   As the integer part is completed here, we are able to finalise the width
+%   of the pre-numeral part, reboxing it to have the correct width and possibly
+%   to force a single overfull warning if appropriate.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_print_format_auxii:w
+  #1 \q_nil #2 \q_nil #3 \q_mark #4 \q_nil #5 \q_nil #6 \q_stop
+  {
+    \@@_print_format_box:Nn \l_@@_tmp_box {#1#2}
+    \dim_set:Nn \l_@@_tmp_dim { \box_wd:N \l_@@_tmp_box }
+    \@@_print_format_box:Nn \l_@@_tmp_box {#4#5}
+    \dim_compare:nNnT { \box_wd:N \l_@@_tmp_box } > \l_@@_tmp_dim
+      {
+        \hbox_set_to_wd:Nnn \l_@@_tmp_box \l_@@_tmp_dim
+          { \hbox_unpack:N \l_@@_tmp_box }
+        \hbox_set_to_wd:Nnn \l_@@_tmp_box \l_@@_tmp_dim
+          {
+            \tex_hss:D
+            \hbox_unpack:N \l_@@_tmp_box
+          }
+      }
+    \bool_lazy_and:nnTF
+      { \l_@@_align_comparator_bool }
+      { \dim_compare_p:nNn { \box_wd:N \l_@@_integer_box } > { 0pt } }
+      {
+        \hbox_set_to_wd:Nnn \l_@@_integer_box
+          {
+              \box_wd:N \l_@@_integer_box
+            + \l_@@_tmp_dim
+          }
+          {
+            \hbox_unpack:N \l_@@_integer_box
+            \@@_fil:
+            \hbox_unpack:N \l_@@_tmp_box
+          }
+      }
+      {
+        \bool_if:NTF \l_@@_align_before_bool
+          {
+            \hbox_set_to_wd:Nnn \l_@@_integer_box
+              {
+                  \box_wd:N \l_@@_integer_box
+                + \l_@@_tmp_dim
+              }
+              {
+                \@@_fil:
+                \hbox_unpack:N \l_@@_integer_box
+                \hbox_unpack:N \l_@@_tmp_box
+              }
+          }
+          {
+            \hbox_set:Nn \l_@@_integer_box
+              {
+                \hbox_unpack:N \l_@@_integer_box
+                \hbox_unpack:N \l_@@_tmp_box
+              }
+            \dim_add:Nn \l_@@_before_dim
+              {
+                  \l_@@_tmp_dim
+                - \box_wd:N \l_@@_tmp_box
+              }
+          }
+      }
+    \hbox_set_to_wd:Nnn \l_@@_before_box \l_@@_before_dim
+      {
+        \@@_fil:
+        \hbox_unpack:N \l_@@_before_box
+      }
+    \@@_print_format_auxiii:w #3 \q_mark #6 \q_stop
+  }
+%    \end{macrocode}
+%   We now deal with the decimal part: there is nothing already in the
+%   |decimal| box, so the basics are easy. We need to \enquote{carry forward}
+%   any white space, as where it gets inserted depends on the options for
+%   subsequent parts.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_print_format_auxiii:w
+  #1 \q_nil #2 \q_nil #3 \q_mark #4 \q_nil #5 \q_nil #6 \q_stop
+  {
+    \@@_print_format_box:Nn \l_@@_tmp_box {#1#2}
+    \@@_print_format_box:Nn \l_@@_decimal_box {#4#5}
+    \dim_set:Nn \l_@@_carry_dim
+      {
+          \box_wd:N \l_@@_tmp_box
+        - \box_wd:N \l_@@_decimal_box
+      }
+    \@@_print_format_auxiv:w #3 \q_mark #6 \q_stop
+  }
+%    \end{macrocode}
+%   Any separated uncertainty is now picked up. That has a number of parts, so
+%   the first step is to look for a sign (which will be |#1|). We then split,
+%   either simply tidying up the markers if there is no uncertainty, or
+%   setting it.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_print_format_auxiv:w
+  #1 \q_nil #2 \q_mark #3 \q_nil #4 \q_stop
+  {
+    \tl_if_blank:nTF {#1}
+      { \@@_print_format_auxv:w }
+      { \@@_print_format_auxvi:w }
+        #1#2 \q_mark #3#4 \q_stop
+  }
+\cs_new_protected:Npn \@@_print_format_auxv:w
+  #1 \q_nil #2 \q_nil #3 \q_nil #4 \q_mark
+  #5 \q_nil #6 \q_nil #7 \q_nil #8 \q_stop
+  { \@@_print_format_auxvii:w #4 \q_mark #8 \q_stop }
+%    \end{macrocode}
+%   Sorting out the placement of the uncertainty requires both the model and
+%   real data widths, so we store the former to avoiding needing more boxes.
+%   It's then just a case of putting the carry-over white space in the right
+%   place.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_print_format_auxvi:w
+  #1 \q_nil #2 \q_nil #3 \q_nil #4 \q_mark
+  #5 \q_nil #6 \q_nil #7 \q_nil #8 \q_stop
+  {
+    \@@_print_format_box:Nn \l_@@_tmp_box { { } #1#2#3 }
+    \dim_set:Nn \l_@@_tmp_dim { \box_wd:N \l_@@_tmp_box }
+    \@@_print_format_box:Nn \l_@@_tmp_box { { } #5#6#7 }
+    \@@_print_format_after:N \l_@@_align_uncertainty_bool
+    \@@_print_format_auxvii:w #4 \q_mark #8 \q_stop
+  }
+%    \end{macrocode}
+%   Finally, we get to the exponent part: the multiplication symbol is
+%   |#1| and the number itself is |#2|. The code is almost the same as for
+%   uncertainties, which allows a shared auxiliary to be used.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_print_format_auxvii:w
+  #1 \q_nil #2 \q_mark #3 \q_nil #4 \q_stop
+  {
+    \tl_if_blank:nF {#2}
+      {
+        \@@_print_format_box:Nn \l_@@_tmp_box { { } #1#2 }
+        \dim_set:Nn \l_@@_tmp_dim { \box_wd:N \l_@@_tmp_box }
+        \@@_print_format_box:Nn \l_@@_tmp_box { { } #3#4 }
+        \@@_print_format_after:N \l_@@_align_exponent_bool
+      }
+  }
+%    \end{macrocode}
+%   A simple auxiliary to avoid relatively expensive use of the print routine
+%   for empty parts.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_print_format_box:Nn #1#2
+  {
+    \hbox_set:Nn #1
+      {
+        \tl_if_blank:nF {#2}
+          { \siunitx_print_number:n {#2} }
+      }
+  }
+%    \end{macrocode}
+%   A common routine for placing material after the decimal marker and
+%   \enquote{shuffling}.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_print_format_after:N #1
+  {
+    \bool_if:NTF #1
+      {
+        \hbox_set_to_wd:Nnn \l_@@_decimal_box
+          {
+              \box_wd:N \l_@@_decimal_box
+            + \l_@@_carry_dim
+            + \box_wd:N \l_@@_tmp_box
+          }
+          {
+            \hbox_unpack:N \l_@@_decimal_box
+            \@@_fil:
+            \hbox_unpack:N \l_@@_tmp_box
+          }
+        \dim_set:Nn \l_@@_carry_dim
+          {
+              \l_@@_tmp_dim
+            - \box_wd:N \l_@@_tmp_box
+          }
+      }
+      {
+        \hbox_set:Nn \l_@@_decimal_box
+          {
+            \hbox_unpack:N \l_@@_decimal_box
+            \hbox_unpack:N \l_@@_tmp_box
+          }
+        \dim_add:Nn \l_@@_carry_dim
+          {
+              \l_@@_tmp_dim
+            - \box_wd:N \l_@@_tmp_box
+          }
+      }
+  }
+%    \end{macrocode}
+%   With no alignment, everything supplied is treated more-or-less the
+%   same as \cs{num} (but without the \pkg{xparse} wrapper).
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_print_none:nnn #1#2#3
+  {
+    \use:c { @@_align_ \l_@@_align_number_tl :n }
+      {
+        #1
+        \siunitx_number_format:nN {#2} \l_@@_tmp_tl
+        \siunitx_print_number:V \l_@@_tmp_tl
+        #3
+     }
+  }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \subsection{Standard settings for module options}
+%
+% Some of these follow naturally from the point of definition
+% (\foreign{e.g.}~boolean variables are always |false| to begin with),
+% but for clarity everything is set here.
+%    \begin{macrocode}
+\keys_set:nn { siunitx }
+  {
+    table-align-comparator  = true   ,
+    table-align-exponent    = true   ,
+    table-align-text-after  = true   ,
+    table-align-text-before = true   ,
+    table-align-uncertainty = true   ,
+    table-alignment         = center ,
+    table-auto-round        = false  ,
+    table-column-width      = 0pt    ,
+    table-fixed-width       = false  ,
+    table-format            = 2.2    ,
+    table-number-alignment  = center ,
+    table-text-alignment    = center ,
+%    \end{macrocode}
+% Out of order as |table-format| sets this implicitly too.
+%    \begin{macrocode}
+    table-alignment-mode    = marker
+  }
+%    \end{macrocode}
+%
+%    \begin{macrocode}
+%</package>
+%    \end{macrocode}
+%
+% \end{implementation}
+%
+% \PrintIndex

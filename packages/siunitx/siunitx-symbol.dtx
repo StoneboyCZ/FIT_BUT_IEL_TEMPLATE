@@ -1,0 +1,331 @@
+% \iffalse meta-comment
+%
+% File: siunitx-symbol.dtx Copyright (C) 2018-2022 Joseph Wright
+%
+% It may be distributed and/or modified under the conditions of the
+% LaTeX Project Public License (LPPL), either version 1.3c of this
+% license or (at your option) any later version.  The latest version
+% of this license is in the file
+%
+%    https://www.latex-project.org/lppl.txt
+%
+% This file is part of the "siunitx bundle" (The Work in LPPL)
+% and all files in that bundle must be distributed together.
+%
+% The released version of this bundle is available from CTAN.
+%
+% -----------------------------------------------------------------------
+%
+% The development version of the bundle can be found at
+%
+%    https://github.com/josephwright/siunitx
+%
+% for those people who are interested.
+%
+% -----------------------------------------------------------------------
+%
+%<*driver>
+\documentclass{l3doc}
+% The next line is needed so that \GetFileInfo will be able to pick up
+% version data
+\usepackage{siunitx}
+\begin{document}
+  \DocInput{\jobname.dtx}
+\end{document}
+%</driver>
+% \fi
+%
+% \GetFileInfo{siunitx.sty}
+%
+% \title{^^A
+%   \pkg{siunitx-symbol} -- Symbol-related settings^^A
+%   \thanks{This file describes \fileversion,
+%     last revised \filedate.}^^A
+% }
+%
+% \author{^^A
+%  Joseph Wright^^A
+%  \thanks{^^A
+%    E-mail:
+%    \href{mailto:joseph.wright@morningstar2.co.uk}
+%      {joseph.wright@morningstar2.co.uk}^^A
+%   }^^A
+% }
+%
+% \date{Released \filedate}
+%
+% \maketitle
+%
+% \begin{documentation}
+%
+% \end{documentation}
+%
+% \begin{implementation}
+%
+% \section{\pkg{siunitx-symbol} implementation}
+%
+% Start the \pkg{DocStrip} guards.
+%    \begin{macrocode}
+%<*package>
+%    \end{macrocode}
+%
+% Identify the internal prefix (\LaTeX3 \pkg{DocStrip} convention): only
+% internal material in this \emph{submodule} should be used directly.
+%    \begin{macrocode}
+%<@@=siunitx_symbol>
+%    \end{macrocode}
+%
+% \begin{variable}{\l_@@_tmpa_tl, \l_@@_tmpb_tl}
+%   Scratch space.
+%    \begin{macrocode}
+\tl_new:N \l_@@_tmpa_tl
+\tl_new:N \l_@@_tmpb_tl
+%    \end{macrocode}
+% \end{variable}
+%
+% A small number of commands are needed from the companion fonts when working
+% with $8$-bit engines. These are loaded by modern \LaTeXe{} kernel, so for
+% older ones, force loading them using \pkg{textcomp}.
+%    \begin{macrocode}
+\AtBeginDocument
+  {
+    \cs_if_free:cT { T@TS1 }
+      { \RequirePackage { textcomp } }
+  }
+%    \end{macrocode}
+%
+% \begin{macro}{\@@_non_latin:n}
+% \begin{macro}{\@@_non_latin:nnnn}
+%   As in \pkg{siunitx-unit}, but internal in both cases as it's rather
+%   specialised.
+%    \begin{macrocode}
+\bool_lazy_or:nnTF
+  { \sys_if_engine_luatex_p: }
+  { \sys_if_engine_xetex_p: }
+  {
+    \cs_new:Npn \@@_non_latin:n #1
+      {
+        \exp_after:wN \exp_after:wN \exp_after:wN
+          \exp_not:N \char_generate:nn {#1} { \char_value_catcode:n {#1} }
+      }
+  }
+  {
+    \cs_new:Npn \@@_non_latin:n #1
+      {
+        \exp_last_unbraced:Nf \@@_non_latin:nnnn
+          { \char_to_utfviii_bytes:n {#1} }
+      }
+    \cs_new:Npn \@@_non_latin:nnnn #1#2#3#4
+      {
+        \@@_deal_with_utf:
+        \exp_after:wN \exp_after:wN \exp_after:wN
+          \exp_not:N \char_generate:nn {#1} { 13 }
+        \char_generate:nn {#2} { 12 }
+        \tl_if_blank:nF {#3}
+          { \char_generate:nn {#3} { 12 } }
+      }
+  }
+\cs_new:Npn \@@_deal_with_utf: { }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\@@_if_replace:NnT}
+%   A test to see if the unit definition which applies is still one we expect:
+%   here that means it is just using a (Unicode) codepoint. The comparison
+%   is string-based as \pkg{unicode-math} (at least) can alter some of them.
+%   Active characters are set to \cs{scan_stop:} so that the code here gives
+%   exactly the tokens (bytes) we want: needed for encodings other than
+%   \textsc{utf}-8.
+%    \begin{macrocode}
+\prg_new_protected_conditional:Npnn \@@_if_replace:Nn #1#2 { T , TF }
+  {
+    \group_begin:
+      \protected@edef \l_@@_tmpa_tl
+        { \exp_not:V \l_siunitx_unit_font_tl { \@@_non_latin:n {#2} } }
+      \int_step_inline:nnn { "80 } { "FF }
+        { \char_set_active_eq:nN {##1} \scan_stop: }
+      \keys_set:nn { siunitx } { parse-units = false }
+      \siunitx_unit_format:nN {#1} \l_@@_tmpb_tl
+      \str_if_eq:VVTF \l_@@_tmpa_tl \l_@@_tmpb_tl
+        {
+          \group_end:
+          \prg_return_true:
+        }
+        {
+          \group_end:
+          \prg_return_false:
+        }
+  }
+%    \end{macrocode}
+% \end{macro}
+%
+% At the start of the document, fonts are fixed and the user may have
+% altered unit set up. If things are unchanged, we can alter the settings
+% such that they use something \enquote{more sensible}.
+%    \begin{macrocode}
+\AtBeginDocument
+  {
+    \@@_if_replace:NnT \arcminute { "02B9 }
+      {
+        \siunitx_declare_unit:Nnn \arcminute
+          { \ensuremath { { } ' } }
+          { quantity-product = { } }
+      }
+    \@@_if_replace:NnT \arcsecond { "02BA }
+      {
+        \siunitx_declare_unit:Nnn \arcsecond
+          { \ensuremath { { } '' } }
+          { quantity-product = { } }
+      }
+%    \end{macrocode}
+%   For |\degree|, direct input works in text mode so there is only a need to
+%   tidy up for math mode.
+%    \begin{macrocode}
+    \@@_if_replace:NnT \degree { "00B0 }
+      {
+        \siunitx_declare_unit:Nxn \degree
+          {
+            \exp_not:N \ifmmode
+              \@ifpackageloaded { unicode-math }
+                { \@@_non_latin:n { "00B0 } }
+                { { } ^ { \exp_not:N \circ } }
+            \exp_not:N \else
+              \exp_not:N \text
+                {
+                  \@ifpackageloaded { inputenc }
+                    { \exp_not:N \textdegree }
+                    { \@@_non_latin:n { "00B0 } }
+                }
+            \exp_not:N \fi
+          }
+          { quantity-product = { } }
+      }
+%    \end{macrocode}
+%   For |\degreeCelsius|, much the same to think about but the comparison
+%   must be done by hand.
+%    \begin{macrocode}
+    \group_begin:
+      \tl_set:Nx \l_@@_tmpa_tl { \@@_non_latin:n { "00B0 } C }
+      \protected@edef \l_@@_tmpa_tl
+        { \exp_not:V \l_siunitx_unit_font_tl { \l_@@_tmpa_tl } }
+      \keys_set:nn { siunitx } { parse-units = false }
+      \siunitx_unit_format:nN { \degreeCelsius } \l_@@_tmpb_tl
+      \str_if_eq:VVTF \l_@@_tmpa_tl \l_@@_tmpb_tl
+        {
+          \group_end:
+          \siunitx_declare_unit:Nx \degreeCelsius
+            {
+              \exp_not:N \ifmmode
+                \@ifpackageloaded { unicode-math }
+                  { \@@_non_latin:n { "00B0 } }
+                  { { } ^ { \exp_not:N \circ } }
+              \exp_not:N \else
+                \exp_not:N \text
+                  {
+                    \@ifpackageloaded { inputenc }
+                      { \exp_not:N \textdegree }
+                      { \@@_non_latin:n { "00B0 } }
+                  }
+              \exp_not:N \fi
+                  C
+            }
+        }
+        { \group_end: }
+%    \end{macrocode}
+%   For |\ohm|, there is a math mode symbol we can use, so there has to be
+%   a mode-dependent definition. This doesn't work if the text mode symbol is
+%   bust: the \pkg{fourier} package puts us in that position.
+%    \begin{macrocode}
+    \@@_if_replace:NnT \ohm { "2126 }
+      {
+        \tl_set:Nx \l_@@_tmpa_tl
+          {
+            \cs_if_exist:NTF \upOmega
+              { \exp_not:N \upOmega }
+              { \exp_not:N \Omega }
+          }
+        \tl_set:Nx \l_@@_tmpb_tl
+          {
+            \exp_not:N \text
+              { \exp_not:N \ensuremath { \exp_not:V \l_@@_tmpa_tl } }
+          }
+        \siunitx_declare_unit:Nx \ohm
+          {
+            \@ifpackageloaded { fourier }
+              {
+                \exp_not:N \ensuremath
+                  { \exp_not:V \l_@@_tmpa_tl }
+              }
+              {
+                \exp_not:N \ifmmode
+                  \@ifpackageloaded { fontspec }
+                    { \exp_not:V \l_@@_tmpb_tl }
+                    {
+                      \@ifclassloaded { beamer }
+                        { \exp_not:V \l_@@_tmpb_tl }
+                        { \exp_not:V \l_@@_tmpa_tl }
+                    }
+                \exp_not:N \else
+                  \exp_not:N \text
+                    {
+                      \bool_lazy_or:nnTF
+                        { \sys_if_engine_luatex_p: }
+                        { \sys_if_engine_xetex_p: }
+                        { \@@_non_latin:n { "2126 } }
+                        { \exp_not:N \textohm }
+                    }
+                \exp_not:N \fi
+              }
+          }
+      }
+%    \end{macrocode}
+%   Only a text mode command is available for |\micro| in the standard
+%   set up.
+%    \begin{macrocode}
+    \@@_if_replace:NnT \micro { "03BC }
+      {
+        \siunitx_declare_prefix:Nnx \micro { -6 }
+          {
+            \exp_not:N \text
+              {
+                \bool_lazy_or:nnTF
+                  { \sys_if_engine_luatex_p: }
+                  { \sys_if_engine_xetex_p: }
+                  { \@@_non_latin:n { "00B5 } }
+                  { \exp_not:N \textmu }
+              }
+          }
+      }
+  }
+%    \end{macrocode}
+%
+% \subsection{Bookmark definitions}
+%
+% Inside PDF strings we disable the text printing function. The definition of
+% |\ohm| is also reset as otherwise engine-dependent strings are generated
+% (\XeTeX{} and \LuaTeX{} give different outcomes using for example
+% |\textohm|).
+%    \begin{macrocode}
+\AtBeginDocument
+  {
+    \@ifpackageloaded { hyperref }
+      {
+        \exp_args:Nx \pdfstringdefDisableCommands
+          {
+            \cs_set_eq:NN \siunitx_print_text:n \exp_not:N \use:n
+            \siunitx_declare_unit:Nn \exp_not:N \ohm
+              { \@@_non_latin:n { "03A9 } }
+          }
+      }
+      { }
+  }
+%    \end{macrocode}
+%
+%    \begin{macrocode}
+%</package>
+%    \end{macrocode}
+%
+% \end{implementation}
+%
+% \PrintIndex

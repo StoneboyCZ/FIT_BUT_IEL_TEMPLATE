@@ -1,0 +1,4494 @@
+% \iffalse meta-comment
+%
+% File: siunitx-number.dtx Copyright (C) 2014-2019,2021,2022 Joseph Wright
+%
+% It may be distributed and/or modified under the conditions of the
+% LaTeX Project Public License (LPPL), either version 1.3c of this
+% license or (at your option) any later version.  The latest version
+% of this license is in the file
+%
+%    https://www.latex-project.org/lppl.txt
+%
+% This file is part of the "siunitx bundle" (The Work in LPPL)
+% and all files in that bundle must be distributed together.
+%
+% The released version of this bundle is available from CTAN.
+%
+% -----------------------------------------------------------------------
+%
+% The development version of the bundle can be found at
+%
+%    https://github.com/josephwright/siunitx
+%
+% for those people who are interested.
+%
+% -----------------------------------------------------------------------
+%
+%<*driver>
+\documentclass{l3doc}
+\ProvideDocumentCommand\foreign{m}{\textit{#1}}
+% The next line is needed so that \GetFileInfo will be able to pick up
+% version data
+\usepackage{siunitx}
+\begin{document}
+  \DocInput{\jobname.dtx}
+\end{document}
+%</driver>
+% \fi
+%
+% \GetFileInfo{siunitx.sty}
+%
+% \title{^^A
+%   \pkg{siunitx-number} -- Parsing and formatting numbers^^A
+%   \thanks{This file describes \fileversion,
+%     last revised \filedate.}^^A
+% }
+%
+% \author{^^A
+%  Joseph Wright^^A
+%  \thanks{^^A
+%    E-mail:
+%    \href{mailto:joseph.wright@morningstar2.co.uk}
+%      {joseph.wright@morningstar2.co.uk}^^A
+%   }^^A
+% }
+%
+% \date{Released \filedate}
+%
+% \maketitle
+%
+% \begin{documentation}
+%
+% This submodule is dedicated to parsing and formatting numbers. A small number
+% of \LaTeXe{} math mode commands are assumed to be available as part of the
+% formatted output. The sign commands \cs{mp}, \cs{pm}, \cs{ll}, \cs{le},
+% \cs{gg} and \cs{ge} are used to replace two-character input; \cs{pm}
+% is also required for the output of uncertainties. The standard settings
+% require \cs{times}. For the display of colored negative numbers, the command
+% \cs{color} is assumed to be available. Where the latter may apply, numbers
+% should be printed inside a group: note that \TeX{} grouping is not added
+% \emph{within} formatted numbers as they may need to be decomposed into parts
+% (see \cs{siunitx_number_output:NN}). Such a color will be the \emph{first}
+% part of the result, meaning that a test for an initial |\color| and following
+% brace group may be used to detect/remove/adjust this part.
+%
+% \section{Formatting numbers}
+%
+% \begin{function}{\siunitx_number_parse:nN, \siunitx_number_parse:VN}
+%   \begin{syntax}
+%     \cs{siunitx_number_parse:nN} \Arg{number} \meta{tl~var}
+%   \end{syntax}
+%   Parses the \emph{number} and stores the resulting internal representation
+%   in the \meta{tl~var}. The parsing is influenced by the various key--value
+%   settings for numerical input. The \meta{number} should comprise a single
+%   real value, possibly with comparator, uncertainty and exponent parts.
+%   If the number is invalid, or if number parsing is disabled, the result will
+%   be an entirely empty \meta{tl~var}.
+%
+%   The structure of a valid number is:
+%   \begin{quote}
+%     \marg{comparator}\marg{sign}\marg{integer}\marg{decimal}
+%       \marg{uncertainty}\\
+%       \marg{exponent sign}\marg{exponent}
+%   \end{quote}
+%   where the two sign parts must be single tokens if present,
+%   and all other components
+%   must be given in braces. The number will have at least one digit for both the
+%   \meta{integer} and \meta{exponent} parts: these are required. The
+%   \meta{uncertainty} part should either be blank or contain an
+%   \meta{identifier} (as a brace group), followed by one or more data entries.
+%   Valid uncertainty \meta{identifiers} currently are
+%   \begin{itemize}
+%     \item[\texttt{S}] A single symmetrical uncertainty (\foreign{e.g.}~a
+%       statistical standard uncertainty). The data item here is a single
+%       value representing the uncertainty in the least-significant digits
+%     \item[\texttt{A}] A single unsymmetrical uncertainty. The data item here
+%       contains two brace groups, each using the same least-significant digit
+%       approach as the \texttt{S} type. The positive component is given first
+%       and the negative second, and neither has a sign.
+%     \item A combination of \texttt{S} and \texttt{A} entries, with one data
+%       item per entry. These are then iterated over to be output in order.
+%   \end{itemize}
+%   If a decimal marker should be explicitly recorded as present for a value
+%   with no decimal digits, the \meta{decimal} part should contain
+%   \cs{empty}.
+% \end{function}
+%
+% \begin{function}{\siunitx_number_process:NN}
+%   \begin{syntax}
+%     \cs{siunitx_number_process:N} \meta{tl~var1} \meta{tl~var2}
+%   \end{syntax}
+%   Applies a set of number processing operations to the \meta{internal
+%   number} stored in the \meta{tl~var1}, \foreign{viz.}~in order
+%   \begin{enumerate}
+%     \item Dropping uncertainty
+%     \item Converting to scientific mode (or similar)
+%     \item Rounding
+%     \item Dropping zero decimal part
+%     \item Forcing a minimum number of digits
+%   \end{enumerate}
+%   with the result stored in \meta{tl~var2}.
+% \end{function}
+%
+% \begin{function}[rEXP]
+%   {
+%     \siunitx_number_output:N,  \siunitx_number_output:n,
+%     \siunitx_number_output:NN, \siunitx_number_output:nN
+%   }
+%   \begin{syntax}
+%     \cs{siunitx_number_output:N} \meta{number}
+%     \cs{siunitx_number_output:NN} \meta{number} \meta{marker}
+%   \end{syntax}
+%   Formats the \meta{number} (in the \pkg{siunitx} internal format),
+%   producing the result in a form suitable for typesetting in math mode.
+%   The details for the formatting are controlled by a number of key--value
+%   options. Note that \emph{formatting} does not apply any manipulation
+%   (processing) to the number. This function is usable in an \texttt{e}-
+%   or \texttt{x}-type expansion, and further uncontrolled expansion is
+%   prevented by appropriate use of |\exp_not:n| internally.
+%
+%   In the \texttt{NN} version, the \meta{marker} token is inserted at each
+%   possible alignment position in the output, \foreign{viz.}
+%   \begin{itemize}
+%     \item Between the comparator and the integer (\emph{before} any
+%       sign for the integer)
+%     \item Between the sign and the first digit of the integer
+%     \item Both sides of the decimal marker
+%     \item Both sides of the separated uncertainty sign (\foreign{i.e.}~after
+%       the decimal part and before any integer uncertainty part)
+%     \item Both sides of the decimal marker for a separated uncertainty
+%     \item Both sides of the multiplication symbol for the exponent part.
+%    \end{itemize}
+%
+%   The \texttt{n} and \texttt{nN} version take a token list, which should
+%   be in the internal \pkg{siunitx} format.
+% \end{function}
+%
+% \begin{function}{\siunitx_number_format:nN}
+%   \begin{syntax}
+%     \cs{siunitx_number_format:nN} \Arg{number} \meta{tl~var}
+%   \end{syntax}
+%    Carries out a combination of \cs{siunitx_number_parse:nN},
+%    \cs{siunitx_number_process:NN} and \cs{siunitx_number_output:N} using
+%    \texttt{x}-type expansion to place the result in the \meta{tl~var}. If
+%    \cs{l_siunitx_number_parse_bool} if \texttt{false}, the input is simply
+%    stored inside the \meta{tl~var} inside \cs{ensuremath}.
+% \end{function}
+%
+% \begin{function}[EXP]
+%   {
+%     \siunitx_number_adjust_exponent:Nn ,
+%     \siunitx_number_adjust_exponent:nn
+%   }
+%   \begin{syntax}
+%     \cs{siunitx_number_adjust_exponent:Nn} \meta{number} \Arg{fp~expr}
+%   \end{syntax}
+%    Adjusts the exponent of the \meta{number} (in internal format) by the
+%    \meta{fp~expr} and leaves the result in the input stream.
+% \end{function}
+%
+% \begin{function}{\siunitx_number_normalize_symbols:N}
+%   \begin{syntax}
+%     \cs{siunitx_number_normalize_symbols:N} \meta{tl~var}
+%   \end{syntax}
+%    Replaces all multi-token signs and comparators in the \meta{tl~var}
+%    with their single-token equivalents. Replaces any active hyphen tokens
+%    with non-active versions.
+% \end{function}
+%
+% \begin{function}[pTF, EXP]{\siunitx_if_number:n}
+%   \begin{syntax}
+%     \cs{siunitx_if_number_token:NTF} \Arg{tokens}
+%       \Arg{true code} \Arg{false code}
+%   \end{syntax}
+%   Determines if the \meta{tokens} form a valid number which can be fully
+%   parsed by \pkg{siunitx}.
+% \end{function}
+%
+% \begin{function}[TF]{\siunitx_if_number_token:N}
+%   \begin{syntax}
+%     \cs{siunitx_if_number_token:NTF} \Arg{token}
+%       \Arg{true code} \Arg{false code}
+%   \end{syntax}
+%   Determines if the \meta{token} is valid in a number based on those
+%   tokens currently set up for detection in a number.
+% \end{function}
+%
+% \begin{variable}{\l_siunitx_bracket_ambiguous_bool}
+%   A switch to control whether ambiguous numbers are bracketed: this can
+%   also be covered in quantity formatting by a setting there.
+% \end{variable}
+%
+% \begin{variable}{\l_siunitx_number_parse_bool}
+%   A switch to control whether any parsing is attempted for numbers.
+% \end{variable}
+%
+% \begin{variable}
+%   {
+%     \l_siunitx_number_comparator_tl ,
+%     \l_siunitx_number_exponent_tl   ,
+%     \l_siunitx_number_sign_tl
+%   }
+%   The list of  possible input comparators, exponent markers and signs.
+% \end{variable}
+%
+% \begin{variable}
+%   {\l_siunitx_number_input_decimal_tl, \l_siunitx_number_output_decimal_tl}
+%   The list of  possible input decimal marker(s), and the output marker.
+% \end{variable}
+%
+% \subsection{Key--value options}
+%
+% The options defined by this submodule are available within the \pkg{l3keys}
+% |siunitx| tree.
+%
+% \begin{function}{bracket-ambiguous-numbers}
+%   \begin{syntax}
+%     |bracket-ambiguous-numbers| = |true|\verb"|"|false|
+%   \end{syntax}
+% \end{function}
+%
+% \begin{function}{bracket-negative-numbers}
+%   \begin{syntax}
+%     |bracket-negative-numbers| = |true|\verb"|"|false|
+%   \end{syntax}
+% \end{function}
+%
+% \begin{function}{drop-exponent}
+%   \begin{syntax}
+%     |drop-exponent| = |true|\verb"|"|false|
+%   \end{syntax}
+% \end{function}
+%
+% \begin{function}{drop-uncertainty}
+%   \begin{syntax}
+%     |drop-uncertainty| = |true|\verb"|"|false|
+%   \end{syntax}
+% \end{function}
+%
+% \begin{function}{drop-zero-decimal}
+%   \begin{syntax}
+%     |drop-zero-decimal| = |true|\verb"|"|false|
+%   \end{syntax}
+% \end{function}
+%
+% \begin{function}{evaluate-expression}
+%   \begin{syntax}
+%     |evaluate-expression| = |true|\verb"|"|false|
+%   \end{syntax}
+% \end{function}
+%
+% \begin{function}{exponent-base}
+%   \begin{syntax}
+%     |exponent-base| = \meta{base}
+%   \end{syntax}
+% \end{function}
+%
+% \begin{function}{exponent-mode}
+%   \begin{syntax}
+%     |exponent-mode| = |engineering|\verb"|"|fixed|\verb"|"|input|\verb"|"|scientific|
+%   \end{syntax}
+% \end{function}
+%
+% \begin{function}{exponent-product}
+%   \begin{syntax}
+%     |exponent-product| = \meta{symbol}
+%   \end{syntax}
+% \end{function}
+%
+% \begin{function}{expression}
+%   \begin{syntax}
+%     |expression| = \meta{expression}
+%   \end{syntax}
+% \end{function}
+%
+% \begin{function}{fixed-exponent}
+%   \begin{syntax}
+%     |fixed-exponent| = \meta{exponent}
+%   \end{syntax}
+% \end{function}
+%
+% \begin{function}
+%   {digit-group-size, digit-group-first-size, digit-group-other-size}
+%   \begin{syntax}
+%     |digit-group-number| = \meta{integer}
+%   \end{syntax}
+%   Sets the size of the block (the number of digits) used when grouping
+%   digits. The option |digit-group-first-size| applies to the first grouping,
+%   \foreign{i.e.}~immediately next to the decimal marker, while
+%   |digit-group-other-size| applies to all other groups. Both can be set
+%   using |digit-group-size|. The standard setting for both options is $3$.
+% \end{function}
+%
+% \begin{function}{group-digits}
+%   \begin{syntax}
+%     |group-digits| = |all|\verb"|"|decimal|\verb"|"|integer|\verb"|"|none|
+%   \end{syntax}
+%   Choice to specify whether digits in a number are grouped. The option |none|
+%   entirely disables this, while |all| means that both the integer and decimal
+%   parts are grouped. The settings |integer| and |decimal| activate grouping
+%   for the relevant part only. The standard setting is |all|.
+% \end{function}
+%
+% \begin{function}{group-minimum-digits}
+%   \begin{syntax}
+%     |group-minimum-digits| = \meta{value}
+%   \end{syntax}
+%   The number of digits that must be present in a numerical part (integer or
+%   decimal) before digit grouping is attempted. The standard setting is $4$.
+% \end{function}
+%
+% \begin{function}{group-separator}
+%   \begin{syntax}
+%     |group-separator| = \meta{symbol}
+%   \end{syntax}
+%   Sets the symbol inserted between groups of digits. The standard setting is
+%   a thin space (\cs{,}).
+% \end{function}
+%
+% \begin{function}{input-close-uncertainty}
+%   \begin{syntax}
+%     |input-close-uncertainty| = \meta{tokens}
+%   \end{syntax}
+% \end{function}
+%
+% \begin{function}{input-comparators}
+%   \begin{syntax}
+%     |input-comparators| = \meta{tokens}
+%   \end{syntax}
+% \end{function}
+%
+% \begin{function}{input-close-uncertainty}
+%   \begin{syntax}
+%     |input-close-uncertainty| = \meta{tokens}
+%   \end{syntax}
+% \end{function}
+%
+% \begin{function}{input-decimal-markers}
+%   \begin{syntax}
+%     |input-decimal-markers| = \meta{tokens}
+%   \end{syntax}
+% \end{function}
+%
+% \begin{function}{input-digits}
+%   \begin{syntax}
+%     |input-digits| = \meta{tokens}
+%   \end{syntax}
+% \end{function}
+%
+% \begin{function}{input-exponent-markers}
+%   \begin{syntax}
+%     |input-exponent-markers| = \meta{tokens}
+%   \end{syntax}
+% \end{function}
+%
+% \begin{function}{input-open-uncertainty}
+%   \begin{syntax}
+%     |input-open-uncertainty| = \meta{tokens}
+%   \end{syntax}
+% \end{function}
+%
+% \begin{function}{input-signs}
+%   \begin{syntax}
+%     |input-signs| = \meta{tokens}
+%   \end{syntax}
+% \end{function}
+%
+% \begin{function}{input-uncertainty-signs}
+%   \begin{syntax}
+%     |input-uncertainty-signs| = \meta{tokens}
+%   \end{syntax}
+% \end{function}
+%
+% \begin{function}{minimum-decimal-digits}
+%   \begin{syntax}
+%     |minimum-decimal-digits| = \meta{min}
+%   \end{syntax}
+% \end{function}
+%
+% \begin{function}{minimum-integer-digits}
+%   \begin{syntax}
+%     |minimum-integer-digits| = \meta{min}
+%   \end{syntax}
+% \end{function}
+%
+% \begin{function}{negative-color}
+%   \begin{syntax}
+%     |negative-color| = \meta{color}
+%   \end{syntax}
+% \end{function}
+%
+% \begin{function}{output-close-uncertainty}
+%   \begin{syntax}
+%     |output-close-uncertainty| = \meta{symbol}
+%   \end{syntax}
+% \end{function}
+%
+% \begin{function}{output-decimal-marker}
+%   \begin{syntax}
+%     |output-decimal-marker| = \meta{symbol}
+%   \end{syntax}
+% \end{function}
+%
+% \begin{function}{output-open-uncertainty}
+%   \begin{syntax}
+%     |output-open-uncertainty| = \meta{symbol}
+%   \end{syntax}
+% \end{function}
+%
+% \begin{function}{parse-numbers}
+%   \begin{syntax}
+%     |parse-numbers| = |true|\verb"|"|false|
+%   \end{syntax}
+% \end{function}
+%
+% \begin{function}{print-implicit-plus}
+%   \begin{syntax}
+%     |print-implicit-plus| = |true|\verb"|"|false|
+%   \end{syntax}
+% \end{function}
+%
+% \begin{function}{print-unity-mantissa}
+%   \begin{syntax}
+%     |print-unity-mantissa| = |true|\verb"|"|false|
+%   \end{syntax}
+% \end{function}
+%
+% \begin{function}{print-zero-exponent}
+%   \begin{syntax}
+%     |print-zero-exponent| = |true|\verb"|"|false|
+%   \end{syntax}
+% \end{function}
+%
+% \begin{function}{print-zero-integer}
+%   \begin{syntax}
+%     |print-zero-integer| = |true|\verb"|"|false|
+%   \end{syntax}
+% \end{function}
+%
+% \begin{function}{retain-explicit-plus}
+%   \begin{syntax}
+%     |retain-explicit-plus| = |true|\verb"|"|false|
+%   \end{syntax}
+%   Switch which determines if an explicit |+| is retained as a sign when
+%   parsing. The standard setting is |false|.
+% \end{function}
+%
+% \begin{function}{retain-explicit-decimal-marker}
+%   \begin{syntax}
+%     |retain-explicit-decimal-marker| = |true|\verb"|"|false|
+%   \end{syntax}
+%   Switch which determines if an explicit decimal marker is retained when
+%   parsing a number where there is no decimal part to a number
+%   (\foreign{i.e.}~whether to differentiate |10| and |10.|). The standard
+%   setting is |false|.
+% \end{function}
+%
+% \begin{function}{retain-negative-zero}
+%   \begin{syntax}
+%     |retain-negative-zero| = |true|\verb"|"|false|
+%   \end{syntax}
+%   Switch which determines if a negative sign is retained where the value of
+%   a parsed number is exactly zero. The standard setting is |false|.
+% \end{function}
+%
+% \begin{function}{retain-zero-uncertainty}
+%   \begin{syntax}
+%     |retain-zero-uncertainty| = |true|\verb"|"|false|
+%   \end{syntax}
+%   Switch which determines if an entirely zero uncertainty part is retained
+%   on parsing, or whether this is normalised to remove the uncertainty.
+%   The standard setting is |false|.
+% \end{function}
+%
+% \begin{function}{round-half}
+%   \begin{syntax}
+%     |round-half| = |even|\verb"|"|up|
+%   \end{syntax}
+%   Choice which determines how values of exactly half are rounded. The setting
+%   |up| means that the value is always rounded away from zero, whereas the
+%   setting |even| means that the value will be rounded to the closes even
+%   number. The standard setting is |up|.
+% \end{function}
+%
+% \begin{function}{round-minimum}
+%   \begin{syntax}
+%     |round-minimum| = \meta{min}
+%   \end{syntax}
+%   Literal which sets a minimum value below which rounded values will be
+%   replaced by this value and a |>| or |<|, as appropriate for the sign of
+%   the value. The standard setting is empty, \foreign{i.e.}~there is no
+%   minimum.
+% \end{function}
+%
+% \begin{function}{round-mode}
+%   \begin{syntax}
+%     |round-mode| = |figures|\verb"|"|none|\verb"|"|places|\verb"|"|uncertainty|
+%   \end{syntax}
+%   Choice which specifies the rounding approach used for numbers. The choice
+%   |figures| means that values are rounding to the number of significant
+%   figures specified by |round-precision|. The setting |places| rounds to
+%   |round-precision| interpreted as a number of decimal places: this may be
+%   negative (rounding to an integer). The setting |none| disables rounding.
+%   The setting |uncertainty| first rounds the uncertainty to the number of
+%   significant figures specified by |round-precision|, then rounds the main
+%   value such that its accuracy is correctly specified by this updated
+%   uncertainty. The standard setting is |none|.
+% \end{function}
+%
+% \begin{function}{round-pad}
+%   \begin{syntax}
+%     |round-pad| = |true|\verb"|"|false|
+%   \end{syntax}
+%   Switch which specifies if values should be padded to the required number
+%   length when rounding to a number of decimal places. The standard setting is
+%   |true|.
+% \end{function}
+%
+% \begin{function}{round-precision}
+%   \begin{syntax}
+%     |round-precision| = \meta{precision}
+%   \end{syntax}
+%   Integer specifying the number of digits used as a target when rounding:
+%   this may be interpreted as decimal places or significant figures,
+%   depending on active |round-mode|. The standard setting is $2$.
+% \end{function}
+%
+% \begin{function}{round-zero-positive}
+%   \begin{syntax}
+%     |round-zero-positive| = |true|\verb"|"|false|
+%   \end{syntax}
+%   Switch to control whether a value rounded to zero is regarded as a positive
+%   number if the input was negative. The standard setting is |true|.
+% \end{function}
+%
+% \begin{function}{tight-spacing}
+%   \begin{syntax}
+%     |tight-spacing| = |true|\verb"|"|false|
+%   \end{syntax}
+% \end{function}
+%
+% \begin{function}{uncertainty-descriptor-mode}
+%   \begin{syntax}
+%     |uncertainty-descriptor| = |bracket|\verb"|"|bracket-separator|\verb"|"|separator|\verb"|"|subscript|
+%   \end{syntax}
+%   Selects how uncertainty descriptors are formatted: a choice from the
+%   options |bracket|, |text| and |subscript|.  The option |bracket| wraps the
+%   descriptor in parenthesis, |bracket-separator| does the same but also
+%   includes a separator between the uncertainty and opening bracket,
+%   |separator| places the descriptor after the uncertainty and a separator,
+%   and |subscript| formats the descriptor as a subscript. The
+%   standard setting is |bracket-separator|.
+% \end{function}
+%
+% \begin{function}{uncertainty-descriptor-separator}
+%   \begin{syntax}
+%     |uncertainty-descriptor-separator| = \meta{separator}
+%   \end{syntax}
+%   Separateor inserted between the uncertainty and descriptor when one is
+%   required by |uncertainty-separator-mode|. The standard setting is
+%   \verb*|\ |.
+% \end{function}
+%
+% \begin{function}{uncertainty-descriptors}
+%   \begin{syntax}
+%     |uncertainty-descriptors| = \meta{clist}
+%   \end{syntax}
+%   Stores the list of descriptors used when there are multiple uncertainty
+%   components given. This is not used when there is only a single uncertainty
+%   component present. The standard setting is |empty|.
+% \end{function}
+%
+% \begin{function}{uncertainty-mode}
+%   \begin{syntax}
+%     |uncertainty-mode| = |compact|\verb"|"|compact-marker|\verb"|"|full|\verb"|"|separate|
+%   \end{syntax}
+%   Switch to determine how single symmetrical uncertainties are formatted.
+%   When this is set to |separate|, the uncertainty is printed as an entirely
+%   separate number preceded by \cs{pm}. Other settings all place the
+%   uncertainty in parentheses directly attached to the main value. The
+%   standard setting of |compact| prints digits of uncertainty in the
+%   least-significant digits. It does \emph{not} print a decimal marker if the
+%   uncertainty crosses the decimal. The setting |full| prints the full value
+%   of the uncertainty. The setting |compact-marker| is available to print in the
+%   |compact| style except where the uncertainty crosses the decimal, in which case the
+%   |full| style is used. The standard setting is |compact|.
+% \end{function}
+%
+% \begin{function}{uncertainty-separator}
+%   \begin{syntax}
+%     |uncertainty-separator| = \meta{separator}
+%   \end{syntax}
+%   Stores the separator used between the main value and uncertainty when using
+%   the |compact| or |compact-marker| style setting for |uncertainty-mode|.
+% \end{function}
+%
+% \begin{function}{zero-decimal-as-symbol}
+%   \begin{syntax}
+%     |zero-decimal-as-symbol| = |true|\verb"|"|false|
+%   \end{syntax}
+%   Switch to determine if an entirely zero decimal part is replaced by a
+%   symbol. Does not apply if the decimal part is marked as entirely absent.
+% \end{function}
+%
+% \begin{function}{zero-symbol}
+%   \begin{syntax}
+%     |zero-symbol| = \meta{symbol}
+%   \end{syntax}
+%   Material printed when a zero numerical component is replaced by a symbol.
+% \end{function}
+%
+% \end{documentation}
+%
+% \begin{implementation}
+%
+% \section{\pkg{siunitx-number} implementation}
+%
+% Start the \pkg{DocStrip} guards.
+%    \begin{macrocode}
+%<*package>
+%    \end{macrocode}
+%
+% Identify the internal prefix (\LaTeX3 \pkg{DocStrip} convention): only
+% internal material in this \emph{submodule} should be used directly.
+%    \begin{macrocode}
+%<@@=siunitx_number>
+%    \end{macrocode}
+%
+% \subsection{Initial set-up}
+%
+%   Variants not provided by \pkg{expl3}.
+%    \begin{macrocode}
+\cs_generate_variant:Nn \tl_if_blank:nTF { f }
+\cs_generate_variant:Nn \tl_if_blank_p:n { f }
+\cs_generate_variant:Nn \tl_if_in:NnTF { NV }
+\cs_generate_variant:Nn \tl_remove_all:Nn { NV }
+\cs_generate_variant:Nn \tl_replace_all:Nnn { NnV }
+%    \end{macrocode}
+%
+% \begin{variable}{\l_@@_tmp_tl}
+%   Scratch space.
+%    \begin{macrocode}
+\tl_new:N \l_@@_tmp_tl
+%    \end{macrocode}
+% \end{variable}
+%
+% \subsection{Main formatting routine}
+%
+% \begin{variable}{\l_@@_outputted_tl}
+%   A token list for the final formatted result: may or may not be generated
+%   by the parser, depending on settings which are active.
+%    \begin{macrocode}
+\tl_new:N \l_@@_outputted_tl
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{variable}{\l_siunitx_number_parse_bool}
+%   Tracks whether to parse numbers: public as this may affect other
+%   behaviors.
+%    \begin{macrocode}
+\tl_new:N \l_siunitx_number_parse_bool
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{variable}{\l_siunitx_number_parse_bool}
+%   Top-level options.
+%    \begin{macrocode}
+\keys_define:nn { siunitx }
+  {
+    parse-numbers .bool_set:N = \l_siunitx_number_parse_bool
+  }
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{macro}{\siunitx_number_format:nN}
+%    \begin{macrocode}
+\cs_new_protected:Npn \siunitx_number_format:nN #1#2
+  {
+    \group_begin:
+      \bool_if:NTF \l_siunitx_number_parse_bool
+        {
+          \siunitx_number_parse:nN {#1} \l_@@_parsed_tl
+          \siunitx_number_process:NN \l_@@_parsed_tl \l_@@_parsed_tl
+          \tl_set:Nx \l_@@_outputted_tl
+            { \siunitx_number_output:N \l_@@_parsed_tl }
+        }
+        { \tl_set:Nn \l_@@_outputted_tl { \ensuremath {#1} } }
+    \exp_args:NNNV \group_end:
+    \tl_set:Nn #2 \l_@@_outputted_tl
+  }
+%    \end{macrocode}
+% \end{macro}
+%
+% \subsection{Parsing numbers}
+%
+% Before numbers can be manipulated or formatted they need to be parsed into
+% an internal form. In particular, if multiple code paths are to be avoided,
+% it is necessary to do such parsing even for relatively simple cases such
+% as converting |1e10| to |1 \times 10^{10}|.
+%
+% Storing the result of such parsing can be done in a number of ways. In the
+% first version of \pkg{siunitx} a series of separate data stores were used.
+% This is potentially quite fast (as recovery of items relies only on \TeX{}'s
+% hash table) but makes managing the various data entries somewhat tedious and
+% error-prone. For version two of the package, a single data structure
+% (property list) was used for each part of the parsed number. Whilst this is
+% easy to manage and extend, it is somewhat slower as at a \TeX{} level there
+% are repeated pack--unpack steps. In particular, the fact that there are a
+% limited number of items to track for a \enquote{number} means that a more
+% efficient approach is desirable (contrast parsing units, which is open-ended
+% and therefore fits well with using a property list).
+%
+% In this release, the structure of a valid number is:
+% \begin{quote}
+%   \marg{comparator}\meta{sign}\marg{integer}\marg{decimal}
+%     \marg{uncertainty}\\
+%     \meta{exponent sign}\marg{exponent}
+% \end{quote}
+% where all components must be given in braces. \emph{All} of the components
+% must be present in a stored number (\foreign{i.e.}~at the end of parsing).
+% The number must have at least one digit for both the \meta{integer} and
+% \meta{exponent} parts.
+%
+% A non-empty \meta{uncertainty} must contain one leading brace group
+% containing an identifier, then zero or more brace groups which contain
+% the uncertainty data. In this release, the known uncertainty types are
+% \begin{itemize}
+%   \item \texttt{S}: A symmetrical statistical uncertainty made up of
+%     a single value. These are stored as uncertainty in significant digits,
+%     with no radix point in the stored value.
+% \end{itemize}
+%
+% \begin{variable}{\l_siunitx_number_input_decimal_tl}
+%   The input decimal markers(s).
+%    \begin{macrocode}
+\tl_new:N \l_siunitx_number_input_decimal_tl
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{variable}
+%   {
+%      \l_@@_expression_bool                 ,
+%      \l_@@_input_uncert_close_tl           ,
+%      \l_siunitx_number_input_comparator_tl ,
+%      \l_@@_input_digit_tl                  ,
+%      \l_siunitx_number_input_exponent_tl   ,
+%      \l_@@_input_ignore_tl                 ,
+%      \l_@@_input_uncert_open_tl            ,
+%      \l_siunitx_number_input_sign_tl       ,
+%      \l_@@_input_uncert_sign_tl            ,
+%      \l_@@_explicit_decimal_bool           ,
+%      \l_@@_explicit_plus_bool              ,
+%      \l_@@_negative_zero_bool              ,
+%      \l_@@_zero_uncert_bool
+%   }
+%  \begin{macro}[EXP]{\@@_expression:n}
+%   Options which determine the various valid parts of a parsed number.
+%    \begin{macrocode}
+\keys_define:nn { siunitx }
+  {
+    evaluate-expression .bool_set:N =
+      \l_@@_expression_bool ,
+    expression .code:n =
+      \cs_set:Npn \@@_expression:n ##1 {#1} ,
+    input-close-uncertainty .tl_set:N =
+      \l_@@_input_uncert_close_tl ,
+    input-comparators .tl_set:N =
+      \l_siunitx_number_input_comparator_tl ,
+    input-decimal-markers .tl_set:N =
+      \l_siunitx_number_input_decimal_tl ,
+    input-digits .tl_set:N =
+      \l_@@_input_digit_tl ,
+    input-exponent-markers .tl_set:N =
+      \l_siunitx_number_input_exponent_tl ,
+    input-ignore .tl_set:N =
+      \l_@@_input_ignore_tl ,
+    input-open-uncertainty .tl_set:N =
+      \l_@@_input_uncert_open_tl ,
+    input-signs .tl_set:N =
+      \l_siunitx_number_input_sign_tl ,
+    input-uncertainty-signs .code:n =
+      {
+        \tl_set:Nn \l_@@_input_uncert_sign_tl {#1}
+        \tl_map_inline:nn {#1}
+          {
+            \tl_if_in:NnF \l_siunitx_number_input_sign_tl {##1}
+              { \tl_put_right:Nn \l_siunitx_number_input_sign_tl {##1} }
+          }
+      } ,
+    parse-numbers .bool_set:N =
+      \l_siunitx_number_parse_bool ,
+    retain-explicit-decimal-marker .bool_set:N =
+      \l_@@_explicit_decimal_bool ,
+    retain-explicit-plus .bool_set:N =
+      \l_@@_explicit_plus_bool ,
+    retain-negative-zero .bool_set:N =
+      \l_@@_negative_zero_bool ,
+    retain-zero-uncertainty .bool_set:N =
+      \l_@@_zero_uncert_bool
+  }
+\cs_new:Npn \@@_expression:n #1 { }
+\tl_new:N \l_@@_input_uncert_sign_tl
+%    \end{macrocode}
+% \end{macro}
+% \end{variable}
+%
+% \begin{variable}{\l_@@_arg_tl}
+%   The input argument or a part thereof, depending on the position in
+%   the parsing routine.
+%    \begin{macrocode}
+\tl_new:N \l_@@_arg_tl
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{variable}{\l_@@_comparator_tl}
+%   A comparator, if found, is held here.
+%    \begin{macrocode}
+\tl_new:N \l_@@_comparator_tl
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{variable}{\l_@@_exponent_tl}
+%   The exponent part of a parsed number. It is easiest to find this
+%   relatively early in the parsing process, but as it needs to go at
+%   the end of the internal format is held separately until required.
+%    \begin{macrocode}
+\tl_new:N \l_@@_exponent_tl
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{variable}{\l_@@_flex_tl}
+%   In a number with an uncertainty, the exact meaning of a second part is
+%   not fully resolved until parsing is complete. That is handled using
+%   this \enquote{flexible} store.
+%    \begin{macrocode}
+\tl_new:N \l_@@_flex_tl
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{variable}{\l_@@_parsed_tl}
+%   The number parsed into internal format.
+%    \begin{macrocode}
+\tl_new:N \l_@@_parsed_tl
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{variable}{\l_@@_input_tl}
+%   The numerical input exactly as given by the user.
+%    \begin{macrocode}
+\tl_new:N \l_@@_input_tl
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{variable}{\l_@@_partial_tl}
+%   To avoid needing to worry about the fact that the final data stores are
+%   somewhat tricky to add to token-by-token, a simple store is used to build
+%   up the parsed part of a number before transferring in one go.
+%    \begin{macrocode}
+\tl_new:N \l_@@_partial_tl
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{variable}{\l_@@_uncert_tl}
+%   To allow multiple uncertainties, we want to build this up as possibly
+%   multiple entries.
+%    \begin{macrocode}
+\tl_new:N \l_@@_uncert_tl
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{variable}{\l_@@_validate_bool}
+%   Used to set up for validation with no error production.
+%    \begin{macrocode}
+\bool_new:N \l_@@_validate_bool
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{macro}{\siunitx_number_normalize_symbols:N}
+% \begin{macro}{\@@_normalize_aux:nN}
+% \begin{macro}{\@@_normalize_sign:N}
+% \begin{variable}{\c_@@_normalize_tl}
+%   There are two parts to the replacement code. First, any active
+%   hyphens signs are normalised: these can come up with some packages and
+%   cause issues. Multi-token signs then are converted to the single token
+%   equivalents so that everything else can work on a one token basis.
+%    \begin{macrocode}
+\cs_new_protected:Npn \siunitx_number_normalize_symbols:N #1
+  {
+    \@@_normalize_minus:N #1
+    \exp_after:wN \@@_normalize_aux:NnN \exp_after:wN #1
+      \c_@@_normalize_tl
+      { ? } \q_recursion_tail
+        \q_recursion_stop
+  }
+\cs_set_protected:Npn \@@_normalize_aux:NnN #1#2#3
+  {
+    \quark_if_recursion_tail_stop:N #3
+    \tl_replace_all:Nnn #1 {#2} {#3}
+    \@@_normalize_aux:NnN #1
+  }
+\tl_const:Nn \c_@@_normalize_tl
+  {
+    { -+ } \mp
+    { +- } \pm
+    { << } \ll
+    { <= } \le
+    { >> } \gg
+    { >= } \ge
+  }
+\group_begin:
+  \char_set_catcode_active:N \-
+  \cs_new_protected:Npx \@@_normalize_minus:N #1
+    {
+      \tl_replace_all:Nnn #1
+        { \exp_not:N - }  { \token_to_str:N - }
+    }
+\group_end:
+%    \end{macrocode}
+% \end{variable}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\siunitx_number_parse:nN, \siunitx_number_parse:VN}
+% \begin{macro}{\@@_parse:nN}
+%   After some initial set up, the parser expands the input and then replaces
+%   as far as possible tricky tokens with ones that can be handled using
+%   delimited arguments. To avoid multiple conditionals here, the parser is
+%   set up as a chain of commands initially, with a loop only later. This
+%   avoids more conditionals than are necessary.
+%    \begin{macrocode}
+\cs_new_protected:Npn \siunitx_number_parse:nN #1#2
+  {
+    \bool_if:NTF \l_siunitx_number_parse_bool
+      { \@@_parse:nN {#1} #2 }
+      { \tl_clear:N #2 }
+  }
+\cs_generate_variant:Nn \siunitx_number_parse:nN { V }
+\cs_new_protected:Npn \@@_parse:nN #1#2
+  {
+    \group_begin:
+      \tl_clear:N \l_@@_parsed_tl
+      \tl_clear:N \l_@@_uncert_tl
+      \tl_map_inline:Nn \l_@@_input_ignore_tl
+        {
+          \token_if_macro:NT ##1
+            { \cs_set_eq:NN ##1 \scan_stop: }
+        }
+      \protected@edef \l_@@_arg_tl
+        {
+          \bool_if:NTF \l_@@_expression_bool
+            { \fp_eval:n { \@@_expression:n {#1} } }
+            {#1}
+        }
+      \tl_set_eq:NN \l_@@_input_tl \l_@@_arg_tl
+      \siunitx_number_normalize_symbols:N \l_@@_arg_tl
+      \tl_map_inline:Nn \l_@@_input_ignore_tl
+        { \tl_remove_all:Nn \l_@@_arg_tl {##1} }
+      \tl_if_empty:NF \l_@@_arg_tl
+        { \@@_parse_comparator: }
+      \@@_parse_check:
+    \exp_args:NNNV \group_end:
+    \tl_set:Nn #2 \l_@@_parsed_tl
+  }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\@@_parse_check:}
+%   After the loop there is one case that might need tidying up. If a
+%   separated uncertainty was found it will be currently in \cs{l_@@_flex_tl}
+%   and needs moving. A series of tests pick up that case, then the check is
+%   made that some content was found
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_parse_check:
+  {
+    \tl_put_right:NV \l_@@_uncert_tl \l_@@_flex_tl
+    \tl_if_empty:NF \l_@@_uncert_tl
+      {
+        \tl_if_blank:fTF { \exp_after:wN \use_iv:nnnn \l_@@_parsed_tl }
+          { \@@_parse_combine_uncert: }
+          { \tl_clear:N \l_@@_parsed_tl }
+      }
+    \tl_if_empty:NTF \l_@@_parsed_tl
+      {
+        \bool_if:NF \l_@@_validate_bool
+          {
+            \msg_error:nnx { siunitx } { invalid-number }
+              { \exp_not:V \l_@@_input_tl }
+          }
+      }
+      { \@@_parse_finalise: }
+  }
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\@@_parse_combine_uncert:}
+% \begin{macro}[EXP]{\@@_parse_combine_uncert:nnnn}
+% \begin{macro}[EXP]{\@@_parse_combine_uncert:nn}
+% \begin{macro}[EXP]{\@@_parse_combine_uncert_loop:nnnnnnn}
+% \begin{macro}[EXP]{\@@_parse_combine_uncert:nnnnnn}
+% \begin{macro}[EXP]{\@@_parse_combine_uncert:nnnnnnn}
+% \begin{macro}[EXP]{\@@_parse_combine_uncert:nnnnn}
+% \begin{macro}[EXP]{\@@_parse_combine_uncert_aux:nnnn}
+% \begin{macro}[EXP]{\@@_parse_combine_uncert:N}
+% \begin{macro}[EXP]{\@@_parse_combine_uncert:w}
+% \begin{macro}[EXP]{\@@_parse_combine_uncert_end:nnn}
+% \begin{macro}[EXP]{\@@_parse_combine_uncert_end:nnnn}
+%   Conversion of a second numerical part to an uncertainty needs a bit of
+%   work. The first step is to extract the useful information from the two
+%   stores: the sign, integer and decimal parts from the real number. Then
+%   set up a loop to deal with each uncertainty to combine. Everything is done
+%   by expansion to avoid repeated assignments. To allow for the case where
+%   there is an error, the setup doesn't insert any tokens until the end of
+%   the loop, which means a bit of work on the stack.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_parse_combine_uncert:
+  {
+    \tl_set:Nx \l_@@_parsed_tl
+      {
+        \exp_after:wN \@@_parse_combine_uncert:nnnn
+          \l_@@_parsed_tl
+     }
+  }
+%    \end{macrocode}
+%   Here, |#1| and |#2| are not required at this stage, while |#4| is junk.
+%   Thus |#3| is the only item needed for the rest of the process. After a
+%   little argument shuffling, the main loop can begin.
+%    \begin{macrocode}
+\cs_new:Npn \@@_parse_combine_uncert:nnnn #1#2#3#4
+  {
+    \exp_after:wN \@@_parse_combine_uncert:nn
+      \exp_after:wN { \l_@@_uncert_tl } {#3}
+  }
+\cs_new:Npn \@@_parse_combine_uncert:nn #1#2
+  {
+    \@@_parse_combine_uncert_loop:nnnnnnn {#2} { } { }
+      #1
+      { \q_recursion_tail } { } { } { } \q_recursion_stop
+  }
+%    \end{macrocode}
+%   Here, |#4| and |#7| are junk arguments simply there to mop up
+%   tokens, with the exception that |#4| is also used for the end-of-loop
+%   test.
+%    \begin{macrocode}
+\cs_new:Npn \@@_parse_combine_uncert_loop:nnnnnnn #1#2#3#4#5#6#7
+  {
+    \quark_if_recursion_tail_stop_do:nn {#4}
+      { \@@_parse_combine_uncert_end:nnn {#1} {#2} {#3} }
+    \exp_args:Nf \@@_parse_combine_uncert:nnnnnn
+      { \int_eval:n { \tl_count:n {#1} - \tl_count:n {#6} } }
+      {#1} {#2} {#3} {#5} {#6}
+  }
+%    \end{macrocode}
+%   The difference in places between the two decimal parts is now found: this
+%   is done just once to avoid having to parse token lists twice. The value
+%   is then used to generate a number of filler |0| tokens, and these are added
+%   to the appropriate part of the number.
+%    \begin{macrocode}
+\cs_new:Npn \@@_parse_combine_uncert:nnnnnn #1
+  {
+    \exp_args:Nf \@@_parse_combine_uncert:nnnnnnn
+      { \prg_replicate:nn { \int_abs:n {#1} } { 0 } }
+      {#1}
+  }
+\cs_new:Npn \@@_parse_combine_uncert:nnnnnnn #1#2#3#4#5#6#7
+  {
+    \int_compare:nNnTF {#2} > 0
+      {
+        \@@_parse_combine_uncert:nnnnn
+          {#3} {#4} {#5} {#6} { #7 #1 }
+      }
+      {
+        \@@_parse_combine_uncert:nnnnn
+          { #3 #1 } {#4} {#5} {#6} {#7}
+      }
+  }
+%    \end{macrocode}
+%   We now ensure that the decimal part is never entirely blank \emph{if} there
+%   are decimal-part uncertainty digits. There is also a need to handle the
+%   possibly of an entirely empty uncertainty, where the value is zero and that
+%   is not being retained.
+%    \begin{macrocode}
+\cs_new:Npn \@@_parse_combine_uncert:nnnnn #1#2#3#4#5
+  {
+    \exp_args:Nee \@@_parse_combine_uncert_aux:nnnn
+      {
+        \bool_lazy_and:nnTF
+          { \tl_if_blank_p:n {#1} }
+          { ! \tl_if_blank_p:n {#5} }
+          { 0 }
+          { \exp_not:n {#1} }
+       }
+       {
+         \@@_parse_combine_uncert:N #4#5
+           \q_recursion_tail \q_recursion_stop
+       }
+       {#2}
+       {#3}
+  }
+\cs_new:Npn \@@_parse_combine_uncert_aux:nnnn #1#2#3#4
+  {
+    \exp_args:Neee \@@_parse_combine_uncert_loop:nnnnnnn
+      { \exp_not:n {#1} }
+      {
+        \exp_not:n {#3}
+        \tl_if_blank:nF {#2} { S } 
+      }
+      {
+        \exp_not:n {#4}
+        \tl_if_blank:nF {#2} { { \exp_not:n {#2} } }
+      }
+  }
+%    \end{macrocode}
+%   A short routine to remove any leading zeros in the uncertainty part,
+%   which are not needed for the compact representation used by the module.
+%    \begin{macrocode}
+\cs_new:Npn \@@_parse_combine_uncert:N #1
+  {
+    \quark_if_recursion_tail_stop_do:Nn #1
+      { \bool_if:NT \l_@@_zero_uncert_bool { 0 } }
+    \str_if_eq:nnTF {#1} { 0 }
+      { \@@_parse_combine_uncert:N }
+      { \@@_parse_combine_uncert:w #1 }
+  }
+\cs_new:Npn \@@_parse_combine_uncert:w
+  #1 \q_recursion_tail \q_recursion_stop
+  { \exp_not:n {#1} }
+%    \end{macrocode}
+%   Recover the sign and integer part, then add in the new decimal and the
+%   uncertainties.
+%    \begin{macrocode}
+\cs_new:Npn \@@_parse_combine_uncert_end:nnn #1#2#3
+  {
+    \exp_after:wN \@@_parse_combine_uncert_end:nnnn
+      \l_@@_parsed_tl
+    { \exp_not:n {#1} }
+    {
+      \tl_if_blank:nF {#2}
+        { \exp_not:n { {#2} #3 } }
+    }
+  }
+\cs_new:Npn \@@_parse_combine_uncert_end:nnnn #1#2#3#4
+  { \exp_not:n { {#1} {#2} } }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\@@_parse_comparator:}
+% \begin{macro}{\@@_parse_comparator_aux:Nw}
+%   A comparator has to be the very first token in the input. A such, the
+%   test for this can be very fast: grab the first token, do a check and
+%   if appropriate store the result.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_parse_comparator:
+  {
+    \exp_after:wN \@@_parse_comparator_aux:Nw
+      \l_@@_arg_tl \q_stop
+  }
+\cs_new_protected:Npn \@@_parse_comparator_aux:Nw #1#2 \q_stop
+  {
+    \tl_if_in:NnTF \l_siunitx_number_input_comparator_tl {#1}
+      {
+        \tl_set:Nn \l_@@_comparator_tl {#1}
+        \tl_set:Nn \l_@@_arg_tl {#2}
+      }
+      { \tl_clear:N \l_@@_comparator_tl }
+    \tl_if_empty:NF \l_@@_arg_tl
+      { \@@_parse_sign: }
+  }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\@@_parse_exponent:}
+% \begin{macro}{\@@_parse_exponent_auxi:w}
+% \begin{macro}{\@@_parse_exponent_auxii:nn}
+% \begin{macro}{\@@_parse_exponent_auxiii:Nw}
+% \begin{macro}{\@@_parse_exponent_auxiv:nn}
+% \begin{macro}
+%   {\@@_parse_exponent_zero_test:N, \@@_parse_exponent_check:N}
+% \begin{macro}{\@@_parse_exponent_cleanup:N}
+%   An exponent part of a number has to come at the end and can only occur
+%   once. Thus it is relatively easy to parse. First, there is a check that
+%   an exponent part is allowed, and if so a split is made (the previous
+%   part of the chain checks that there is some content in \cs{l_@@_arg_tl}
+%   before calling this function). After splitting, if there is no exponent
+%   then simply save a default. Otherwise, check for a sign and then store
+%   either this or an implicit plus, and the digits after a check that nothing
+%   else is present after the~|e|. The only slight complication to all of
+%   this is allowing an arbitrary token in the input to represent the exponent:
+%   this is done by setting any exponent tokens to the first of the allowed
+%   list, then using that in a delimited argument set up. Once an exponent
+%   part is found, there is a loop to check that each of the tokens is a digit
+%   then a tidy up step to remove any leading zeros.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_parse_exponent:
+  {
+    \tl_if_empty:NTF \l_siunitx_number_input_exponent_tl
+      {
+        \tl_set:Nn \l_@@_exponent_tl { { } 0 }
+        \tl_if_empty:NF \l_@@_parsed_tl
+          { \@@_parse_loop: }
+      }
+      {
+        \tl_set:Nx \l_@@_tmp_tl
+          { \tl_head:V \l_siunitx_number_input_exponent_tl }
+        \tl_map_inline:Nn \l_siunitx_number_input_exponent_tl
+          {
+            \tl_replace_all:NnV \l_@@_arg_tl
+              {##1} \l_@@_tmp_tl
+          }
+        \use:x
+          {
+            \cs_set_protected:Npn
+              \exp_not:N \@@_parse_exponent_auxi:w
+              ####1 \exp_not:V \l_@@_tmp_tl
+              ####2 \exp_not:V \l_@@_tmp_tl
+              ####3 \exp_not:N \q_stop
+          }
+            { \@@_parse_exponent_auxii:nn {##1} {##2} }
+        \use:x
+          {
+            \@@_parse_exponent_auxi:w
+              \exp_not:V \l_@@_arg_tl
+              \exp_not:V \l_@@_tmp_tl \exp_not:N \q_nil
+              \exp_not:V \l_@@_tmp_tl \exp_not:N \q_stop
+          }
+      }
+  }
+\cs_new_protected:Npn \@@_parse_exponent_auxi:w  { }
+\cs_new_protected:Npn \@@_parse_exponent_auxii:nn #1#2
+  {
+    \quark_if_nil:nTF {#2}
+      { \tl_set:Nn \l_@@_exponent_tl { { } 0 } }
+      {
+        \tl_set:Nn \l_@@_arg_tl {#1}
+        \tl_if_blank:nTF {#2}
+          { \tl_clear:N \l_@@_parsed_tl }
+          { \@@_parse_exponent_auxiii:Nw #2 \q_stop }
+      }
+    \tl_if_empty:NF \l_@@_parsed_tl
+      { \@@_parse_loop: }
+  }
+\cs_new_protected:Npn \@@_parse_exponent_auxiii:Nw #1#2 \q_stop
+  {
+    \tl_if_in:NnTF \l_siunitx_number_input_sign_tl {#1}
+      { \@@_parse_exponent_auxiv:nn {#1} {#2} }
+      { \@@_parse_exponent_auxiv:nn { } {#1#2} }
+    \tl_if_empty:NT \l_@@_exponent_tl
+      { \tl_clear:N \l_@@_parsed_tl }
+  }
+\cs_new_protected:Npn \@@_parse_exponent_auxiv:nn #1#2
+  {
+    \bool_lazy_or:nnTF
+      { \l_@@_explicit_plus_bool }
+      { ! \str_if_eq_p:nn {#1} { + } }
+      { \tl_set:Nn \l_@@_exponent_tl { {#1} } }
+      { \tl_set:Nn \l_@@_exponent_tl { { } } }
+    \tl_if_blank:nTF {#2}
+      { \tl_clear:N \l_@@_parsed_tl }
+      {
+        \@@_parse_exponent_zero_test:N #2
+          \q_recursion_tail \q_recursion_stop
+      }
+  }
+\cs_new_protected:Npn \@@_parse_exponent_zero_test:N #1
+  {
+    \quark_if_recursion_tail_stop_do:Nn #1
+      { \tl_set:Nn \l_@@_exponent_tl { { } 0 } }
+    \str_if_eq:nnTF {#1} { 0 }
+      { \@@_parse_exponent_zero_test:N }
+      { \@@_parse_exponent_check:N #1 }
+  }
+\cs_new_protected:Npn \@@_parse_exponent_check:N #1
+  {
+    \quark_if_recursion_tail_stop:N #1
+    \tl_if_in:NnTF \l_@@_input_digit_tl {#1}
+      {
+        \tl_put_right:Nn \l_@@_exponent_tl {#1}
+        \@@_parse_exponent_check:N
+      }
+      { \@@_parse_exponent_cleanup:wN }
+  }
+\cs_new_protected:Npn \@@_parse_exponent_cleanup:wN
+  #1 \q_recursion_stop
+  { \tl_clear:N \l_@@_parsed_tl }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\@@_parse_finalise:}
+% \begin{macro}[EXP]{\@@_parse_finalise:nnnn}
+% \begin{macro}[EXP]{\@@_parse_finalise:nw}
+%   Combine all of the bits of a number together, dealing with negative zero
+%   if required.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_parse_finalise:
+  {
+    \tl_if_empty:NF \l_@@_parsed_tl
+      {
+        \tl_set:Nx \l_@@_parsed_tl
+          {
+            { \exp_not:V \l_@@_comparator_tl }
+            \exp_after:wN \@@_parse_finalise:nnnn \l_@@_parsed_tl
+            \exp_after:wN \@@_parse_finalise:nw
+              \l_@@_exponent_tl \q_stop
+          }
+      }
+  }
+\cs_new:Npn \@@_parse_finalise:nnnn #1#2#3#4
+  {
+    \bool_lazy_all:nTF
+      {
+        { ! \l_@@_negative_zero_bool }
+        { \str_if_eq_p:nn {#1} { - } }
+        { ! \tl_if_blank_p:n {#2#3} }
+        {
+          \str_if_eq_p:ee
+            { \exp_not:n {#2#3} }
+            { \prg_replicate:nn { \tl_count:n {#2#3} } { 0 } }
+        }
+      }
+      { \exp_not:n { { } {#2} {#3} {#4} } }
+      { \exp_not:n { {#1} {#2} {#3} {#4} } }
+  }
+\cs_new:Npn \@@_parse_finalise:nw #1#2 \q_stop
+  {
+    { \exp_not:n {#1} }
+    { \exp_not:n {#2} }
+  }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\@@_parse_loop:}
+% \begin{macro}{\@@_parse_loop_first:NNN}
+% \begin{macro}{\@@_parse_loop_main:NNNN}
+% \begin{macro}{\@@_parse_loop_main_end:NN}
+% \begin{macro}{\@@_parse_loop_main_digit:NNNN}
+% \begin{macro}{\@@_parse_loop_main_decimal:N}
+% \begin{macro}{\@@_parse_loop_main_uncert:NN}
+% \begin{macro}{\@@_parse_loop_main_sign:NNN}
+% \begin{macro}{\@@_parse_loop_main_store:NNN}
+% \begin{macro}{\@@_parse_loop_after_decimal:NN}
+% \begin{macro}{\@@_parse_loop_break:w}
+%   At this stage, the partial input \cs{l_@@_arg_tl} will contain any
+%   mantissa, which may contain one or more uncertainties. Parsing this
+%   and allowing for all of the different formats possible is best done using
+%   a token-by-token approach. However, as at each stage only a subset of
+%   tokens are valid, the approach take is to use a set of semi-dedicated
+%   functions to parse different components along with switches to allow a
+%   sensible amount of code sharing.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_parse_loop:
+  {
+    \tl_clear:N \l_@@_partial_tl
+    \exp_after:wN \@@_parse_loop_first:NNN
+      \exp_after:wN \l_@@_parsed_tl \exp_after:wN \c_true_bool
+        \l_@@_arg_tl
+        \q_recursion_tail \q_recursion_stop
+  }
+%    \end{macrocode}
+%   The very first token of the input is handled with a dedicated function.
+%   Valid cases here are
+%   \begin{itemize}
+%     \item Entirely blank if the original input was for example |+e10|:
+%       simply clean up if in the integer part or issue an error if in
+%       a second part (uncertainty).
+%     \item An integer part digit: pass through to the main collection
+%       routine.
+%     \item A decimal marker: store an empty integer part and move to
+%       the main collection routine for a decimal part.
+%   \end{itemize}
+%   Anything else is invalid and sends the code to the abort function.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_parse_loop_first:NNN #1#2#3
+  {
+    \quark_if_recursion_tail_stop_do:Nn #3
+      {
+        \bool_if:NTF #2
+          { \tl_put_right:Nn #1 { { } { } { } } }
+          { \@@_parse_loop_break:w \q_recursion_stop }
+      }
+    \tl_if_in:NnTF \l_@@_input_digit_tl {#3}
+      {
+        \@@_parse_loop_main:NNNN
+          #1 \c_true_bool \c_false_bool #3
+      }
+      {
+        \tl_if_in:NnTF \l_siunitx_number_input_decimal_tl {#3}
+          {
+            \tl_put_right:Nn #1 { { 0 } }
+            \@@_parse_loop_after_decimal:NN #1
+          }
+          { \@@_parse_loop_break:w }
+      }
+  }
+%    \end{macrocode}
+%   A single function is used to cover the \enquote{main} part of numbers:
+%   finding the main or separated uncertainty parts and covering both
+%   the integer and decimal components. This works because these elements
+%   share a lot of concepts: a small number of switches can be used to
+%   differentiate between them. To keep the code at least somewhat readable,
+%   this main function deals with the validity testing but hands off other
+%   tasks to dedicated auxiliaries for each case.
+%
+%   The possibilities are
+%   \begin{itemize}
+%     \item The number terminates, meaning that some digits were collected
+%       and everything is simply tidied up (as far as the loop is concerned).
+%     \item A digit is found: this is the common case and leads to a storage
+%       auxiliary (which handles non-significant zeros).
+%     \item A decimal marker is found: only valid in the integer part and
+%       there leading to a store-and-switch situation.
+%     \item An open-uncertainty token: switch to the dedicated collector
+%       for uncertainties.
+%     \item A sign token: stop collecting this number and
+%       restart collection for the next part.
+%   \end{itemize}
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_parse_loop_main:NNNN #1#2#3#4
+  {
+    \quark_if_recursion_tail_stop_do:Nn #4
+      { \@@_parse_loop_main_end:NN #1#2 }
+    \tl_if_in:NnTF \l_@@_input_digit_tl {#4}
+      { \@@_parse_loop_main_digit:NNNN #1#2#3#4 }
+      {
+        \tl_if_in:NnTF \l_siunitx_number_input_decimal_tl {#4}
+          {
+            \bool_if:NTF #2
+              { \@@_parse_loop_main_decimal:N #1 }
+              { \@@_parse_loop_break:w }
+          }
+          {
+            \tl_if_in:NnTF \l_@@_input_uncert_open_tl {#4}
+              { \@@_parse_loop_main_uncert:NN #1 #2 }
+              {
+                \tl_if_in:NnTF \l_@@_input_uncert_sign_tl {#4}
+                  {
+                    \@@_parse_loop_main_sign:NNN
+                      #1 #2 #4
+                  }
+                  { \@@_parse_loop_break:w }
+              }
+          }
+      }
+  }
+%    \end{macrocode}
+%   If the main loop finds the end marker then there is a tidy up phase.
+%   The current partial number is stored either as the integer or decimal,
+%   depending on the setting for the indicator switch. For the integer
+%   part, if no number has been collected then one or more non-significant
+%   zeros have been dropped. Exactly one zero is therefore needed to make
+%   sure the parsed result is correct. On the other hand, if the decimal
+%   is empty \emph{and} we are asked to track the presence of a marker,
+%   we store the indicator value \cs{empty}.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_parse_loop_main_end:NN #1#2
+  {
+    \tl_if_empty:NT \l_@@_partial_tl
+      {
+        \bool_if:NTF #2
+          { \tl_set:Nn \l_@@_partial_tl { 0 } }
+          {
+            \bool_if:NT \l_@@_explicit_decimal_bool
+              { \tl_set:Nn \l_@@_partial_tl { \empty } }
+          }
+      }
+    \tl_put_right:Nx #1
+      {
+        { \exp_not:V \l_@@_partial_tl }
+        \bool_if:NT #2 { { } }
+        { }
+      }
+  }
+%    \end{macrocode}
+%   The most common case for the main loop collector is to find a digit.
+%   Here, in the integer part it is possible that zeros are non-significant:
+%   that is handled using a combination of a switch and a string test. Other
+%   than that, the situation here is simple: store the input and loop.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_parse_loop_main_digit:NNNN #1#2#3#4
+  {
+    \bool_lazy_or:nnTF
+      {#3} { ! \str_if_eq_p:nn {#4} { 0 } }
+      {
+        \tl_put_right:Nn \l_@@_partial_tl {#4}
+        \@@_parse_loop_main:NNNN #1 #2 \c_true_bool
+      }
+      { \@@_parse_loop_main:NNNN #1 #2 \c_false_bool }
+  }
+%    \end{macrocode}
+%   When a decimal marker was found, move the integer part to the
+%   store and then go back to the loop with the flags set correctly.
+%   There is the case of non-significant zeros to cover before that, of course.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_parse_loop_main_decimal:N #1
+  {
+    \@@_parse_loop_main_store:NNN #1 \c_false_bool \c_false_bool
+    \@@_parse_loop_after_decimal:NN #1
+  }
+%    \end{macrocode}
+%   Starting an uncertainty part means storing the number to date as in other
+%   cases, with the possibility of a blank decimal part allowed for. The
+%   uncertainty itself is collected by a dedicated function as it is extremely
+%   restricted.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_parse_loop_main_uncert:NN #1#2
+  {
+    \@@_parse_loop_main_store:NNN #1 #2 \c_false_bool
+    \tl_clear:N \l_@@_uncert_tl
+    \@@_parse_uncert:N
+  }
+%    \end{macrocode}
+%   If a sign is found, terminate the current number, store the sign as the
+%   first token of the second part and go back to do the dedicated first-token
+%   function.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_parse_loop_main_sign:NNN #1#2#3
+  {
+    \@@_parse_loop_main_store:NNN #1 #2 \c_true_bool
+    \tl_put_right:NV \l_@@_uncert_tl \l_@@_flex_tl
+    \tl_set:Nn \l_@@_flex_tl { {#3} }
+    \@@_parse_loop_first:NNN
+      \l_@@_flex_tl \c_false_bool
+  }
+%    \end{macrocode}
+%   A common auxiliary for the various non-digit token functions: tidy up the
+%   integer and decimal parts of a number. Here, the two flags are used to
+%   indicate if empty decimal and uncertainty parts should be included in
+%   the storage cycle.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_parse_loop_main_store:NNN #1#2#3
+  {
+    \tl_put_right:Nx #1
+      {
+        {
+          \tl_if_empty:NTF \l_@@_partial_tl
+            { 0 }
+            { \exp_not:V \l_@@_partial_tl }
+        }
+        \bool_if:NT #2 { { } }
+        \bool_if:NT #3 { { } }
+      }
+    \tl_clear:N \l_@@_partial_tl
+  }
+%    \end{macrocode}
+%   After a decimal marker there has to be a digit if there wasn't one before
+%   it. That is handled by using a dedicated function, which checks for
+%   an empty integer part first then either simply hands off or looks for
+%   a digit.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_parse_loop_after_decimal:NN #1#2
+  {
+    \tl_if_blank:fTF { \exp_after:wN \use_none:n #1 }
+      {
+        \quark_if_recursion_tail_stop_do:Nn #2
+          { \@@_parse_loop_break:w \q_recursion_stop }
+        \tl_if_in:NnTF \l_@@_input_digit_tl {#1}
+          {
+            \tl_put_right:Nn \l_@@_partial_tl {#2}
+            \@@_parse_loop_main:NNNN
+              #1 \c_false_bool \c_true_bool
+          }
+          { \@@_parse_loop_break:w }
+      }
+      {
+        \@@_parse_loop_main:NNNN
+          #1 \c_false_bool \c_true_bool #2
+      }
+  }
+%    \end{macrocode}
+%   Something is not right: remove all of the remaining tokens from the
+%   number and clear the storage areas as a signal for the next part of the
+%   code.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_parse_loop_break:w
+  #1 \q_recursion_stop
+  {
+    \tl_clear:N \l_@@_flex_tl
+    \tl_clear:N \l_@@_parsed_tl
+  }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\@@_parse_sign:}
+% \begin{macro}{\@@_parse_sign_aux:Nw}
+%   The first token of a number after a comparator could be a sign. A quick
+%   check is made and if found stored. For the number to be valid it has to be
+%   more than just a sign, so the next part of the chain is only called if that
+%   is the case.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_parse_sign:
+  {
+    \exp_after:wN \@@_parse_sign_aux:Nw
+      \l_@@_arg_tl \q_stop
+  }
+\cs_new_protected:Npn \@@_parse_sign_aux:Nw #1#2 \q_stop
+  {
+    \tl_if_in:NnTF \l_siunitx_number_input_sign_tl {#1}
+      {
+        \tl_set:Nn \l_@@_arg_tl {#2}
+        \bool_lazy_and:nnTF
+          { \token_if_eq_charcode_p:NN #1 + }
+          { ! \l_@@_explicit_plus_bool }
+          { \tl_set:Nn \l_@@_parsed_tl { { } } }
+          { \tl_set:Nn \l_@@_parsed_tl { {#1} } }
+      }
+      { \tl_set:Nn \l_@@_parsed_tl { { } } }
+    \tl_if_empty:NTF \l_@@_arg_tl
+      { \tl_clear:N \l_@@_parsed_tl }
+      { \@@_parse_exponent: }
+  }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\@@_parse_uncert:N}
+% \begin{macro}{\@@_parse_uncert:NNN}
+% \begin{macro}{\@@_parse_uncert_auxi:N, \@@_parse_uncert_auxii:N}
+% \begin{macro} {\@@_parse_uncert_auxii:, \@@_parse_uncert_marker:}
+%  \begin{macro}{\@@_parse_uncert_extend:nnn}
+%  \begin{macro}{\@@_parse_uncert_after:N}
+%   Parsing a combined uncertainty has a very restricted range of allowed
+%   tokens. A closing uncertainty token in the first place is an error,
+%   so we filter that out explicitly. After that, we check for digits,
+%   which require checking for significant digits. The non-digit function
+%   is separate to make the flow clearer.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_parse_uncert:N #1
+  {
+    \quark_if_recursion_tail_stop_do:Nn #1
+      { \@@_parse_loop_break:w \q_recursion_stop }
+    \tl_if_in:NnTF \l_@@_input_uncert_close_tl {#1}
+      { \@@_parse_loop_break:w }
+      {
+        \@@_parse_uncert:NNN
+          \c_false_bool \@@_parse_uncert_auxi:N #1
+      }
+  }
+%    \end{macrocode}
+%   Deal with digits: a simple question of whether they are significant.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_parse_uncert:NNN #1#2#3
+  {
+    \quark_if_recursion_tail_stop_do:Nn #3
+      { \@@_parse_loop_break:w \q_recursion_stop }
+    \tl_if_in:NnTF \l_@@_input_digit_tl {#3}
+      {
+        \bool_lazy_or:nnTF
+          {#1} { ! \str_if_eq_p:nn {#3} { 0 } }
+          {
+            \tl_put_right:Nn \l_@@_partial_tl {#3}
+            \@@_parse_uncert:NNN \c_true_bool #2
+          }
+          { \@@_parse_uncert:NNN \c_false_bool #2 }
+      }
+      { #2 #3 }
+  }
+%    \end{macrocode}
+%   For the two auxiliaries, the difference is the handling of a
+%   decimal marker: one may be present, but only exactly one.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_parse_uncert_auxi:N #1
+  {
+    \tl_if_in:NnTF \l_@@_input_uncert_close_tl {#1}
+      {
+        \@@_parse_uncert_auxiii:
+        \@@_parse_uncert_after:N
+      }
+      {
+        \tl_if_in:NnTF \l_siunitx_number_input_decimal_tl {#1}
+          { \@@_parse_uncert_marker: }
+          { \@@_parse_loop_break:w }
+      }
+  }
+\cs_new_protected:Npn \@@_parse_uncert_auxii:N #1
+  {
+    \tl_if_in:NnTF \l_@@_input_uncert_close_tl {#1}
+      {
+        \@@_parse_uncert_auxiii:
+        \@@_parse_uncert_after:N
+      }
+      { \@@_parse_loop_break:w }
+  }
+%    \end{macrocode}
+%   Deal with the closing bracket, which might leave us with nothing if there
+%   were no significant digits.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_parse_uncert_auxiii:
+  {
+    \bool_lazy_and:nnT
+      { \l_@@_zero_uncert_bool }
+      { \tl_if_empty_p:N \l_@@_partial_tl }
+      { \tl_set:Nn \l_@@_partial_tl { 0 } }
+  }
+%    \end{macrocode}
+%   Handling a decimal marker in the uncertainty is a bit tricky: we need to make
+%   sure it's valid. First, we need to be sure that the integer part of the captured
+%   uncertainty is not too long. Then we need to check that the decimal part is
+%   not too long, and extend the decimal if it is.
+%   Both of these require data from the collected partial number,
+%   so we extract that first. Checking the decimal part needs the length of the
+%   not-yet-collected uncertainty. Handily, we know that it should be a set of
+%   digits then a closing marker. So we can use that as a length: if it's
+%   too long we can stop.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_parse_uncert_marker:
+  {
+    \exp_after:wN \@@_parse_uncert_marker:nnn
+      \l_@@_parsed_tl
+  }
+\cs_new_protected:Npn \@@_parse_uncert_marker:nnn #1#2#3
+  {
+    \int_compare:nNnTF
+      { \tl_count:N \l_@@_partial_tl } > { \tl_count:n {#2} }
+      { \@@_parse_loop_break:w }
+      { \@@_parse_uncert_marker:nw {#3} }
+  }
+\cs_new_protected:Npn \@@_parse_uncert_marker:nw
+  #1#2 \q_recursion_tail \q_recursion_stop
+  {
+    \int_compare:nNnTF
+      { \tl_count:n {#2} - 1 } = { \tl_count:n {#1} }
+      {
+        \str_if_eq:eeTF
+          { \exp_not:V \l_@@_uncert_tl }
+          { \prg_replicate:nn { \tl_count:N \l_@@_partial_tl } { 0 } }
+          { \@@_parse_uncert:NNN \c_false_bool }
+          { \@@_parse_uncert:NNN \c_true_bool }
+            \@@_parse_uncert_auxii:N
+      }
+      { \exp_after:wN \@@_parse_uncert_extend:nnn \l_@@_parsed_tl }
+    #2 \q_recursion_tail \q_recursion_stop
+  }
+\cs_new_protected:Npn \@@_parse_uncert_extend:nnn #1#2#3
+  {
+    \tl_set:Nn \l_@@_parsed_tl { {#1} {#2} { #3 0 } }
+    \@@_parse_uncert:NNN \c_true_bool
+      \@@_parse_uncert_auxii:N
+  }
+%    \end{macrocode}
+%   At the end of collection, we can either start another one or be done:
+%   either way we move the data around.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_parse_uncert_after:N #1
+  {
+    \tl_set:Nx \l_@@_uncert_tl
+      {
+        \exp_not:V \l_@@_uncert_tl
+        \tl_if_empty:NF \l_@@_partial_tl
+          { { \exp_not:V \l_@@_partial_tl } }
+      }
+    \tl_clear:N \l_@@_partial_tl
+    \quark_if_recursion_tail_stop_do:Nn #1
+      {
+        \tl_set:Nx \l_@@_parsed_tl
+          {
+            \exp_not:V \l_@@_parsed_tl
+            {
+              \tl_if_empty:NF \l_@@_uncert_tl
+                {
+                  {
+                    \prg_replicate:nn
+                      { \tl_count:N \l_@@_uncert_tl }
+                     { S }
+                  }
+                  \exp_not:V \l_@@_uncert_tl
+                }
+            }
+          }
+        \tl_clear:N \l_@@_partial_tl
+        \tl_clear:N \l_@@_uncert_tl
+      }
+    \tl_if_in:NnTF \l_@@_input_uncert_open_tl {#1}
+      { \@@_parse_uncert:N }
+      { \@@_parse_loop_break:w }
+  }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \subsection{Processing numbers}
+%
+% \begin{variable}
+%   {
+%     \l_@@_drop_exponent_bool     ,
+%     \l_@@_drop_uncertainty_bool  ,
+%     \l_@@_drop_zero_decimal_bool ,
+%     \l_@@_exponent_mode_tl       ,
+%     \l_@@_exponent_fixed_int     ,
+%     \l_@@_min_decimal_int        ,
+%     \l_@@_min_integer_int        ,
+%     \l_@@_round_half_even_bool   ,
+%     \l_@@_round_mode_tl          ,
+%     \l_@@_round_pad_bool         ,
+%     \l_@@_round_precision_int    ,
+%     \l_@@_round_positive_bool
+%   }
+%    \begin{macrocode}
+\keys_define:nn { siunitx }
+  {
+    drop-exponent .bool_set:N =
+      \l_@@_drop_exponent_bool ,
+    drop-uncertainty .bool_set:N =
+      \l_@@_drop_uncertainty_bool ,
+    drop-zero-decimal .bool_set:N =
+      \l_@@_drop_zero_decimal_bool ,
+    exponent-mode .choices:nn =
+      { engineering , fixed , input , scientific }
+      { \tl_set_eq:NN \l_@@_exponent_mode_tl \l_keys_choice_tl } ,
+    fixed-exponent .int_set:N =
+      \l_@@_exponent_fixed_int ,
+    minimum-decimal-digits .int_set:N =
+      \l_@@_min_decimal_int ,
+    minimum-integer-digits .int_set:N =
+      \l_@@_min_integer_int ,
+    round-half .choice: ,
+    round-half / even .code:n =
+      { \bool_set_true:N \l_@@_round_half_even_bool } ,
+    round-half / up .code:n =
+      { \bool_set_false:N \l_@@_round_half_even_bool } ,
+    round-minimum .code:n =
+      { \@@_set_round_min:n {#1} } ,
+    round-mode .choices:nn =
+      { figures , none , places, uncertainty }
+      { \tl_set_eq:NN \l_@@_round_mode_tl \l_keys_choice_tl } ,
+    round-pad .bool_set:N =
+      \l_@@_round_pad_bool ,
+    round-precision .int_set:N =
+      \l_@@_round_precision_int ,
+    round-zero-positive .bool_set:N =
+      \l_@@_round_positive_bool
+  }
+\bool_new:N \l_@@_round_half_even_bool
+\tl_new:N \l_@@_exponent_mode_tl
+\tl_new:N \l_@@_round_mode_tl
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{variable}{\l_@@_round_min_tl}
+%   For storing the minimum for rounding.
+%    \begin{macrocode}
+\tl_new:N \l_@@_round_min_tl
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{macro}{\@@_set_round_min:n}
+% \begin{macro}{\@@_set_round_min:nnnnnnn}
+%  For setting the rounding minimum, the aim is to do as much of the work
+%  now as possible. That's mainly a question of checking if there are any
+%  significant digits in the mantissa given.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_set_round_min:n #1
+  {
+    \siunitx_number_parse:nN {#1} \l_@@_tmp_tl
+    \exp_after:wN \@@_set_round_min:nnnnnnn \l_@@_tmp_tl
+  }
+\cs_new_protected:Npn \@@_set_round_min:nnnnnnn #1#2#3#4#5#6#7
+  {
+    \tl_set:Nx \l_@@_round_min_tl
+      {
+        \bool_lazy_and:nnF
+          { \str_if_eq_p:nn {#3} { 0 } }
+          {
+            \str_if_eq_p:ee
+              { \exp_not:n {#4} }
+              { \prg_replicate:nn { \tl_count:n {#4} } { 0 } }
+          }
+          { \exp_not:n { {#3} {#4} } }
+      }
+  }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\siunitx_number_process:NN}
+% \begin{macro}{\@@_process:nnnnnnnNN}
+%   A top-level interface for the processing tools. Rounding happens in all
+%   cases, but exponents are only processed if the value is not $0$.
+%    \begin{macrocode}
+\cs_new_protected:Npn \siunitx_number_process:NN #1#2
+  {
+    \tl_if_empty:NTF #1
+      { \tl_clear:N #2 }
+      {
+        \@@_drop_uncertainty:NN #1 #2
+        \exp_after:wN \@@_process:nnnnnnnNN #2 #2 #2
+        \@@_drop_exponent:NN #2 #2
+        \@@_zero_decimal:NN #2 #2
+        \@@_digits:NN #2 #2
+      }
+  }
+\cs_new_protected:Npn \@@_process:nnnnnnnNN #1#2#3#4#5#6#7#8#9
+  {
+    \bool_lazy_and:nnTF
+      { \str_if_eq_p:nn {#3} { 0 } }
+      {
+        \str_if_eq_p:ee
+          { \exp_not:n {#4} } { \prg_replicate:nn { \tl_count:n {#4} } { 0 } }
+      }
+      { \@@_round:NN #8 #9 }
+      {
+        \@@_exponent:NN #8 #9
+        \@@_round:NN #9 #9
+      }
+  }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\@@_exponent:NN}
+% \begin{macro}[EXP]
+%   {
+%     \@@_exponent_engineering:nnnnnnn ,
+%     \@@_exponent_fixed:nnnnnnn       ,
+%     \@@_exponent_input:nnnnnnn       ,
+%     \@@_exponent_scientific:nnnnnnn
+%   }
+% \begin{macro}[EXP]
+%   {
+%     \@@_exponent_fixed:nnnnnnnn       ,
+%     \@@_exponent_scientific:nnnnnnnn
+%   }
+% \begin{macro}[EXP]{\@@_exponent_scientific:nnnw}
+% \begin{macro}[EXP]{\@@_exponent_shift:nnn,\@@_exponent_shift:nnf}
+% \begin{macro}[EXP]{\@@_exponent_shift_down:nnnw}
+% \begin{macro}[EXP]{\@@_exponent_shift_down:nnn}
+% \begin{macro}[EXP]{\@@_exponent_shift_down:nw}
+% \begin{macro}[EXP]{\@@_exponent_shift_up:nnn}
+% \begin{macro}[EXP]{\@@_exponent_shift_up:nnw}
+% \begin{macro}[EXP]
+%   {
+%     \@@_exponent_shift_up_aux:nnn ,
+%     \@@_exponent_shift_up_aux:fnn ,
+%     \@@_exponent_shift_up_aux:ffn
+%   }
+% \begin{macro}[EXP]{\@@_exponent_shift_uncert:nw}
+% \begin{macro}[EXP]
+%   {\@@_exponent_shift_uncert_S:nnnn, \@@_exponent_shift_uncert_S:fnnn}
+% \begin{macro}[EXP]{\@@_exponent_uncert:n}
+% \begin{macro}[EXP]{\@@_exponent_finalise:n}
+% \begin{macro}[EXP]{\@@_exponent_engineering_aux:nnnnnnn}
+% \begin{macro}[EXP]
+%   {
+%     \@@_exponent_engineering_0:nnnn ,
+%     \@@_exponent_engineering_1:nnnn ,
+%     \@@_exponent_engineering_2:nnnn
+%   }
+%  \begin{macro}[EXP]{\@@_exponent_engineering:nnNw}
+%  \begin{macro}[EXP]{\@@_exponent_engineering_uncert:nn}
+%  \begin{macro}[EXP]{\@@_exponent_engineering_uncert_S:nnn}
+%   Manipulating an exponent is done using a single expansion function
+%   \emph{unless} dealing with engineering-style output. The latter is easier
+%   to handle by first converting to scientific output, then post-processing.
+%   (Once \texttt{e}-type expansion is generally available, this will be
+%   handling using a single \cs{tl_set:Nx}.)
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_exponent:NN #1#2
+  {
+    \tl_set:Nx #2
+      {
+        \cs:w
+          @@_exponent_ \l_@@_exponent_mode_tl :nnnnnnn
+          \exp_after:wN
+        \cs_end: #1
+      }
+    \str_if_eq:VnT \l_@@_exponent_mode_tl { engineering }
+      {
+        \tl_set:Nx #2
+          { \exp_after:wN \@@_exponent_engineering_aux:nnnnnnn #2 }
+      }
+  }
+\cs_new:Npn \@@_exponent_fixed:nnnnnnn #1#2#3#4#5#6#7
+  {
+    \exp_args:Nf \@@_exponent_fixed:nnnnnnnn
+      { \int_eval:n { \l_@@_exponent_fixed_int - (#6#7) } }
+      {#1} {#2} {#3} {#4} {#5} {#6} {#7}
+  }
+\cs_new:Npn \@@_exponent_fixed:nnnnnnnn #1#2#3#4#5#6#7#8
+  {
+    \exp_not:n { {#2} {#3} }
+    \@@_exponent_shift:nnn {#1} {#4} {#5}
+    \@@_exponent_uncert:n {#6}
+    { \int_compare:nNnT \l_@@_exponent_fixed_int < 0 { - }  }
+    { \int_abs:n \l_@@_exponent_fixed_int }
+  }
+\cs_new:Npn \@@_exponent_input:nnnnnnn #1#2#3#4#5#6#7
+  { \exp_not:n { {#1} {#2} {#3} {#4} {#5} {#6} {#7} } }
+%    \end{macrocode}
+%   To convert to scientific notation, the key question is to find the number
+%   of significant places. That is easy enough if the number has a non-zero
+%   integer component. For a pure decimal, we have to trim off leading
+%   zeros in a loop.
+%    \begin{macrocode}
+\cs_new:Npn \@@_exponent_scientific:nnnnnnn #1#2#3#4#5#6#7
+  {
+    \exp_args:Nf \@@_exponent_scientific:nnnnnnnn
+      { \int_eval:n { \tl_count:n {#3} } }
+      {#1} {#2} {#3} {#4} {#5} {#6} {#7}
+  }
+\cs_new:Npn \@@_exponent_scientific:nnnnnnnn #1#2#3#4#5#6#7#8
+  {
+    \exp_not:n { {#2} {#3} }
+    \int_compare:nNnTF {#1} = 1
+      {
+        \str_if_eq:nnTF {#4} { 0 }
+          {
+            \@@_exponent_scientific:nnnw
+              { 0 } {#6} { #7#8 } #5 \q_stop
+          }
+          { \exp_not:n { {#4} {#5} {#6} {#7} {#8} } }
+      }
+      {
+        \@@_exponent_shift:nnn { #1 - 1 } {#4} {#5}
+        \@@_exponent_uncert:n {#6}
+        \@@_exponent_finalise:n { #1 + #7#8 - 1 }
+      }
+  }
+\cs_new_eq:NN \@@_exponent_engineering:nnnnnnn
+  \@@_exponent_scientific:nnnnnnn
+\cs_new:Npn \@@_exponent_scientific:nnnw #1#2#3#4#5 \q_stop
+  {
+    \str_if_eq:nnTF {#4} { 0 }
+      {
+        \@@_exponent_scientific:nnnw
+          { #1 - 1 } {#2} {#3} #5 \q_stop
+      }
+      {
+        \exp_not:n { {#4} {#5} {#2} }
+        \@@_exponent_finalise:n { #1 + #3 - 1 }
+      }
+  }
+%    \end{macrocode}
+%   When adjusting the exponent position, there are two paths depending on
+%   which way the shift takes place.
+%    \begin{macrocode}
+\cs_new:Npn \@@_exponent_shift:nnn #1#2#3
+  {
+    \int_compare:nNnTF {#1} > 0
+      { \@@_exponent_shift_down:nnnw {#1} {#3} { } #2 \q_stop }
+      {
+        \int_compare:nNnTF {#1} < 0
+          { \@@_exponent_shift_up:nnn {#1} {#2} {#3} }
+          { {#2} {#3} }
+      }
+  }
+\cs_generate_variant:Nn \@@_exponent_shift:nnn { nnf }
+%    \end{macrocode}
+%   For shifting the exponent down, there is first a loop to reserve the
+%   integer part before doing the work: that of course has to be undone
+%   for any remainder at he end of the process.
+%    \begin{macrocode}
+\cs_new:Npn \@@_exponent_shift_down:nnnw #1#2#3#4#5 \q_stop
+  {
+    \tl_if_blank:nTF {#5}
+      { \@@_exponent_shift_down:nnn {#1} { #4 #3 } {#2} }
+      { \@@_exponent_shift_down:nnnw {#1} {#2} { #4 #3 } #5 \q_stop }
+  }
+\cs_new:Npn \@@_exponent_shift_down:nnn #1#2#3
+  {
+    \int_compare:nNnTF {#1} = 0
+      { { \tl_reverse:n {#2} } \exp_not:n { {#3} } }
+      { \@@_exponent_shift_down:nw {#1} #2 \q_stop {#3} }
+  }
+\cs_new:Npn \@@_exponent_shift_down:nw #1#2#3 \q_stop #4
+  {
+    \tl_if_blank:nTF {#3}
+      { \@@_exponent_shift_down:nnn { #1 - 1 } { 0 } { #2#4 } }
+      { \@@_exponent_shift_down:nnn { #1 - 1 } {#3} { #2#4 } }
+  }
+%    \end{macrocode}
+%   For shifting the exponent up, we can run out of decimal digits, at which
+%   point filling is easy. Other than that a simple loop as we are picking
+%   input off the front of the decimal part. We also need to deal with leading
+%   zeros: these cannot accumulate.
+%    \begin{macrocode}
+\cs_new:Npn \@@_exponent_shift_up:nnn #1#2#3
+  {
+    \tl_if_blank:nTF {#3}
+      {
+        \@@_exponent_shift_up_aux:ffn
+          { \int_eval:n { #1 + 1 } }
+          { \str_if_eq:nnF {#2} { 0 } {#2} 0 }
+          { }
+        \@@_exponent_shift_uncert:nw { 1 }
+      }
+      {  \@@_exponent_shift_up:nnw {#1} {#2} #3 \q_stop }
+  }
+\cs_new:Npn \@@_exponent_shift_up:nnw #1#2#3#4 \q_stop
+  {
+    \@@_exponent_shift_up_aux:ffn
+      { \int_eval:n { #1 + 1 } }
+      { \str_if_eq:nnF {#2} { 0 } {#2} #3 }
+      {#4}
+  }
+\cs_new:Npn \@@_exponent_shift_up_aux:nnn #1#2#3
+  {
+    \int_compare:nNnTF {#1} = 0
+      { \exp_not:n { {#2} {#3} } }
+      {
+        \tl_if_blank:nTF {#3}
+          {
+            {
+              \exp_not:n {#2}
+              \prg_replicate:nn { \int_abs:n {#1} } { 0 }
+            }
+            { }
+            \@@_exponent_shift_uncert:nw { \int_abs:n {#1} }
+         }
+         { \@@_exponent_shift_up:nnn {#1} {#2} {#3} }
+      }
+  }
+\cs_generate_variant:Nn \@@_exponent_shift_up_aux:nnn { f , ff }
+%    \end{macrocode}
+%   If the shift has put digits into the integer part, we have to adjust the
+%   uncertainty accordingly. First, we grab the data, then adjust by the
+%   number of places that have been transferred.
+%    \begin{macrocode}
+\cs_new:Npn \@@_exponent_shift_uncert:nw
+  #1#2 \@@_exponent_uncert:n #3
+  {
+    \tl_if_blank:nTF {#3}
+      {
+        #2
+        \@@_exponent_uncert:n { }
+      }
+      {
+        \str_if_eq:nnTF {#3} { 0 }
+          {
+            #2
+            \@@_exponent_uncert:n { { S } { 0 } }
+          }
+          {
+            \use:c { @@_exponent_shift_uncert_ \use_i:nn #3 :fnnn }
+              { \prg_replicate:nn {#1} { 0 } }
+              {#2}
+              #3
+          }
+      }
+  }
+\cs_new:Npn \@@_exponent_shift_uncert_S:nnnn #1#2#3#4
+  {
+    #2
+    \@@_exponent_uncert:n { { S } { #4#1 } }
+  }
+\cs_generate_variant:Nn \@@_exponent_shift_uncert_S:nnnn { f }
+\cs_new:Npn \@@_exponent_uncert:n #1 { { \exp_not:n {#1} } }
+%    \end{macrocode}
+%   Tidy up the exponent to put the sign in the right place.
+%    \begin{macrocode}
+\cs_new:Npn \@@_exponent_finalise:n #1
+  {
+    \int_compare:nNnTF {#1} < 0
+      { { - } }
+      { { } }
+      { \int_abs:n {#1} }
+  }
+%    \end{macrocode}
+%   This could (and eventually will) be combined with the main function above:
+%   that will need \texttt{e}-type expansion. The input has already been
+%   normalised such that the integer part is in the range $1 \le n < 10$.
+%   Thus there are only three cases to deal with, depending on the required
+%   adjustment to the exponent.
+%    \begin{macrocode}
+\cs_new:Npn \@@_exponent_engineering_aux:nnnnnnn #1#2#3#4#5#6#7
+  {
+    \exp_not:n { {#1} {#2} }
+    \use:c
+      {
+        @@_exponent_engineering_
+	     \int_compare:nNnTF {#6#7} < 0
+	       {
+	         \int_case:nnF { \int_mod:nn { #7 } { 3 } }
+	           {
+	             { 1 } { 2 }
+	             { 2 } { 1 }
+	           }
+	           { 0 }
+	       }
+	       { \int_mod:nn {#7} { 3 } }
+	       :nnnn
+      }
+        {#3} {#4} {#5} {#6#7}
+  }
+\cs_new:cpn { @@_exponent_engineering_0:nnnn } #1#2#3#4
+  {
+    \exp_not:n { {#1} {#2} {#3} }
+    \@@_exponent_finalise:n {#4}
+  }
+\cs_new:cpn { @@_exponent_engineering_1:nnnn } #1#2#3#4
+  {
+    \tl_if_blank:nTF {#2}
+      {
+        { \exp_not:n { #1 0 } } { }
+        { \@@_exponent_engineering_uncert:nn {#3} { 0 } }
+      }
+      {
+        { \exp_not:n {#1} \exp_not:o { \tl_head:w #2 \q_stop } }
+        { \exp_not:f { \tl_tail:n {#2} } }
+        { \exp_not:n {#3} }
+      }
+    \@@_exponent_finalise:n { #4 - 1 }
+  }
+\cs_new:cpn { @@_exponent_engineering_2:nnnn } #1#2#3#4
+  {
+    \tl_if_blank:nTF {#2}
+      {
+        { \exp_not:n { #1 00 } } { }
+        { \@@_exponent_engineering_uncert:nn {#3} { 00 } }
+      }
+      { \@@_exponent_engineering:nnNw {#1} {#3} #2 \q_stop }
+    \@@_exponent_finalise:n { #4 - 2 }
+  }
+\cs_new:Npn \@@_exponent_engineering:nnNw #1#2#3#4 \q_stop
+  {
+    \tl_if_blank:nTF {#4}
+      {
+        { \exp_not:n { #1#3 0 } } { }
+        { \@@_exponent_engineering_uncert:nn {#2} { 0 } }
+      }
+      {
+        { \exp_not:n {#1#3} \exp_not:o { \tl_head:w #4 \q_stop } }
+        { \exp_not:f { \tl_tail:n {#4} } }
+        { \exp_not:n {#2} }
+      }
+  }
+\cs_new:Npn \@@_exponent_engineering_uncert:nn #1#2
+  {
+    \tl_if_blank:nF {#1}
+      {
+        \use:c { @@_exponent_engineering_uncert_ \use_i:nn #1 :nnn }
+          #1 {#2}
+      }
+  }
+\cs_new:Npn \@@_exponent_engineering_uncert_S:nnn #1#2#3
+  {
+    { S }
+    {
+      \exp_not:n {#2}
+      \str_if_eq:nnF {#2} { 0 } {#3}
+    }
+  }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\@@_digits:NN}
+% \begin{macro}[EXP]{\@@_digits:nnnnnnn}
+% \begin{macro}[EXP]{\@@_digits:nn}
+% \begin{macro}[EXP]{\@@_digits_uncert:nnw}
+% \begin{macro}[EXP]
+%   {\@@_digits_uncert_A:nn, \@@_digits_uncert_S:nn, \@@_digits_uncert_aux:nn}
+% \begin{macro}[EXP]{\@@_digits_uncert_A:nnn}
+% \begin{macro}[EXP]{\@@_digits_uncert:nN}
+% \begin{macro}[EXP]{\@@_digits_uncert:nNw}
+%   Forcing a minimum number of digits in each part is quite easy. As
+%   the common case is that we don't do anything here, there is no real need
+%   to optimise the calculation (normally also numbers have only a few digits).
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_digits:NN #1#2
+  {
+    \tl_set:Nx #2
+      { \exp_after:wN \@@_digits:nnnnnnn #1 }
+  }
+\cs_new:Npn \@@_digits:nnnnnnn #1#2#3#4#5#6#7
+  {
+    \exp_not:n { {#1} {#2} }
+    {
+      \@@_digits:nn \l_@@_min_integer_int {#3}
+      \exp_not:n {#3}
+    }
+    {
+      \exp_not:n {#4}
+      \@@_digits:nn \l_@@_min_decimal_int {#4}
+    }
+    {
+      \tl_if_blank:nF {#5}
+        { \@@_digits_uncert:nnw {#4} #5 \q_stop }
+    }
+    \exp_not:n { {#6} {#7} }
+  }
+\cs_new:Npn \@@_digits:nn #1#2
+  {
+    \int_compare:nNnT
+      { #1 - \tl_count:n {#2} } > 0
+      { \prg_replicate:nn { #1 - \tl_count:n {#2} } { 0 } }
+  }
+\cs_new:Npn \@@_digits_uncert:nnw #1#2#3 \q_stop
+  {
+    { #2 }
+    \cs_if_exist:cTF { @@_digits_uncert_ #2 :nn }
+      { { \use:c { @@_digits_uncert_ #2 :nn } {#1} {#3} } }
+      {
+        \@@_digits_uncert:nN {#1} #2 \q_recursion_tail
+          #3 \q_recursion_stop
+      }
+  }
+\cs_new:Npn \@@_digits_uncert_A:nn #1#2
+  { \@@_digits_uncert_A:nnn {#1} #2 }
+\cs_new:Npn \@@_digits_uncert_A:nnn #1#2#3
+  {
+     { \@@_digits_uncert_aux:nn {#1} {#2} }
+     { \@@_digits_uncert_aux:nn {#1} {#3} }
+  }
+\cs_new:Npn \@@_digits_uncert_S:nn #1#2
+  { \@@_digits_uncert_aux:nn {#1} {#2} }
+\cs_new:Npn \@@_digits_uncert_aux:nn #1#2
+  {
+    \exp_not:n {#2}
+    \@@_digits:nn 
+      {
+        \int_max:nn
+           { 0 }
+           { \l_@@_min_decimal_int - \tl_count:n {#1} + 1 }
+      }
+      {#2}
+  }
+\cs_new:Npn \@@_digits_uncert:nN #1#2
+  {
+    \quark_if_recursion_tail_stop:N #2
+    \@@_digits_uncert:nNw {#1} #2
+  }
+\cs_new:Npn \@@_digits_uncert:nNw #1#2#3 \q_recursion_tail #4
+  {
+    { \use:c { @@_digits_uncert_ #2 :nn } {#1} {#4} }
+    \@@_digits_uncert:nN {#1} #3 \q_recursion_tail
+  }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\@@_drop_exponent:NN}
+% \begin{macro}[EXP]{\@@_drop_exponent:nnnnnnn}
+%   Simple stripping of the exponent.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_drop_exponent:NN #1#2
+  {
+    \bool_if:NT \l_@@_drop_exponent_bool
+      {
+        \str_if_eq:VnT \l_@@_exponent_mode_tl { input }
+          { \msg_warning:nn { siunitx } { ambiguous-dropped-exponent } }
+        \tl_set:Nx #2
+          { \exp_after:wN \@@_drop_exponent:nnnnnnn #1 }
+      }
+  }
+\cs_new:Npn \@@_drop_exponent:nnnnnnn #1#2#3#4#5#6#7
+  { \exp_not:n { {#1} {#2} {#3} {#4} {#5} { } { 0 } } }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\@@_drop_uncertainty:NN}
+% \begin{macro}[EXP]{\@@_drop_uncertainty:nnnnnnn}
+%   Simple stripping of the uncertainty.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_drop_uncertainty:NN #1#2
+  {
+    \bool_if:NTF \l_@@_drop_uncertainty_bool
+      {
+        \tl_set:Nx #2
+          { \exp_after:wN \@@_drop_uncertainty:nnnnnnn #1 }
+      }
+      { \tl_set_eq:NN #2 #1 }
+
+  }
+\cs_new:Npn \@@_drop_uncertainty:nnnnnnn #1#2#3#4#5#6#7
+  { \exp_not:n { {#1} {#2} {#3} {#4} { } {#6} {#7} } }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\@@_round:NN}
+% \begin{macro}[EXP]{\@@_round:nnnnnnn}
+%   Rounding is at the top level simple enough: fire off the expandable
+%   set up which does the work.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_round:NN #1#2
+  {
+    \tl_set:Nx #2
+      {
+        \str_if_eq:VnTF \l_@@_round_mode_tl { none }
+          { \exp_not:V #1 }
+          { \exp_after:wN \@@_round:nnnnnnn #1 }
+       }
+  }
+\cs_new:Npn \@@_round:nnnnnnn #1#2#3#4#5#6#7
+  {
+    \str_if_eq:nnTF {#4} { \empty }
+      { \use:c { @@_round_ \l_@@_round_mode_tl :nnnnnnn } {#1} {#2} {#3} { } }
+      { \use:c { @@_round_ \l_@@_round_mode_tl :nnnnnnn } {#1} {#2} {#3} {#4} }
+        {#5} {#6} {#7}
+  }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}[EXP]{\@@_round:nnn, \@@_round:fnn}
+% \begin{macro}[EXP]
+%   {
+%     \@@_round_auxi:nnnN  ,
+%     \@@_round_auxii:nnnN ,
+%     \@@_round_auxiii:nnnN
+%   }
+%  \begin{macro}[EXP]{\@@_round_auxiv:nnN, \@@_round_auxv:nnN}
+%  \begin{macro}[EXP]{\@@_round_auxvi:nN}
+%  \begin{macro}[EXP]{\@@_round_auxvii:nnN, \@@_round_auxviii:nnN}
+%  \begin{macro}[EXP]{\@@_round_final_integer:nnw, \@@_round_final_decimal:nnw}
+%  \begin{macro}[EXP]{\@@_round_final_signicant:n}
+%  \begin{macro}[EXP]{\@@_round_final_signicant:N}
+%  \begin{macro}[EXP]{\@@_round_final_signicant:w}
+%  \begin{macro}[EXP]{\@@_round_final_output:nn, \@@_round_final_output:ff}
+%  \begin{macro}[EXP]{\@@_round_final:nn, \@@_round_final:fn}
+%  \begin{macro}[EXP]{\@@_round_final_shift:nn, \@@_round_final_shift:ff}
+%  \begin{macro}[EXP]{\@@_round_final_shift:Nw}
+%  \begin{macro}[EXP]
+%    {
+%      \@@_round_engineering:nn ,
+%      \@@_round_fixed:nn       ,
+%      \@@_round_input:nn       ,
+%      \@@_round_scientific:nn
+%    }
+%  \begin{macro}[EXP]{\@@_round_engineering:NNNNn}
+%  \begin{macro}[EXP]{\@@_round_engineering:nnN}
+%  \begin{macro}[EXP]{\@@_round_truncate:n, \@@_round_truncate_direct:n}
+%  \begin{macro}[EXP]{\@@_round_truncate:nnN}
+%   Actually doing the rounding needs us to work from the least significant
+%   digit, so we start by reversing the input. We \emph{could} also drop
+%   digits in this phase, but tracking everything would be horrible, so
+%   we go slightly slower but clearer and split the steps. First we reverse
+%   the decimal part, then the integer.
+%    \begin{macrocode}
+\cs_new:Npn \@@_round:nnn #1#2#3
+  {
+    \@@_round_auxi:nnnN {#1} {#2} { }
+      #3 \q_recursion_tail \q_recursion_stop
+  }
+\cs_generate_variant:Nn \@@_round:nnn { f }
+\cs_new:Npn \@@_round_auxi:nnnN #1#2#3#4
+  {
+    \quark_if_recursion_tail_stop_do:Nn #4
+      {
+        \@@_round_auxii:nnnN {#1} {#3} { } #2
+          \q_recursion_tail \q_recursion_stop
+      }
+    \@@_round_auxi:nnnN {#1} {#2} {#4#3}
+  }
+\cs_new:Npn \@@_round_auxii:nnnN #1#2#3#4
+  {
+    \quark_if_recursion_tail_stop_do:Nn #4
+      {
+        \tl_if_blank:nTF {#2}
+          {
+            \@@_round_auxiv:nnnN {#1} { } { } #3
+              \q_recursion_tail \q_recursion_stop
+          }
+          {
+            \@@_round_auxiii:nnnN {#1} {#3} { } #2
+              \q_recursion_tail \q_recursion_stop
+          }
+      }
+    \@@_round_auxii:nnnN {#1} {#2} {#4#3}
+  }
+%    \end{macrocode}
+%   We now have the input reversed plus how many digits we need to discard
+%   (|#1|).  We have two functions, one which deals with the decimal part,
+%   one of which deals with the integer. In the latter, we should never hit
+%   the end before we've dropped all the digits: the fixed-zero is a
+%   fall-back in case something weird happens. For the integer case, we need
+%   to collect up zeros to pad the length back out correctly later. We also
+%   have to cover the case where we round to exactly place above the length
+%   of the integer: that may product a value of $1\dots$: we tidy up the
+%   case where it comes out as $0$ later.
+%    \begin{macrocode}
+\cs_new:Npn \@@_round_auxiii:nnnN #1#2#3#4
+  {
+    \quark_if_recursion_tail_stop_do:Nn #4
+      {
+        \@@_round_auxiv:nnnN {#1} { } {#3} #2
+          \q_recursion_tail \q_recursion_stop
+      }
+    \int_compare:nNnTF {#1} > 0
+      {
+        \exp_args:Nf \@@_round_auxiii:nnnN
+          { \int_eval:n { #1 - 1 } } {#2} { #4#3 }
+      }
+      { \@@_round_auxv:nnN {#3} {#2} #4 }
+  }
+\cs_new:Npn \@@_round_auxiv:nnnN #1#2#3#4
+  {
+    \quark_if_recursion_tail_stop_do:Nn #4
+      {
+        \int_compare:nNnTF {#1} = 0
+          {
+            \@@_round_auxvi:nnN {#3} {#2}
+              0 \q_recursion_tail \q_recursion_stop
+          }
+          { { 0 } { } }
+      }
+    \int_compare:nNnTF {#1} > 0
+      {
+        \exp_args:Nf \@@_round_auxiv:nnnN
+          { \int_eval:n { #1 - 1 } } { #2 0 } { #4#3 }
+      }
+      { \@@_round_auxvi:nnN {#3} {#2} #4 }
+  }
+%    \end{macrocode}
+%   The lead off to rounding proper needs to deal with the half-even rule:
+%   it can only apply at this stage, when the \emph{discarded} value can
+%   be exactly half.
+%    \begin{macrocode}
+\cs_new:Npn \@@_round_auxv:nnN #1#2#3
+  {
+    \quark_if_recursion_tail_stop_do:Nn #3
+      {
+        \@@_round_auxvi:nnN
+          {#1} { } #2 \q_recursion_tail \q_recursion_stop
+      }
+    \bool_lazy_or:nnTF
+      { \int_compare_p:nNn { 0 \tl_head:n {#1} } < 5 }
+      {
+        \bool_lazy_all_p:n
+          {
+            { \l_@@_round_half_even_bool }
+            { ! \int_if_odd_p:n {#3} }
+            { \@@_round_if_half_p:n {#1} }
+          }
+      }
+      { \@@_round_final_decimal:nnw }
+      { \@@_round_auxvii:nnN }
+        {#2} { } #3
+  }
+\cs_new:Npn \@@_round_auxvi:nnN #1#2#3
+  {
+    \quark_if_recursion_tail_stop_do:Nn #3
+      { { 0 } { } }
+    \bool_lazy_or:nnTF
+      { \int_compare_p:nNn { 0 \tl_head:n {#1} } < 5 }
+      {
+        \bool_lazy_all_p:n
+          {
+            { \l_@@_round_half_even_bool }
+            { ! \int_if_odd_p:n {#3} }
+            { \@@_round_if_half_p:n {#1} }
+          }
+      }
+      { \@@_round_final_integer:nnw }
+      { \@@_round_auxviii:nnN }
+        { } {#2} #3
+  }
+%    \end{macrocode}
+%   The main rounding routines. These are only every called when there is
+%   rounding to do, so there is no need to carry a flag forward. Thus the
+%   question to ask is simple: is the next value a $9$ or not (as that
+%   continues the sequence). There is a general need to handle the case
+%   where a zero is rounded up: that automatically means a need to trim
+%   the other end.
+%    \begin{macrocode}
+\cs_new:Npn \@@_round_auxvii:nnN #1#2#3
+  {
+    \quark_if_recursion_tail_stop_do:Nn #3
+      {
+        \str_if_eq:nnTF {#1} { 0 }
+          {
+            \@@_round_final_output:ff
+              { 1 }
+              { \@@_round_truncate:n {#2} }
+          }
+          {
+            \@@_round_auxviii:nnN {#2} { } #1
+              \q_recursion_tail \q_recursion_stop
+          }
+      }
+    \int_compare:nNnTF {#3} = 9
+      { \@@_round_auxvii:nnN {#1} { 0 #2 } }
+      {
+        \int_compare:nNnTF {#3} = 0
+          {
+            \bool_lazy_or:nnTF
+              { \tl_if_blank_p:n {#1} }
+              { \int_compare_p:nNn {#1} = { 0 } }
+              {
+                \@@_round_final_decimal:nnw
+                  {#1} { 1 \@@_round_truncate:n {#2} }
+              }
+              {
+                \@@_round_final_decimal:nnw
+                  {#1} { 1 #2 }
+              }
+          }
+          {
+            \@@_round_final:fn
+              { \int_eval:n { #3 + 1 } }
+              { \@@_round_final_decimal:nnw {#1} {#2} }
+          }
+      }
+  }
+\cs_new:Npn \@@_round_auxviii:nnN #1#2#3
+  {
+    \quark_if_recursion_tail_stop_do:Nn #3
+      {
+        \tl_if_blank:nTF {#1}
+          {
+            \@@_round_final_shift:ff
+              {
+                \exp_last_unbraced:Nf 1
+                  { \@@_round_truncate_direct:n {#2} } 0
+              }
+              { }
+          }
+          {
+            \@@_round_final_shift:ff
+              { 1 #2 }
+              { \@@_round_truncate:n {#1} }
+          }
+      }
+    \int_compare:nNnTF {#3} = 9
+      { \@@_round_auxviii:nnN {#1} { 0 #2 } }
+      {
+        \@@_round_final:fn
+          { \int_eval:n { #3 + 1 } }
+          { \@@_round_final_integer:nnw {#1} {#2} }
+      }
+  }
+%    \end{macrocode}
+%   Tidying up means grabbing the remaining digits and undoing the reversal.
+%    \begin{macrocode}
+\cs_new:Npn \@@_round_final_decimal:nnw
+  #1#2#3 \q_recursion_tail \q_recursion_stop
+  {
+    \@@_round_final_output:ff
+      { \tl_reverse:n {#1} }
+      { \tl_reverse:n {#3} #2 }
+  }
+\cs_new:Npn \@@_round_final_integer:nnw
+  #1#2#3 \q_recursion_tail \q_recursion_stop
+  {
+    \@@_round_final_output:ff
+      { \exp_args:Ne \@@_round_final_significant:n { \tl_reverse:n {#3} #2 } }
+      {#1}
+  }
+\cs_new:Npn \@@_round_final_significant:n #1
+  {
+     \@@_round_final_significant:N #1
+       \q_recursion_tail \q_recursion_stop
+  }
+\cs_new:Npn \@@_round_final_significant:N #1
+  {
+    \quark_if_recursion_tail_stop_do:Nn #1 { 0 }
+    \int_compare:nNnTF {#1} = 0
+      { \@@_round_final_significant:N }
+      {
+        #1
+        \@@_round_final_significant:w
+      }
+  }
+\cs_new:Npn \@@_round_final_significant:w
+  #1 \q_recursion_tail \q_recursion_stop
+  {#1}
+\cs_new:Npn \@@_round_final_output:nn #1#2 { {#1} {#2} }
+\cs_generate_variant:Nn \@@_round_final_output:nn { ff }
+\cs_new:Npn \@@_round_final:nn #1#2
+  { #2 #1 }
+\cs_generate_variant:Nn \@@_round_final:nn { f }
+%    \end{macrocode}
+%   Here we deal with the case where rounding applies along with an
+%   exponent set based on number of places. We can only get here if an
+%   additional integer digit has been added, so there is no need to test for
+%   that. There are two cases for action: when using |scientific| mode, where
+%   we always need to shift by one, and when using |engineering| mode if
+%   we now have four digits. The latter is a bit more work: we need to trim
+%   digits off as required.
+%    \begin{macrocode}
+\cs_new:Npn \@@_round_final_shift:nn #1#2
+  {
+    \bool_lazy_or:nnTF
+      { \str_if_eq_p:Vn \l_@@_round_mode_tl { figures } }
+      { \str_if_eq_p:Vn \l_@@_round_mode_tl { places } }
+      {
+        \use:c
+          { @@_round_ \l_@@_exponent_mode_tl :nn }
+          {#1} {#2}
+      }
+      { {#1} {#2} }
+  }
+\cs_generate_variant:Nn \@@_round_final_shift:nn { ff }
+\cs_new:Npn \@@_round_engineering:nn #1#2
+  {
+    \int_compare:nNnTF { \tl_count:n {#1} } = 4
+      {
+        \bool_lazy_and:nnTF
+          { \int_compare_p:nNn \l_@@_round_precision_int = 1 }
+          { \str_if_eq_p:Vn \l_@@_round_mode_tl { figures } }
+          { { 1 } { } }
+          { \@@_round_engineering:NNNNn #1 {#2} }
+        \@@_round_final_shift:Nw 3
+      }
+      { {#1} {#2} }
+  }
+\cs_new:Npn \@@_round_engineering:NNNNn #1#2#3#4#5
+  {
+    {#1}
+    \exp_args:NV \@@_round_engineering:nnN
+      \l_@@_round_precision_int { }
+      #2#3#4#5 \q_recursion_tail \q_recursion_stop
+  }
+\cs_new:Npn \@@_round_engineering:nnN #1#2#3
+  {
+    \quark_if_recursion_tail_stop_do:Nn #3 { {#2} }
+    \int_compare:nNnTF {#1} = { 0 }
+      { \use_i_delimit_by_q_recursion_stop:nw { {#2} } }
+      { \@@_round_engineering:nnN { #1 - 1 } { #2#3 } }
+  }
+\cs_new:Npn \@@_round_fixed:nn #1#2 { {#1} {#2} }
+\cs_new:Npn \@@_round_input:nn #1#2 { {#1} {#2} }
+\cs_new:Npn \@@_round_scientific:nn #1#2
+  {
+    \bool_lazy_and:nnTF
+      { \int_compare_p:nNn \l_@@_round_precision_int = 1 }
+      { \str_if_eq_p:Vn \l_@@_round_mode_tl { figures } }
+      { { 1 } { } }
+      {
+        \@@_exponent_shift:nnf
+          { 1 } {#1} { \@@_round_truncate_direct:n {#2} }
+      }
+    \@@_round_final_shift:Nw 1
+  }
+\cs_new:Npn \@@_round_final_shift:Nw #1#2 \@@_round_end:nnn #3#4#5
+  {
+    \exp_not:n { {#3} }
+    \@@_exponent_finalise:n { #4#5 + #1 }
+  }
+%    \end{macrocode}
+%   When we have rounded up to the next power of ten, we need to go back and
+%   remove one more digit. That only happens when rounding to a number of
+%   figures or when dealing with an integer part.
+%    \begin{macrocode}
+\cs_new:Npn \@@_round_truncate:n #1
+  {
+    \str_if_eq:VnTF \l_@@_round_mode_tl { figures }
+      { \@@_round_truncate_direct:n {#1} }
+      {#1}
+  }
+\cs_new:Npn \@@_round_truncate_direct:n #1
+  {
+    \@@_round_truncate:nnN { } { }
+      #1 \q_recursion_tail \q_recursion_stop
+  }
+\cs_new:Npn \@@_round_truncate:nnN #1#2#3
+  {
+    \quark_if_recursion_tail_stop_do:Nn #3 { #1 }
+    \@@_round_truncate:nnN {#1#2} {#3}
+  }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}[EXP]{\@@_round_if_half_p:n}
+% \begin{macro}[EXP]{\@@_round_if_half:N}
+%   A simple test for a valuing being exactly half: we can only test
+%   digit-by-digit as there is no limit on the size of the value given.
+%    \begin{macrocode}
+\prg_new_conditional:Npnn \@@_round_if_half:n #1 { p }
+  {
+    \int_compare:nNnTF { \tl_head:n { #1 0 } } = 5
+      {
+        \exp_after:wN \@@_round_if_half:N \use_none:n #1 0
+          \q_recursion_tail \q_recursion_stop
+      }
+      { \prg_return_false: }
+  }
+\cs_new:Npn \@@_round_if_half:N #1
+  {
+    \quark_if_recursion_tail_stop_do:Nn #1
+      { \prg_return_true: }
+    \int_compare:nNnTF {#1} = 0
+      { \@@_round_if_half:N }
+      { \use_i_delimit_by_q_recursion_stop:nw { \prg_return_false: } }
+  }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}[EXP]{\@@_round_pad:nnn}
+%   The case where we are short of digits is easy enough to handle:
+%   generate zeros to pad it out.
+%    \begin{macrocode}
+\cs_new:Npn \@@_round_pad:nnn #1#2#3
+  {
+    {#2}
+    {
+      #3
+      \bool_if:NT \l_@@_round_pad_bool
+        { \prg_replicate:nn {#1} { 0 } }
+    }
+  }
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}[EXP]{\@@_round_end:nnn}
+%   Used as a marker to allow adjustment when we pass a power of ten.
+%    \begin{macrocode}
+\cs_new:Npn \@@_round_end:nnn #1#2#3 { \exp_not:n { {#1} {#2} {#3} } }
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}[EXP]{\@@_round_figures:nnnnnnn, \@@_round_figures_aux:nnnnnnn}
+% \begin{macro}[EXP]{\@@_round_figures_count:nnN}
+% \begin{macro}[EXP]{\@@_round_figures_count:nnnN}
+%   Rounding to figures only makes sense if the number is not $0$, so we start
+%   by filtering out that case. We then check that
+%   there is no uncertainty, and that the number of figures requested is
+%   positive: if not, the result is always fixed at zero.
+%    \begin{macrocode}
+\cs_new:Npn \@@_round_figures:nnnnnnn #1#2#3#4#5#6#7
+  {
+    \bool_lazy_and:nnTF
+      { \str_if_eq_p:nn {#3} { 0 } }
+      {
+        \str_if_eq_p:ee
+          { \exp_not:n {#4} } { \prg_replicate:nn { \tl_count:n {#4} } { 0 } }
+      }
+      { \exp_not:n { {#1} {#2} {#3} {#4} {#5} {#6} {#7} } }
+      { \@@_round_figures_aux:nnnnnnn {#1} {#2} {#3} {#4} {#5} {#6} {#7} }
+  }
+\cs_new:Npn \@@_round_figures_aux:nnnnnnn #1#2#3#4#5#6#7
+  {
+    \tl_if_blank:nTF {#5}
+      {
+        \int_compare:nNnTF \l_@@_round_precision_int > 0
+          {
+            \exp_not:n { {#1} {#2} }
+            \@@_round_figures_count:nnN {#3} {#4} #3#4
+              \q_recursion_tail \q_recursion_stop
+            \@@_round_end:nnn { } {#6} {#7}
+          }
+          { { } { } { 0 } { } { } { } { 0 } }
+      }
+      { \exp_not:n { {#1} {#2} {#3} {#4} {#5} {#6} {#7} } }
+  }
+%    \end{macrocode}
+%   The first real step is to count up the number of significant figures.
+%   The only tricky issue here is dealing with leading zeros.
+%    \begin{macrocode}
+\cs_new:Npn \@@_round_figures_count:nnN #1#2#3
+  {
+    \quark_if_recursion_tail_stop_do:Nn #3
+      { { } { } { 0 } { } { } { } { 0 } }
+    \int_compare:nNnTF {#3} = 0
+      { \@@_round_figures_count:nnN {#1} {#2} }
+      { \@@_round_figures_count:nnnN { 1 } {#1} {#2} }
+  }
+\cs_new:Npn \@@_round_figures_count:nnnN #1#2#3#4
+  {
+    \quark_if_recursion_tail_stop_do:Nn #4
+      {
+        \int_compare:nNnTF {#1} > \l_@@_round_precision_int
+          {
+            \@@_round:fnn
+              { \int_eval:n { #1 - \l_@@_round_precision_int } }
+              {#2} {#3}
+          }
+          {
+            \@@_round_pad:nnn
+              { \l_@@_round_precision_int - (#1) } {#2} {#3}
+          }
+      }
+    \exp_args:Nf \@@_round_figures_count:nnnN
+      { \int_eval:n { #1 + 1 } } {#2} {#3}
+  }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}[EXP]{\@@_round_places:nnnnnnn}
+% \begin{macro}[EXP]{\@@_round_places_decimal:nn, \@@_round_places_integer:nn}
+% \begin{macro}[EXP]{\@@_round_places_finalise:n}
+% \begin{macro}[EXP]{\@@_round_places_finalise:nnnnnnn}
+% \begin{macro}[EXP]{\@@_round_places_finalise:nnnnn}
+%   The first step when rounding to a fixed number of places is to establish
+%   if this is in the decimal or integer parts. The two require different
+%   calculations for how many digits to drop from the input. The no-op end
+%   function here is to allow tidying up in some cases: see the finalisation
+%   of rounding.
+%    \begin{macrocode}
+\cs_new:Npn \@@_round_places:nnnnnnn #1#2#3#4#5#6#7
+  {
+    \tl_if_blank:nTF {#5}
+      {
+        \exp_args:Ne \@@_round_places_finalise:n
+          {
+            \exp_not:n { {#1} {#2} }
+            \int_compare:nNnTF \l_@@_round_precision_int > 0
+              { \@@_round_places_decimal:nn }
+              { \@@_round_places_integer:nn }
+                {#3} {#4}
+            \@@_round_end:nnn { } {#6} {#7}
+          }
+      }
+      { \exp_not:n { {#1} {#2} {#3} {#4} {#5} {#6} {#7} } }
+  }
+\cs_new:Npn \@@_round_places_decimal:nn #1#2
+  {
+    \int_compare:nNnTF
+      { \l_@@_round_precision_int - 0 \tl_count:n {#2} } > 0
+      {
+        \@@_round_pad:nnn
+          { \l_@@_round_precision_int - 0 \tl_count:n {#2} }
+          {#1} {#2}
+      }
+      {
+        \@@_round:fnn
+           {
+             \int_eval:n
+               { 0 \tl_count:n {#2} - \l_@@_round_precision_int }
+           }
+           {#1} {#2}
+      }
+  }
+\cs_new:Npn \@@_round_places_integer:nn #1#2
+  {
+    \@@_round:fnn
+       {
+         \int_eval:n
+           { 0 \tl_count:n {#2} - \l_@@_round_precision_int }
+       }
+       {#1} {#2}
+  }
+%    \end{macrocode}
+%   To finalise rounding to places, we have to worry about a minimum value:
+%   that is basically a case of looking for value of zero and rearranging. We
+%   also need to worry about a \enquote{negative zero} arising.
+%    \begin{macrocode}
+\cs_new:Npn \@@_round_places_finalise:n #1
+  { \@@_round_places_finalise:nnnnnnn #1 }
+\cs_new:Npn \@@_round_places_finalise:nnnnnnn #1#2#3#4#5#6#7
+  {
+    \str_if_eq:eeTF
+      { \exp_not:n {#3#4} }
+      { \prg_replicate:nn { \tl_count:n {#3#4} } { 0 } }
+      {
+        \tl_if_empty:NTF \l_@@_round_min_tl
+          {
+            \exp_not:n { {#1} }
+            {
+              \bool_lazy_and:nnF
+                { \l_@@_round_positive_bool }
+                { \str_if_eq_p:nn {#2} { - } }
+                { \exp_not:n {#2} }
+            }
+            \exp_not:n { {#3} {#4} {#5} {#6} {#7} }
+          }
+          {
+            \exp_after:wN \@@_round_places_finalise:nnnnn
+              \l_@@_round_min_tl {#2} {#6} {#7}
+          }
+      }
+      { \exp_not:n { {#1} {#2} {#3} {#4} {#5} {#6} {#7} } }
+  }
+\cs_new:Npn \@@_round_places_finalise:nnnnn #1#2#3#4#5
+  {
+    {
+      \str_if_eq:nnTF {#3} { - }
+        { > }
+        { < }
+    }
+    \exp_not:n { {#3} {#1} {#2} { } {#4} {#5} }
+  }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}[EXP]{\@@_round_uncertainty:nnnnnnn}
+% \begin{macro}[EXP]{\@@_round_uncertainty_end:nn}
+% \begin{macro}[EXP]{\@@_round_uncertainty:nnn}
+% \begin{macro}[EXP]{\@@_round_uncertainty_check:nnnw}
+% \begin{macro}[EXP]{\@@_round_uncertainty_check:Nnnnw}
+% \begin{macro}[EXP]{\@@_round_uncertainty_aux:nnn}
+% \begin{macro}[EXP]{\@@_round_uncertainty:nnnn}
+% \begin{macro}[EXP]{\@@_round_uncertainty:nnnnn}
+% \begin{macro}[EXP]
+%   {
+%     \@@_round_uncertainty_simple:nnnnnn ,
+%     \@@_round_uncertainty_shift:nnnnnn
+%   }
+% \begin{macro}[EXP]{\@@_round_uncertainty_shift:nn}
+% \begin{macro}[EXP]{\@@_round_uncertainty_shift:nnnw}
+% \begin{macro}[EXP]{\@@_round_uncertainty_shift_aux:nnnnn}
+% \begin{macro}[EXP]
+%   {
+%     \@@_round_uncertainty_engineering:nnn ,
+%     \@@_round_uncertainty_fixed:nnn       ,
+%     \@@_round_uncertainty_input:nnn       ,
+%     \@@_round_uncertainty_scientific:nnn
+%   }
+% \begin{macro}[EXP]
+%   {
+%     \@@_round_uncertainty_engineering_2:n ,
+%     \@@_round_uncertainty_engineering_3:n ,
+%     \@@_round_uncertainty_engineering_4:n
+%   }
+%   Rounding to an uncertainty can only happen where the result will have some
+%   uncertainty left: otherwise we simply drop the uncertainty entirely. Only
+%   |S|-type uncertainties can be used for rounding.
+%    \begin{macrocode}
+\cs_new:Npn \@@_round_uncertainty:nnnnnnn #1#2#3#4#5#6#7
+  {
+    \bool_lazy_or:nnTF
+      { \tl_if_blank_p:n {#5} }
+      { ! \int_compare_p:nNn \l_@@_round_precision_int > 0 }
+      { \exp_not:n { {#1} {#2} {#3} {#4} { } {#6} {#7} } }
+      {
+        \str_if_eq:eeTF { \tl_head:n {#5} } { S }
+          {
+            \exp_not:n { {#1} {#2} }
+            \exp_args:Nnno \@@_round_uncertainty:nnn
+              {#3} {#4} { \use_ii:nn #5 }
+            \@@_round_uncertainty_end:nn {#6} {#7}
+          }
+          { \exp_not:n { {#1} {#2} {#3} {#4} {#5} {#6} {#7} } }
+      }
+  }
+\cs_new:Npn \@@_round_uncertainty_end:nn #1#2
+  { \exp_not:n { {#1} {#2} } }
+%    \end{macrocode}
+%   Before doing any rounding, we need to be sure that the main value has
+%   enough significant digits. If not, the result is zero.
+%    \begin{macrocode}
+\cs_new:Npn \@@_round_uncertainty:nnn #1#2#3
+  {
+     \@@_round_uncertainty_check:nnnw {#1} {#2} {#3}
+       #1#2 \q_recursion_tail \q_recursion_stop
+  }
+\cs_new:Npn \@@_round_uncertainty_check:nnnw #1#2#3#4
+  {
+    \quark_if_recursion_tail_stop_do:Nn #4 { { 0 } { } { } }
+    \int_compare:nNnTF {#4} = 0
+      { \@@_round_uncertainty_check:nnnw }
+      { \@@_round_uncertainty_check:Nnnnw #4 }
+        {#1} {#2} {#3}
+  }
+\cs_new:Npn \@@_round_uncertainty_check:Nnnnw #1#2#3#4#5
+  \q_recursion_tail \q_recursion_stop
+  {
+    \int_compare:nNnTF { \tl_count:n {#1#5} } < { \tl_count:n {#4} }
+      { { 0 } { } { } }
+      { \@@_round_uncertainty_aux:nnn {#2} {#3} {#4} }
+  }
+%    \end{macrocode}
+%   Round the uncertainty first: this is needed to get the number of places
+%   correct. Once that is done, it's just a question of working out the digits
+%   in the main part.
+%    \begin{macrocode}
+\cs_new:Npn \@@_round_uncertainty_aux:nnn #1#2#3
+  {
+    \exp_args:Nf \@@_round_uncertainty:nnnn
+      {
+        \int_eval:n
+          { \tl_count:n {#3} - \l_@@_round_precision_int }
+      }
+      {#1} {#2} {#3}
+  }
+\cs_new:Npn \@@_round_uncertainty:nnnn #1#2#3#4
+  {
+    \use:e
+      {
+        \exp_not:N \@@_round_uncertainty:nnnnnn
+          \@@_round:nnn {#1} { } {#4}
+          {#2} {#3} {#1} {#4}
+      }
+  }
+%    \end{macrocode}
+%   Here, we need to work out how many digits to zero-fill the uncertainty, for
+%   the case where it crosses into the integer part. This depends on whether
+%   the uncertainty rounded up, which also links to additional treatment. We
+%   therefore split paths here.
+%    \begin{macrocode}
+\cs_new:Npn \@@_round_uncertainty:nnnnnn #1#2#3#4#5#6
+  {
+    \tl_if_blank:nTF {#1}
+      {
+        \exp_args:Nf \@@_round_uncertainty_simple:nnnnn
+          {
+            \prg_replicate:nn
+              {
+                \int_max:nn
+                  {
+                    \tl_if_blank:nTF {#4}
+                      { #5 }
+                      { ( \tl_count:n {#6} - \tl_count:n {#4} ) - \tl_count:n {#2} }
+                  }
+                  { 0 }
+              }
+              { 0 }
+          }
+          {#3} {#4} {#2} {#5}
+      }
+      { \@@_round_uncertainty_shift:nnnnn {#3} {#4} {#1} {#2} {#5} }
+
+  }
+%    \end{macrocode}
+%   The simple case: round and pad out the uncertainty as required.
+%    \begin{macrocode}
+\cs_new:Npn \@@_round_uncertainty_simple:nnnnn #1#2#3#4#5
+  {
+    \@@_round:nnn
+      {#5}
+      {#2} {#3}
+    { { S } { #4 #1 } }
+  }
+%    \end{macrocode}
+%    \begin{macrocode}
+\cs_new:Npn \@@_round_uncertainty_shift:nnnnn #1#2#3#4#5
+  {
+    \exp_args:Ne \@@_round_uncertainty_shift:nn
+      { \@@_round:fnn { \int_eval:n { #5 + 1 } } {#1} {#2} }
+      {#5}
+  }
+%    \end{macrocode}
+%   If the padding length is the same as the number of integer digits, then
+%   we have a pathological case and need to filter out. They show up as they
+%   have the either the precision greater than the length of the integer
+%   part, or have a value of exactly $10$ when the exponent mode is
+%   scientific.
+%    \begin{macrocode}
+\cs_new:Npn \@@_round_uncertainty_shift:nn #1#2
+  { \@@_round_uncertainty_shift:nnnw #1 {#2} }
+\cs_new:Npn \@@_round_uncertainty_shift:nnnw
+  #1#2#3 #4 \@@_round_uncertainty_end:nn #5#6
+  {
+    #4
+    \bool_lazy_and:nnTF
+      { \int_compare_p:nNn {#3} > { \tl_count:n {#1} } }
+      {
+        ! \bool_lazy_and_p:nn
+          { \str_if_eq_p:Vn \l_@@_exponent_mode_tl { scientific } }
+          { \str_if_eq_p:nn { #1.#2 } { 10. } }
+      }
+      {
+        \exp_args:Nf \@@_round_uncertainty_shift_aux:nnnnn
+          {
+            \prg_replicate:nn
+              {
+                \tl_if_blank:nTF {#2}
+                  { \int_min:nn {#3} { \tl_count:n {#1} - 1 } }
+                  { 0 }
+              }
+              { 0 }
+          }
+          {#1} {#2}
+      }
+      {
+        \use:c
+          { @@_round_uncertainty_ \l_@@_exponent_mode_tl :nnn }
+            {#1}
+      }
+         {#5} {#6}
+  }
+\cs_new:Npn \@@_round_uncertainty_shift_aux:nnnnn #1#2#3#4#5
+  {
+    \use:c
+      { @@_round_ \l_@@_exponent_mode_tl :nn }
+        {#2} {#3}
+    \@@_round_end:nnn { { S } { 1 #1 } } {#4} {#5}
+  }
+%    \end{macrocode}
+%   With the data available, adjust the output such that the uncertainty
+%   is of the right length.
+%    \begin{macrocode}
+\cs_new:Npn \@@_round_uncertainty_engineering:nnn #1#2#3
+  {
+    \use:c
+      {
+         @@_round_uncertainty_
+         \l_@@_exponent_mode_tl _
+	     \tl_count:n {#1}
+         :n
+      }
+        {#2#3}
+  }
+\cs_new:cpn { @@_round_uncertainty_engineering_2:n } #1
+  {
+    { 10 } { } { { S } { 10 } }
+    \@@_exponent_finalise:n {#1}
+  }
+\cs_new:cpn { @@_round_uncertainty_engineering_3:n } #1
+  {
+    { 100 } { } { { S } { 100 } }
+    \@@_exponent_finalise:n {#1}
+  }
+\cs_new:cpn { @@_round_uncertainty_engineering_4:n } #1
+  {
+    { 1 } { } { { S } { 1 } }
+    \@@_exponent_finalise:n { #1 + 3 }
+  }
+\cs_new:Npn \@@_round_uncertainty_fixed:nnn #1#2#3
+  {
+    {#1} { }
+    { { S } { 1 \prg_replicate:nn { \tl_count:n {#1} - 1 } { 0 } } }
+    {#2} {#3}
+  }
+\cs_new_eq:NN \@@_round_uncertainty_input:nnn
+   \@@_round_uncertainty_fixed:nnn
+\cs_new:Npn \@@_round_uncertainty_scientific:nnn #1#2#3
+  {
+    { 1 } { } { { S } { 1 } }
+    \@@_exponent_finalise:n { #2#3 + \tl_count:n {#1} - 1 }
+  }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\@@_zero_decimal:NN}
+% \begin{macro}[EXP]{\@@_zero_decimal:nnnnnnn}
+%   Simple stripping of the decimal part if zero.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_zero_decimal:NN #1#2
+  {
+    \bool_if:NT \l_@@_drop_zero_decimal_bool
+      {
+        \tl_set:Nx #2
+          { \exp_after:wN \@@_zero_decimal:nnnnnnn #1 }
+      }
+  }
+\cs_new:Npn \@@_zero_decimal:nnnnnnn #1#2#3#4#5#6#7
+  {
+    \exp_not:n { {#1} {#2} {#3} }
+    \str_if_eq:eeTF
+      { \exp_not:n {#4} }
+      { \prg_replicate:nn { \tl_count:n {#4} } { 0 } }
+      { { } }
+      { \exp_not:n { {#4} } }
+    \exp_not:n { {#5} {#6} {#7} }
+  }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% \subsection{Number modification}
+%
+% \begin{macro}[rEXP]{\siunitx_number_adjust_exponent:nn}
+% \begin{macro}[rEXP]{\siunitx_number_adjust_exponent:Nn}
+% \begin{macro}[rEXP]{\@@_adjust_exp:nnnnnnnn}
+% \begin{macro}[rEXP]{\@@_adjust_exp:nn}
+% \begin{macro}[rEXP]{\@@_adjust_exp:nNw}
+%   A simply case of breaking down and rebuilding the number.
+%    \begin{macrocode}
+\cs_new:Npn \siunitx_number_adjust_exponent:nn #1#2
+  { \@@_adjust_exp:nnnnnnnn #1 {#2} }
+\cs_new:Npn \siunitx_number_adjust_exponent:Nn #1#2
+  {
+    \tl_if_empty:NF #1
+      { \exp_args:NV \siunitx_number_adjust_exponent:nn #1 {#2} }
+  }
+\cs_new:Npn \@@_adjust_exp:nnnnnnnn #1#2#3#4#5#6#7#8
+  {
+    \exp_not:n { {#1} {#2} {#3} {#4} {#5} }
+    \exp_args:Ne \@@_adjust_exp:nn { \fp_eval:n { #6#7 + #8 } } {#6}
+  }
+\cs_new:Npn \@@_adjust_exp:nn #1#2
+  { \@@_adjust_exp:nNw {#2} #1 \q_stop }
+\cs_new:Npn \@@_adjust_exp:nNw #1#2#3 \q_stop
+  {
+    \token_if_eq_meaning:NNTF #2 -
+      { { - } { \exp_not:n {#3} } }
+      { { \str_if_eq:nnT {#1} { + } { + } } { \exp_not:n {#2#3} } }
+  }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \subsection{Outputting parsed numbers}
+%
+% \begin{variable}{\l_@@_bracket_close_tl, \l_@@_bracket_open_tl}
+%   Purely internal for the present.
+%    \begin{macrocode}
+\tl_new:N \l_@@_bracket_close_tl
+\tl_new:N \l_@@_bracket_open_tl
+\tl_set:Nn \l_@@_bracket_open_tl { ( }
+\tl_set:Nn \l_@@_bracket_close_tl { ) }
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{variable}{\l_siunitx_number_bracket_ambiguous_bool}
+%    \begin{macrocode}
+\bool_new:N \l_siunitx_number_bracket_ambiguous_bool
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{variable}{\l_siunitx_number_output_decimal_tl}
+%    \begin{macrocode}
+\tl_new:N \l_siunitx_number_output_decimal_tl
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{variable}
+%   {
+%      \l_@@_bracket_negative_bool    ,
+%      \l_@@_implicit_plus_bool       ,
+%      \l_@@_exponent_base_tl         ,
+%      \l_@@_exponent_product_tl      ,
+%      \l_@@_group_size_int           ,
+%      \l_@@_group_first_int          ,
+%      \l_@@_group_decimal_bool       ,
+%      \l_@@_group_integer_bool       ,
+%      \l_@@_group_minimum_int        ,
+%      \l_@@_group_separator_tl       ,
+%      \l_@@_negative_color_tl        ,
+%      \l_@@_output_exp_marker_tl     ,
+%      \l_@@_output_uncert_close_tl   ,
+%      \l_@@_output_uncert_open_tl    ,
+%      \l_@@_uncert_desc_mode_tl      ,
+%      \l_@@_uncert_desc_separator_tl ,
+%      \l_@@_uncert_desc_clist        ,
+%      \l_@@_uncert_mode_tl           ,
+%      \l_@@_uncert_separator_tl      ,
+%      \l_@@_tight_bool               ,
+%      \l_@@_unity_mantissa_bool      ,
+%      \l_@@_zero_exponent_bool       ,
+%      \l_@@_zero_integer_bool
+%   }
+%   Keys producing tokens in the output.
+%    \begin{macrocode}
+\keys_define:nn { siunitx }
+  {
+    bracket-ambiguous-numbers .bool_set:N =
+      \l_siunitx_number_bracket_ambiguous_bool ,
+    bracket-negative-numbers .bool_set:N =
+      \l_@@_bracket_negative_bool ,
+    exponent-base .tl_set:N =
+      \l_@@_exponent_base_tl ,
+    exponent-product .tl_set:N =
+      \l_@@_exponent_product_tl ,
+    digit-group-size .meta:n =
+      {
+        digit-group-first-size = {#1} ,
+        digit-group-other-size = {#1}
+      } ,
+    digit-group-first-size .int_set:N =
+      \l_@@_group_first_int ,
+    digit-group-other-size .int_set:N =
+      \l_@@_group_size_int ,
+    group-digits .choice: ,
+    group-digits / all .code:n =
+      {
+        \bool_set_true:N \l_@@_group_decimal_bool
+        \bool_set_true:N \l_@@_group_integer_bool
+      } ,
+    group-digits / decimal .code:n =
+      {
+        \bool_set_true:N  \l_@@_group_decimal_bool
+        \bool_set_false:N \l_@@_group_integer_bool
+      } ,
+    group-digits / integer .code:n =
+      {
+        \bool_set_false:N \l_@@_group_decimal_bool
+        \bool_set_true:N  \l_@@_group_integer_bool
+      } ,
+    group-digits / none .code:n =
+      {
+        \bool_set_false:N \l_@@_group_decimal_bool
+        \bool_set_false:N \l_@@_group_integer_bool
+      } ,
+    group-digits .default:n  = all ,
+    group-minimum-digits .int_set:N  =
+      \l_@@_group_minimum_int ,
+    group-separator .tl_set:N =
+      \l_@@_group_separator_tl ,
+    negative-color .tl_set:N =
+    \l_@@_negative_color_tl ,
+    output-close-uncertainty .tl_set:N =
+      \l_@@_output_uncert_close_tl ,
+    output-decimal-marker .tl_set:N =
+      \l_siunitx_number_output_decimal_tl ,
+    output-exponent-marker .tl_set:N =
+      \l_@@_output_exp_marker_tl ,
+    output-open-uncertainty .tl_set:N =
+      \l_@@_output_uncert_open_tl ,
+    print-implicit-plus .bool_set:N =
+      \l_@@_implicit_plus_bool ,
+    print-unity-mantissa .bool_set:N =
+      \l_@@_unity_mantissa_bool ,
+    print-zero-exponent .bool_set:N =
+      \l_@@_zero_exponent_bool ,
+    print-zero-integer .bool_set:N =
+      \l_@@_zero_integer_bool ,
+    tight-spacing .bool_set:N =
+      \l_@@_tight_bool ,
+    uncertainty-descriptor-mode .choices:nn =
+      { bracket , bracket-separator , separator , subscript }
+      { \tl_set_eq:NN \l_@@_uncert_desc_mode_tl \l_keys_choice_tl } ,
+    uncertainty-descriptor-separator .tl_set:N =
+      \l_@@_uncert_desc_separator_tl ,
+    uncertainty-descriptors .clist_set:N =
+      \l_@@_uncert_desc_clist ,
+    uncertainty-mode .choices:nn =
+      { compact , compact-marker , full , separate }
+      { \tl_set_eq:NN \l_@@_uncert_mode_tl \l_keys_choice_tl } ,
+    uncertainty-separator .tl_set:N =
+      \l_@@_uncert_separator_tl ,
+    zero-decimal-as-symbol .bool_set:N =
+      \l_@@_zero_symbol_bool ,
+    zero-symbol .tl_set:N = \l_@@_zero_symbol_tl
+  }
+\bool_new:N \l_@@_group_decimal_bool
+\bool_new:N \l_@@_group_integer_bool
+\tl_new:N \l_@@_uncert_desc_mode_tl
+\tl_new:N \l_@@_uncert_mode_tl
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{macro}[rEXP]{\siunitx_number_output:N}
+% \begin{macro}[rEXP]{\siunitx_number_output:n}
+% \begin{macro}[rEXP]{\siunitx_number_output:NN}
+% \begin{macro}[rEXP]{\siunitx_number_output:nN}
+% \begin{macro}[rEXP]{\@@_output:Nn}
+% \begin{macro}[rEXP]{\@@_output:nn}
+% \begin{macro}[rEXP]{\@@_output:nnnnnnn}
+% \begin{macro}[rEXP]{\@@_output_bracket:nn}
+% \begin{macro}[rEXP]{\@@_output_bracket:w}
+% \begin{macro}[rEXP]{\@@_output_comparator:nn}
+% \begin{macro}[rEXP]{\@@_output_sign:nnn}
+% \begin{macro}[rEXP]{\@@_output_sign:nN}
+% \begin{macro}[rEXP]
+%   {\@@_output_sign_color:w, \@@_output_sign_brackets:w}
+% \begin{macro}[rEXP]{\@@_output_integer:nnn}
+% \begin{macro}[rEXP]{\@@_output_decimal:nn, \@@_output_decimal:fn}
+% \begin{macro}[rEXP]{\@@_output_digits:nn}
+% \begin{macro}[rEXP]{\@@_output_digit_separator:N}
+% \begin{macro}[rEXP]{\@@_output_integer_3_3:n}
+% \begin{macro}[rEXP]
+%   {
+%     \@@_output_integer_aux_0:n,
+%     \@@_output_integer_aux_1:n,
+%     \@@_output_integer_aux_2:n
+%   }
+% \begin{macro}[rEXP]{\@@_output_integer_first:nnNN}
+% \begin{macro}[rEXP]{\@@_output_integer_loop:NNNN}
+% \begin{macro}[rEXP]{\@@_output_integer_first:n}
+% \begin{macro}[rEXP]{\@@_output_integer_aux:n}
+% \begin{macro}[rEXP]{\@@_output_integer_loop:NnnN}
+% \begin{macro}[rEXP]{\@@_output_decimal_3_3:n}
+% \begin{macro}[rEXP]{\@@_output_decimal_loop:NNNN}
+% \begin{macro}[rEXP]{\@@_output_decimal_3_2:n}
+% \begin{macro}[rEXP]{\@@_output_decimal:NNNw}
+% \begin{macro}[rEXP]{\@@_output_decimal_loop:NN}
+% \begin{macro}[rEXP]{\@@_output_decimal_first:n}
+% \begin{macro}[rEXP]{\@@_output_decimal_loop:NnnN}
+% \begin{macro}[rEXP]{\@@_output_uncertainty:nnn}
+% \begin{macro}[rEXP]{\@@_output_uncertainty_unaligned:n}
+% \begin{macro}[rEXP]{\@@_output_uncert:nnnn}
+% \begin{macro}[rEXP]{\@@_output_uncert:nnnnn}
+% \begin{macro}[rEXP]{\@@_output_uncert_loop:nnN}
+% \begin{macro}[rEXP]{\@@_output_uncert_loop:nnNw}
+% \begin{macro}[rEXP]
+%   {
+%     \@@_output_uncert_desc_bracket:n           ,
+%     \@@_output_uncert_desc_bracket-separator:n ,
+%     \@@_output_uncert_desc_separator:n         ,
+%     \@@_output_uncert_desc_subscript:n
+%   }
+% \begin{macro}[rEXP]{\@@_output_uncert_A_loop:nnn, \@@_output_uncert_S_loop:nnn}
+% \begin{macro}[rEXP]{\@@_output_uncert_S_loop:w}
+% \begin{macro}[rEXP]{\@@_output_uncert_A:nnnn, \@@_output_uncert_A_multi:nnnn}
+% \begin{macro}[rEXP]{\@@_output_uncert_A:nnnnn}
+% \begin{macro}[rEXP]
+%   {
+%     \@@_output_uncert_S:nnnn       ,
+%     \@@_output_uncert_S_sep:nnnn   ,
+%     \@@_output_uncert_S_multi:nnnn
+%   }
+% \begin{macro}[rEXP]
+%   {
+%     \@@_output_uncert_S_compact:nn        ,
+%     \@@_output_uncert_S_compact-marker:nn ,
+%     \@@_output_uncert_S_full:nn
+%   }
+% \begin{macro}[rEXP]
+%   {\@@_output_uncert_augment:nnnn}
+% \begin{macro}[rEXP]
+%   {\@@_output_uncert_augment:nnn}
+% \begin{macro}[rEXP]
+%   {\@@_output_uncert_augment:nnnw, \@@_output_uncert_augment:fnnw}
+% \begin{macro}[rEXP]{\@@_output_uncert_augment:nnw}
+% \begin{macro}[rEXP]
+%   {
+%     \@@_output_exponent:nnnnn       ,
+%     \@@_output_exponent_auxi:nnnnn  ,
+%     \@@_output_exponent_auxii:nnnnn
+%   }
+% \begin{macro}[rEXP]{\@@_output_exponent_auxiii:nn}
+% \begin{macro}[rEXP]{\@@_output_end:}
+%   The approach to formatting a single number is to split into
+%   the constituent parts. All of the parts are assembled including
+%   inserting tabular alignment markers (which may be empty) for each
+%   separate unit.
+%    \begin{macrocode}
+\cs_new:Npn \siunitx_number_output:N #1
+  { \@@_output:Nn #1 { } }
+\cs_new:Npn \siunitx_number_output:n #1
+  { \@@_output:nn #1 { } }
+\cs_new:Npn \siunitx_number_output:NN #1#2
+  { \@@_output:Nn #1 {#2} }
+\cs_new:Npn \siunitx_number_output:nN #1#2
+  { \@@_output:nn #1 {#2} }
+\cs_new:Npn \@@_output:Nn #1#2
+  {
+    \tl_if_empty:NF #1
+      { \exp_after:wN \@@_output:nnnnnnn #1 {#2} }
+  }
+\cs_new:Npn \@@_output:nn #1#2
+  {
+    \tl_if_empty:nF {#1}
+      { \@@_output:nnnnnnn #1 {#2} }
+  }
+\cs_new:Npn \@@_output:nnnnnnn #1#2#3#4#5#6#7#8
+  {
+    \@@_output_color:n {#2}
+    \@@_output_comparator:nn {#1} {#8}
+    \@@_output_bracket:nn {#5} {#7}
+    \@@_output_sign:nnn {#1} {#2} {#8}
+    \@@_output_integer:nnn {#3} {#4} {#7}
+    \@@_output_decimal:nn {#4} {#8}
+    \@@_output_uncertainty:nnn {#5} {#4} {#8}
+    \@@_output_exponent:nnnnn {#6} {#7} {#3} {#4} {#8}
+    \@@_output_end:
+  }
+%    \end{macrocode}
+%   Adding brackets for the combination of a separate uncertainty with an
+%   exponent may need brackets. This needs testing up-front, so has to come
+%   before the main formatting routines.
+%    \begin{macrocode}
+\cs_new:Npn \@@_output_bracket:nn #1#2
+  {
+    \bool_lazy_all:nT
+      {
+        { \str_if_eq_p:Vn \l_@@_uncert_mode_tl { separate } }
+        { \l_siunitx_number_bracket_ambiguous_bool }
+        { ! \tl_if_blank_p:n {#1} }
+        {
+          \bool_lazy_or_p:nn
+            { \l_@@_zero_exponent_bool }
+            { ! \str_if_eq_p:nn {#2} { 0 } }
+        }
+      }
+    \@@_output_bracket:w
+  }
+\cs_new:Npn \@@_output_bracket:w #1 \@@_output_exponent:nnnnn
+  {
+    \exp_not:V \l_@@_bracket_open_tl
+    #1
+    \exp_not:V \l_@@_bracket_close_tl
+    \@@_output_exponent:nnnnn
+  }
+%    \end{macrocode}
+%   As color for negative values applies to the \emph{whole} output, we have
+%   to deal with it before anything else.
+%    \begin{macrocode}
+\cs_new:Npn \@@_output_color:n #1
+  {
+    \bool_lazy_and:nnT
+      { \str_if_eq_p:nn {#1} { - } }
+      { ! \tl_if_empty_p:N \l_@@_negative_color_tl }
+      { \exp_not:N \color { \exp_not:V \l_@@_negative_color_tl } }
+  }
+%    \end{macrocode}
+%   To get the spacing correct this needs to be an ordinary math character.
+%    \begin{macrocode}
+\cs_new:Npn \@@_output_comparator:nn #1#2
+  {
+    \tl_if_blank:nF {#1}
+      { \exp_not:n { \mathord {#1} } }
+    \exp_not:n {#2}
+  }
+%    \end{macrocode}
+%   Formatting signs has to deal with some additional formatting requirements
+%   for negative numbers. Making such numbers by bracketing them needs some
+%   rearrangement of the order of tokens, which is set up in the main
+%   formatting macro by the dedicated do-nothing end function. We also have
+%   the comparator passed here: if it is present, we need to deal with
+%   tighter spacing.
+%    \begin{macrocode}
+\cs_new:Npn \@@_output_sign:nnn #1#2#3
+  {
+    \tl_if_blank:nTF {#2}
+      {
+        \bool_if:NT \l_@@_implicit_plus_bool
+          { \@@_output_sign:nN {#1} + }
+      }
+      {
+        \str_if_eq:nnTF {#2} { - }
+          {
+            \bool_if:NTF \l_@@_bracket_negative_bool
+              { \@@_output_sign_brackets:w }
+              { \@@_output_sign:nN {#1} - }
+          }
+          { \@@_output_sign:nN {#1} #2 }
+      }
+    \exp_not:n {#3}
+  }
+\cs_new:Npn \@@_output_sign:nN #1#2
+  {
+    \tl_if_blank:nTF {#1}
+      { \use:n }
+      { \mathord }
+        { \exp_not:n {#2} }
+  }
+\cs_new:Npn
+  \@@_output_sign_brackets:w #1 \@@_output_end:
+  {
+    \exp_not:V \l_@@_bracket_open_tl
+    #1
+    \exp_not:V \l_@@_bracket_close_tl
+    \@@_output_end:
+  }
+%    \end{macrocode}
+%   Digit formatting leads off with separate functions to allow for a few
+%   \enquote{up front} items before using a common set of tests for some common
+%   cases. The code then splits again as the two types of grouping need
+%   different strategies.
+%    \begin{macrocode}
+\cs_new:Npn \@@_output_integer:nnn #1#2#3
+  {
+    \tl_if_blank:nTF {#1}
+      {
+        \bool_lazy_and:nnT
+          { \str_if_eq_p:nn {#3} { 0 } }
+          { ! \l_@@_zero_exponent_bool }
+          { \@@_output_digits:nn { integer } { 1 } }
+      }
+      {
+        \bool_lazy_or:nnT
+          { \l_@@_zero_integer_bool }
+          { ! \str_if_eq_p:nn {#1} { 0 } }
+          {
+            \bool_lazy_any:nT
+              {
+                { \l_@@_unity_mantissa_bool }
+                { ! \str_if_eq_p:nn { #1 . #2 } { 1. } }
+                {
+                  \bool_lazy_and_p:nn
+                    { \str_if_eq_p:nn {#3} { 0 } }
+                    { ! \l_@@_zero_exponent_bool }
+                }
+                {
+                  \bool_lazy_and_p:nn
+                    { \str_if_eq_p:nn {#1} { 0 } }
+                    { \l_@@_zero_integer_bool }
+                }
+              }
+              { \@@_output_digits:nn { integer } {#1} }
+          }
+      }
+  }
+\cs_new:Npn \@@_output_decimal:nn #1#2
+  {
+    \exp_not:n {#2}
+    \tl_if_blank:nF {#1}
+      {
+        \str_if_eq:VnTF \l_siunitx_number_output_decimal_tl { , }
+          { \exp_not:N \mathord }
+          { \use:n }
+            { \exp_not:V \l_siunitx_number_output_decimal_tl }
+      }
+    \exp_not:n {#2}
+    \str_if_eq:nnF {#1} { \empty }
+      {
+        \bool_lazy_and:nnTF
+          { \l_@@_zero_symbol_bool }
+          {
+            \str_if_eq_p:ee
+            {#1}
+            { \prg_replicate:nn { \tl_count:n {#1} } { 0 } }
+          }
+          { \exp_not:V \l_@@_zero_symbol_tl }
+          { \@@_output_digits:nn { decimal } {#1} }
+      }
+  }
+\cs_generate_variant:Nn \@@_output_decimal:nn { f }
+\cs_new:Npn \@@_output_digits:nn #1#2
+  {
+    \bool_if:cTF { l_@@_group_ #1 _ bool }
+      {
+        \int_compare:nNnTF
+          { \tl_count:n {#2} } < \l_@@_group_minimum_int
+          { \exp_not:n {#2} }
+          {
+            \cs_if_exist_use:cF
+              {
+                @@_output_ #1 _
+                \int_use:N \l_@@_group_first_int
+                _
+                \int_use:N \l_@@_group_size_int
+                :n
+              }
+              { \use:c { @@_output_ #1 _first:n } }
+                {#2}
+          }
+      }
+      { \exp_not:n {#2} }
+  }
+%    \end{macrocode}
+%   An auxiliary to ensure spacing is correct.
+%    \begin{macrocode}
+\cs_new:Npn \@@_output_digit_separator:N #1
+  {
+    \str_if_eq:VnTF #1 { , }
+      { \exp_not:N \mathord }
+      { \use:n }
+        { \exp_not:V #1 }
+  }
+%    \end{macrocode}
+%   For standard grouping of integers, we need to know how many digits there
+%   are to allow for the correct insertion of separators. That is done using
+%   a two-part set up such that there is no separator on the first pass.
+%    \begin{macrocode}
+\cs_new:cpn { @@_output_integer_3_3:n } #1
+  {
+     \use:c
+       {
+         @@_output_integer_aux_
+         \int_eval:n { \int_mod:nn { \tl_count:n {#1} } { 3 } }
+         :n
+       } {#1}
+  }
+\cs_new:cpn { @@_output_integer_aux_0:n } #1
+  { \@@_output_integer_first:nnNN #1 \q_nil }
+\cs_new:cpn { @@_output_integer_aux_1:n } #1
+  { \@@_output_integer_first:nnNN { } { } #1 \q_nil }
+\cs_new:cpn { @@_output_integer_aux_2:n } #1
+  { \@@_output_integer_first:nnNN { } #1 \q_nil }
+\cs_new:Npn \@@_output_integer_first:nnNN #1#2#3#4
+  {
+    \exp_not:n {#1#2#3}
+    \quark_if_nil:NF #4
+      { \@@_output_integer_loop:NNNN #4 }
+  }
+\cs_new:Npn \@@_output_integer_loop:NNNN #1#2#3#4
+  {
+    \@@_output_digit_separator:N \l_@@_group_separator_tl
+    \exp_not:n {#1#2#3}
+    \quark_if_nil:NF #4
+      { \@@_output_integer_loop:NNNN #4 }
+  }
+%    \end{macrocode}
+%   There is no clever way of doing an uneven integer grouping, so just provide
+%   a slow generic approach. This is more-or-less the same as the generic
+%   decimal code, but with the output reversed. The only wrinkle is we need to
+%   reverse the entire input again, so it has to be carried as an argument.
+%    \begin{macrocode}
+\cs_new:Npn \@@_output_integer_first:n #1
+  {
+    \exp_args:Ne \@@_output_integer_aux:n { \tl_reverse:n {#1} }
+  }
+\cs_new:Npn \@@_output_integer_aux:n #1
+  {
+    \@@_output_integer_loop:NnnN \l_@@_group_first_int { 0 } { }
+      #1 \q_recursion_tail \q_recursion_stop
+  }
+\cs_new:Npn \@@_output_integer_loop:NnnN #1#2#3#4
+  {
+    \quark_if_recursion_tail_stop_do:Nn #4 {#3}
+    \int_compare:nNnTF { #2 + 1 } > #1
+      {
+        \@@_output_integer_loop:NnnN
+          \l_@@_group_size_int { 1 }
+            {
+              \exp_not:n {#4}
+              \@@_output_digit_separator:N \l_@@_group_separator_tl
+              #3
+            }
+      }
+      {
+        \@@_output_integer_loop:NnnN #1 { #2 + 1 }
+          { \exp_not:n {#4} #3 }
+      }
+  }
+%    \end{macrocode}
+%   For standard decimal grouping, no need to do any counting, just loop using
+%   enough markers to find the end of the list. By passing the decimal marker,
+%   it is possible not to have to use a check on the content of the rest of
+%   the number. The |\use_none:n(n)| mop up the remaining |\q_nil| tokens.
+%    \begin{macrocode}
+\cs_new:cpn { @@_output_decimal_3_3:n } #1
+  {
+    \@@_output_decimal_loop:NNNN \c_empty_tl
+      #1 \q_nil \q_nil \q_nil
+  }
+\cs_new:Npn \@@_output_decimal_loop:NNNN #1#2#3#4
+  {
+    \quark_if_nil:NF #2
+      {
+        \@@_output_digit_separator:N #1
+        \exp_not:n {#2}
+        \quark_if_nil:NTF #3
+          { \use_none:n }
+          {
+            \exp_not:n {#3}
+            \quark_if_nil:NTF #4
+              { \use_none:nn }
+              {
+                \exp_not:n {#4}
+                \@@_output_decimal_loop:NNNN
+                  \l_@@_group_separator_tl
+              }
+          }
+      }
+  }
+%    \end{macrocode}
+%   The same trick for the group-of-two case, but as the first pass is already
+%   done, there is not need to worry about the separator.
+%    \begin{macrocode}
+\cs_new:cpn { @@_output_decimal_3_2:n } #1
+  {
+    \int_compare:nNnTF { \tl_count:n {#1} } > 2
+      { \@@_output_decimal:NNNw #1 \q_stop }
+      { \exp_not:n {#1} }
+  }
+\cs_new:Npn \@@_output_decimal:NNNw #1#2#3#4 \q_stop
+  {
+    \exp_not:n {#1#2#3}
+    \@@_output_decimal_loop:NN #4 \q_nil \q_nil
+  }
+\cs_new:Npn \@@_output_decimal_loop:NN #1#2
+  {
+    \quark_if_nil:NF #1
+      {
+        \@@_output_digit_separator:N
+          \l_@@_group_separator_tl
+        \exp_not:n {#1}
+        \quark_if_nil:NTF #2
+          { \use_none:n }
+          {
+            \exp_not:n {#2}
+            \@@_output_decimal_loop:NN
+          }
+      }
+  }
+%    \end{macrocode}
+%   The generic decimal separator: simply count the digits.
+%    \begin{macrocode}
+\cs_new:Npn \@@_output_decimal_first:n #1
+  {
+    \@@_output_decimal_loop:NnnN \l_@@_group_first_int { 0 } { }
+      #1 \q_recursion_tail \q_recursion_stop
+  }
+\cs_new:Npn \@@_output_decimal_loop:NnnN #1#2#3#4
+  {
+    \quark_if_recursion_tail_stop_do:Nn #4 { \exp_not:n {#3} }
+    \int_compare:nNnTF { #2 + 1 } > #1
+      {
+        \exp_not:n {#3}
+        \@@_output_digit_separator:N
+          \l_@@_group_separator_tl
+        \@@_output_decimal_loop:NnnN \l_@@_group_size_int { 1 } {#4}
+      }
+      { \@@_output_decimal_loop:NnnN #1 { #2 + 1 } { #3 #4 } }
+  }
+%    \end{macrocode}
+%   The lead-off here is to deal with the common cases: no uncertainty at all
+%   or a single uncertainty. Otherwise we have to move to a mapping.
+%    \begin{macrocode}
+\cs_new:Npn \@@_output_uncertainty:nnn #1#2#3
+  {
+    \tl_if_blank:nTF {#1}
+      { \@@_output_uncertainty_unaligned:n {#3} }
+      {
+        \cs_if_exist:cTF
+          { @@_output_uncert_ \tl_head:n {#1} :nnnn }
+          {
+            \use:c { @@_output_uncert_ \tl_head:n {#1} :nnnn }
+              {#2} {#3} #1
+          }
+          { \@@_output_uncert:nnnn {#2} {#3} #1 }
+      }
+  }
+\cs_new:Npn \@@_output_uncertainty_unaligned:n #1
+  { \exp_not:n { #1 #1 #1 #1 } }
+%    \end{macrocode}
+%   For handling a list of uncertainties, we also need the descriptors. There
+%   is no way to reasonably deal with alignment of an open-ended list, so
+%   the treatment is as-for no uncertainty at all.
+%    \begin{macrocode}
+\cs_new:Npn \@@_output_uncert:nnnn #1#2#3#4
+  {
+    \exp_args:NV \@@_output_uncert:nnnnn \l_@@_uncert_desc_clist
+      {#1} {#2} {#3} {#4}
+  }
+\cs_new:Npn \@@_output_uncert:nnnnn #1#2#3#4#5
+  {
+    \@@_output_uncert_loop:nnN {#2} {#3}
+      #4 \q_recursion_tail #1 , \q_recursion_stop {#5}
+  }
+\cs_new:Npn \@@_output_uncert_loop:nnN #1#2#3
+  {
+    \quark_if_recursion_tail_stop:N #3
+    \@@_output_uncert_loop:nnNw {#1} {#2} #3
+  }
+\cs_new:Npn \@@_output_uncert_loop:nnNw
+  #1#2#3#4 \q_recursion_tail #5 , #6 \q_recursion_stop #7
+  {
+    \use:c { @@_output_uncert_ #3 _loop:nnn } {#1} {#2} {#7}
+    \tl_if_blank:nF {#5}
+      { \use:c { @@_output_uncert_desc_ \l_@@_uncert_desc_mode_tl :n } {#5} }
+   \@@_output_uncert_loop:nnN {#1} {#2} #4
+     \q_recursion_tail #6 , \q_recursion_stop
+  }
+\cs_new:Npn \@@_output_uncert_desc_bracket:n #1
+  {
+    \exp_not:V \l_@@_bracket_open_tl
+    \exp_not:V \l_siunitx_unit_font_tl
+      { \exp_not:n {#1} }
+    \exp_not:V \l_@@_bracket_close_tl
+  }
+\cs_new:cpn { @@_output_uncert_desc_bracket-separator:n } #1
+  {
+    \exp_not:V \l_@@_uncert_desc_separator_tl
+    \exp_not:V \l_@@_bracket_open_tl
+    \exp_not:V \l_siunitx_unit_font_tl
+      { \exp_not:n {#1} }
+    \exp_not:V \l_@@_bracket_close_tl
+  }
+\cs_new:Npn \@@_output_uncert_desc_separator:n #1
+  {
+    \exp_not:V \l_@@_uncert_desc_separator_tl
+    \exp_not:V \l_siunitx_unit_font_tl
+      { \exp_not:n {#1} }
+  }
+\cs_new:Npx \@@_output_uncert_desc_subscript:n #1
+  {
+    \char_generate:nn { `\_ } { 8 } 
+      {
+        \exp_not:N \exp_not:V \exp_not:N \l_siunitx_unit_font_tl
+          { \exp_not:N \exp_not:n {#1} }
+      }
+  }
+%    \end{macrocode}
+%   Here, we have to tidy up so the alignment point only applies to the first
+%   |S|-type uncertainty.
+%    \begin{macrocode}
+\cs_new:Npn \@@_output_uncert_A_loop:nnn #1#2#3
+   { \@@_output_uncert_A_multi:nnnn {#1} {#2} { A } {#3} }
+\cs_new:Npn \@@_output_uncert_S_loop:nnn #1#2#3
+   {
+     \@@_output_uncert_S_multi:nnnn {#1} {#2} { S } {#3}
+     \@@_output_uncert_S_loop:w
+   }
+\cs_new:Npn \@@_output_uncert_S_loop:w #1 \@@_output_uncert_loop:nnN #2#3
+  {
+     #1
+     \@@_output_uncert_loop:nnN {#2} { }
+  }
+%    \end{macrocode}
+%   Printing an asymmetrical uncertainty is more straight-forward as they are
+%   always given in a single format. The only issue is handling the catcode.
+%    \begin{macrocode}
+\cs_new:Npn \@@_output_uncert_A:nnnn #1#2#3#4
+  { \@@_output_uncert_A:nnnnn {#1} {#2} {#3} #4 }
+\cs_new_eq:NN \@@_output_uncert_A_multi:nnnn
+  \@@_output_uncert_A:nnnn
+\cs_new:Npx \@@_output_uncert_A:nnnnn #1#2#3#4#5
+  {
+    ^
+      { 
+        +
+        \exp_not:N \@@_output_uncert_augment:nnnn
+          {#4} {#1} {#4} {#2}
+      }
+    \char_generate:nn { `\_ } { 8 }
+      {
+        -
+        \exp_not:N \@@_output_uncert_augment:nnnn
+          {#5} {#1} {#5} {#2}
+      }
+    \exp_not:N \@@_output_uncertainty_unaligned:n {#2}
+  }
+%    \end{macrocode}
+%   Uncertainties which are directly attached are easy to deal with. For those
+%   that are separated, the first step is to find if they are entirely
+%   contained within the decimal part, and to pad if they are. For the case
+%   where the boundary is crossed to the integer part, the correct number of
+%   digit tokens need to be removed from the start of the uncertainty and
+%   the split result sent to the appropriate auxiliaries.
+%    \begin{macrocode}
+\cs_new:Npn \@@_output_uncert_S:nnnn #1#2#3#4
+  {
+    \str_if_eq:VnTF \l_@@_uncert_mode_tl { separate }
+      { \@@_output_uncert_S_sep:nnnn {#1} {#2} {#3} {#4} }
+      {
+        \exp_not:V \l_@@_uncert_separator_tl
+        \exp_not:V \l_@@_output_uncert_open_tl
+        \use:c { @@_output_uncert_S_ \l_@@_uncert_mode_tl :nn } {#1} {#4}
+        \exp_not:V \l_@@_output_uncert_close_tl
+        \@@_output_uncertainty_unaligned:n {#2}
+      }
+  }
+\cs_new:Npn \@@_output_uncert_S_sep:nnnn #1#2#3#4
+  {
+    \exp_not:n {#2}
+    \bool_if:NTF \l_@@_tight_bool
+      { \mathord }
+      { \use:n }
+        { \exp_not:n { \pm } }
+    \exp_not:n {#2}
+    \@@_output_uncert_augment:nnnn {#4} {#1} {#4} {#2}
+  }
+\cs_new_eq:NN \@@_output_uncert_S_multi:nnnn
+  \@@_output_uncert_S_sep:nnnn
+%    \end{macrocode}
+%   Handle the content of brackets: the only complex case is the
+%   mixed situation.
+%    \begin{macrocode}
+\cs_new:Npn \@@_output_uncert_S_compact:nn #1#2
+  { \exp_not:n {#2} }
+\cs_new:cpn { @@_output_uncert_S_compact-marker:nn } #1#2
+  {
+    \bool_lazy_or:nnTF
+      { \tl_if_blank_p:n {#1} }
+      { ! \int_compare_p:nNn { \tl_count:n {#2} } > { \tl_count:n {#1} } }
+      { \@@_output_uncert_S_compact:nn }
+      { \@@_output_uncert_S_full:nn }
+        {#1} {#2}
+  }
+\cs_new:Npn \@@_output_uncert_S_full:nn #1#2
+  {
+    \@@_output_uncert_augment:nnnn {#2} {#1} {#2} { }
+  }
+%    \end{macrocode}
+%   Convert the internal (short) form of an uncertainty to the longer form.
+%    \begin{macrocode}
+\cs_new:Npn \@@_output_uncert_augment:nnnn #1#2#3#4
+  {
+    \exp_args:Nf \@@_output_uncert_augment:nnn
+      { \int_eval:n { \tl_count:n {#1} - \tl_count:n {#2} } }
+      {#3} {#4}
+  }
+\cs_new:Npn \@@_output_uncert_augment:nnn #1#2#3
+  {
+    \int_compare:nNnTF {#1} > 0
+      {
+        \@@_output_uncert_augment:fnnw
+          { \int_eval:n { #1 - 1 } }
+          {#3}
+          { }
+          #2 \q_nil
+      }
+      {
+        0
+        \@@_output_decimal:fn
+          {
+            \prg_replicate:nn { \int_abs:n {#1} } { 0 }
+            #2
+          }
+          {#3}
+      }
+  }
+\cs_new:Npn \@@_output_uncert_augment:nnnw #1#2#3#4
+  {
+    \quark_if_nil:NF #4
+      {
+        \int_compare:nNnTF {#1} = 0
+          { \@@_output_uncert_augment:nnw {#3#4} {#2} }
+          {
+            \@@_output_uncert_augment:fnnw
+              { \int_eval:n { #1 - 1 } }
+              {#2}
+              {#3#4}
+          }
+      }
+  }
+\cs_generate_variant:Nn \@@_output_uncert_augment:nnnw { f }
+\cs_new:Npn \@@_output_uncert_augment:nnw #1#2#3 \q_nil
+  {
+    \@@_output_digits:nn { integer } {#1}
+    \@@_output_decimal:nn {#3} {#2}
+  }
+%    \end{macrocode}
+%   Setting the exponent part requires some information about the mantissa:
+%   was it there or not. This means that whilst only the sign and value for
+%   the exponent are typeset here, there is a need to also have access to the
+%   combined mantissa part (with a decimal marker). The rest of the work is
+%   about picking up the various options and getting the combinations right.
+%   For signs, the auxiliary from the main sign routine can be used, but not
+%   the main function: negative exponents don't have special handling.
+%    \begin{macrocode}
+\cs_new:Npn \@@_output_exponent:nnnnn #1#2#3#4#5
+  {
+    \exp_not:n {#5}
+    \bool_lazy_or:nnTF
+      { \l_@@_zero_exponent_bool }
+      { ! \str_if_eq_p:nn {#2} { 0 } }
+      {
+        \tl_if_empty:NTF \l_@@_output_exp_marker_tl
+          { \@@_output_exponent_auxi:nnnnn }
+          { \@@_output_exponent_auxii:nnnnn }
+            {#1} {#2} {#3} {#4} {#5}
+      }
+      { \exp_not:n {#5} }
+  }
+\cs_new:Npn \@@_output_exponent_auxi:nnnnn #1#2#3#4#5
+  {
+    \bool_lazy_or:nnT
+      {
+        \bool_lazy_and_p:nn
+          { \l_@@_unity_mantissa_bool }
+          { \str_if_eq_p:nn { #3 . #4 } { 1. } }
+      }
+      {
+        ! \bool_lazy_or_p:nn
+          { \str_if_eq_p:nn { #3 . #4 } { 1. } }
+          { \tl_if_blank_p:n {#3} }
+      }
+      {
+        \bool_if:NTF \l_@@_tight_bool
+          { \exp_not:N \mathord }
+          { \use:n }
+            { \exp_not:V \l_@@_exponent_product_tl }
+      }
+    \exp_not:n {#5}
+    \exp_not:V \l_@@_exponent_base_tl
+    ^
+      { \@@_output_exponent_auxiii:nnn { } {#1} {#2} }
+  }
+\cs_new:Npn \@@_output_exponent_auxii:nnnnn #1#2#3#4#5
+  {
+    \exp_not:n {#5}
+    \exp_not:V \l_@@_output_exp_marker_tl
+    \@@_output_exponent_auxiii:nnn { \mathord } {#1} {#2}
+  }
+\cs_new:Npn \@@_output_exponent_auxiii:nnn #1#2#3
+  {
+    \tl_if_blank:nTF {#2}
+      {
+        \bool_lazy_and:nnT
+          { \l_@@_implicit_plus_bool }
+          { ! \str_if_eq_p:nn {#3} { 0 } }
+          { #1 + }
+      }
+      { \exp_not:n {#1#2} }
+    \@@_output_digits:nn { integer } {#3}
+  }
+%    \end{macrocode}
+%   A do-nothing marker used to allow shuffling of the output and so expandable
+%   operations for formatting.
+%    \begin{macrocode}
+\cs_new:Npn \@@_output_end: { }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \subsection{Miscellaneous tools}
+%
+% \begin{variable}{\l_@@_valid_tl}
+%   The list of valid tokens.
+%    \begin{macrocode}
+\tl_new:N \l_@@_valid_tl
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{macro}[TF]{\siunitx_if_number:n}
+%   Test if an entire number is valid: this means parsing the number but not
+%   returning anything.
+%    \begin{macrocode}
+\prg_new_protected_conditional:Npnn \siunitx_if_number:n #1
+  { T , F , TF }
+  {
+    \group_begin:
+      \bool_set_true:N \l_@@_validate_bool
+      \bool_set_true:N \l_siunitx_number_parse_bool
+      \siunitx_number_parse:nN {#1} \l_@@_parsed_tl
+      \tl_if_empty:NTF \l_@@_parsed_tl
+        {
+          \group_end:
+          \prg_return_false:
+        }
+        {
+          \group_end:
+          \prg_return_true:
+        }
+  }
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}[pTF, EXP]{\siunitx_if_number_token:N}
+% \begin{macro}[EXP]
+%   {
+%     \@@_if_token_auxi:NN   ,
+%     \@@_if_token_auxii:NN  ,
+%     \@@_if_token_auxiii:NN
+%   }
+%   A simple conditional to answer the question of whether a specific token is
+%   possibly valid in a number.
+%    \begin{macrocode}
+\prg_new_conditional:Npnn \siunitx_if_number_token:N #1
+  { p , T , F , TF }
+  {
+    \@@_token_auxi:NN #1
+      \l_siunitx_number_input_decimal_tl
+      \l_@@_input_uncert_close_tl
+      \l_siunitx_number_input_comparator_tl
+      \l_@@_input_digit_tl
+      \l_siunitx_number_input_exponent_tl
+      \l_@@_input_ignore_tl
+      \l_@@_input_uncert_open_tl
+      \l_siunitx_number_input_sign_tl
+      \l_@@_input_uncert_sign_tl
+      \q_recursion_tail
+      \q_recursion_stop
+  }
+\cs_new:Npn \@@_token_auxi:NN #1#2
+  {
+    \quark_if_recursion_tail_stop_do:Nn #2 { \prg_return_false: }
+    \@@_token_auxii:NN #1 #2
+    \@@_token_auxi:NN #1
+  }
+\cs_new:Npn \@@_token_auxii:NN #1#2
+  {
+    \exp_after:wN \@@_token_auxiii:NN \exp_after:wN #1
+      #2 \q_recursion_tail \q_recursion_stop
+  }
+\cs_new:Npn \@@_token_auxiii:NN #1#2
+  {
+    \quark_if_recursion_tail_stop:N #2
+    \str_if_eq:nnT {#1} {#2}
+      {
+        \use_i_delimit_by_q_recursion_stop:nw
+          {
+            \use_i_delimit_by_q_recursion_stop:nw
+              { \prg_return_true: }
+          }
+      }
+    \@@_token_auxiii:NN #1
+  }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% \subsection{Messages}
+%
+%    \begin{macrocode}
+\msg_new:nnnn { siunitx } { invalid-number }
+  { Invalid~number~'#1'. }
+  {
+    The~input~'#1'~could~not~be~parsed~as~a~number~following~the~
+    format~defined~in~module~documentation.
+  }
+\msg_new:nnnn { siunitx } { ambiguous-dropped-exponent }
+  { Potentially~ambiguous~dropping~of~exponent. }
+  {
+    The~option~"drop-exponent"~is~active~but~values~do~not~have~an~
+    exponent~fixed~by~"exponent-mode".~The~result~could~be~misleading.
+  }
+%    \end{macrocode}
+%
+% \subsection{Standard settings for module options}
+%
+% Some of these follow naturally from the point of definition
+% (\foreign{e.g.}~boolean variables are always |false| to begin with),
+% but for clarity everything is set here.
+%    \begin{macrocode}
+\keys_set:nn { siunitx }
+  {
+    bracket-ambiguous-numbers        = true                                   ,
+    bracket-negative-numbers         = false                                  ,
+    drop-exponent                    = false                                  ,
+    drop-uncertainty                 = false                                  ,
+    drop-zero-decimal                = false                                  ,
+    evaluate-expression              = false                                  ,
+    exponent-base                    = 10                                     ,
+    exponent-mode                    = input                                  ,
+    exponent-product                 = \times                                 ,
+    expression                       = #1                                     ,
+    fixed-exponent                   = 0                                      ,
+    digit-group-size                 = 3                                      ,
+    digit-group-first-size           = 3                                      ,
+    digit-group-other-size           = 3                                      ,
+    group-digits                     = all                                    ,
+    group-minimum-digits             = 5                                      ,
+    group-separator                  = \,                                     , % (
+    input-close-uncertainty          = )                                      ,
+    input-comparators                = { <=>\approx\ge\geq\gg\le\leq\ll\sim } ,
+    input-decimal-markers            = { ., }                                 ,
+    input-digits                     = 0123456789                             ,
+    input-exponent-markers           = dDeE                                   ,
+    input-ignore                     = \,                                     ,
+    input-open-uncertainty           = (                                      , % )
+    input-signs                      = +-\mp\pm                               ,
+    input-uncertainty-signs          = \pm                                    ,
+    minimum-decimal-digits           = 0                                      ,
+    minimum-integer-digits           = 0                                      ,
+    negative-color                   =                                        , % (
+    output-close-uncertainty         = )                                      ,
+    output-decimal-marker            = .                                      ,
+    output-open-uncertainty          = (                                      , % )
+    parse-numbers                    = true                                   ,
+    print-implicit-plus              = false                                  ,
+    print-unity-mantissa             = true                                   ,
+    print-zero-exponent              = false                                  ,
+    print-zero-integer               = true                                   ,
+    retain-explicit-decimal-marker   = false                                  ,
+    retain-explicit-plus             = false                                  ,
+    retain-negative-zero             = false                                  ,
+    retain-zero-uncertainty          = false                                  ,
+    round-half                       = up                                     ,
+    round-minimum                    = 0                                      ,
+    round-mode                       = none                                   ,
+    round-pad                        = true                                   ,
+    round-precision                  = 2                                      ,
+    round-zero-positive              = true                                   ,
+    tight-spacing                    = false                                  ,
+    uncertainty-descriptor-mode      = bracket-separator                      ,
+    uncertainty-descriptor-separator = \                                      ,
+    uncertainty-descriptors          =                                        ,
+    uncertainty-mode                 = compact                                ,
+    uncertainty-separator            =                                        ,
+    zero-decimal-as-symbol           = false                                  ,
+    zero-symbol                      = \mbox { --- }
+  }
+%    \end{macrocode}
+%
+%    \begin{macrocode}
+%</package>
+%    \end{macrocode}
+%
+% \end{implementation}
+%
+% \PrintIndex

@@ -1,0 +1,798 @@
+% \iffalse meta-comment
+%
+% File: siunitx.dtx Copyright (C) 2008-2019,2021,2022 Joseph Wright
+%
+% It may be distributed and/or modified under the conditions of the
+% LaTeX Project Public License (LPPL), either version 1.3c of this
+% license or (at your option) any later version.  The latest version
+% of this license is in the file
+%
+%    https://www.latex-project.org/lppl.txt
+%
+% This file is part of the "siunitx bundle" (The Work in LPPL)
+% and all files in that bundle must be distributed together.
+%
+% The released version of this bundle is available from CTAN.
+%
+% -----------------------------------------------------------------------
+%
+% The development version of the bundle can be found at
+%
+%    https://github.com/josephwright/siunitx
+%
+% for those people who are interested.
+%
+% -----------------------------------------------------------------------
+%
+%<*driver>
+\documentclass{l3doc}
+% The next line is needed so that \GetFileInfo will be able to pick up
+% version data
+\usepackage{siunitx}
+\begin{document}
+  \DocInput{\jobname.dtx}
+\end{document}
+%</driver>
+% \fi
+%
+% \GetFileInfo{siunitx.sty}
+%
+% \title{^^A
+%   \pkg{siunitx} -- Overall set up^^A
+%   \thanks{This file describes \fileversion,
+%     last revised \filedate.}^^A
+% }
+%
+% \author{^^A
+%  Joseph Wright^^A
+%  \thanks{^^A
+%    E-mail:
+%    \href{mailto:joseph.wright@morningstar2.co.uk}
+%      {joseph.wright@morningstar2.co.uk}^^A
+%   }^^A
+% }
+%
+% \date{Released \filedate}
+%
+% \maketitle
+%
+% \begin{documentation}
+%
+% \end{documentation}
+%
+% \begin{implementation}
+%
+% \section{\pkg{siunitx} implementation}
+%
+% Start the \pkg{DocStrip} guards.
+%    \begin{macrocode}
+%<*package>
+%    \end{macrocode}
+%
+% Identify the internal prefix (\LaTeX3 \pkg{DocStrip} convention).
+%    \begin{macrocode}
+%<@@=siunitx>
+%    \end{macrocode}
+%
+% \subsection{Initial set up}
+%
+%    \begin{macrocode}
+%<*init>
+%    \end{macrocode}
+%
+% Set up a couple of commands in recent-ish \LaTeXe{} releases.
+%    \begin{macrocode}
+\providecommand\DeclareRelease[3]{}
+\providecommand\DeclareCurrentRelease[2]{}
+%    \end{macrocode}
+%
+% Allow rollback to version~$2$: if we need to, version~$1$ could eventually
+% be added here too.
+%    \begin{macrocode}
+\DeclareRelease{2}{2010-05-23}{siunitx-v2.sty}
+\DeclareRelease{v2}{2010-05-23}{siunitx-v2.sty}
+\DeclareCurrentRelease{}{2021-05-17}
+%    \end{macrocode}
+%
+% Load only the essential support (\pkg{expl3}) \enquote{up-front}, and
+% only if required.
+%    \begin{macrocode}
+\@ifundefined{ExplLoaderFileDate}
+  {\RequirePackage{expl3}}
+  {}
+%    \end{macrocode}
+%
+% Make sure that the version of \pkg{l3kernel} in use is sufficiently new.
+% We use \cs{ExplFileDate} as \cs{@ifpackagelater} doesn't work for pre-loaded
+% \pkg{expl3} in the absence of the package.
+%    \begin{macrocode}
+\@ifl@t@r\ExplLoaderFileDate{2020-01-09}
+  {}
+  {%
+    \PackageError{siunitx}{Support package expl3 too old}
+      {%
+        You need to update your installation of the bundles 'l3kernel' and
+        'l3packages'.\MessageBreak
+        Loading~siunitx~will~abort!%
+      }%
+    \endinput
+  }%
+%    \end{macrocode}
+%
+% Identify the package and give the over all version information.
+%    \begin{macrocode}
+\ProvidesExplPackage {siunitx} {2022-11-16} {3.1.10}
+  {A comprehensive (SI) units package}
+%    \end{macrocode}
+%
+% \subsection{Safety checks}
+%
+% \begin{macro}{\@@_load_check:}
+%   There are a number of packages that are incompatible with \pkg{siunitx}
+%   as they cover the same concepts and in some cases define the same command
+%   names. These are all tested at the point of loading to try to trap
+%   issues, and a couple are also tested later as it's possible for them to
+%   load without an obvious error if \pkg{siunitx} was loaded first.
+%    \begin{macrocode}
+\msg_new:nnnn { siunitx } { incompatible-package }
+  { Package~'#1'~incompatible. }
+  { The~#1~package~and~siunitx~are~incompatible. }
+\cs_new_protected:Npn \@@_load_check:n #1
+  {
+    \@ifpackageloaded {#1}
+      { \msg_error:nnx { siunitx } { incompatible-package } {#1} }
+      { }
+  }
+\clist_map_function:nN
+  { SIunits , sistyle , units , unitsdef , fancyunits }
+  \@@_load_check:n
+\AtBeginDocument
+  {
+    \clist_map_function:nN { SIunits , sistyle , units }
+      \@@_load_check:n
+  }
+%    \end{macrocode}
+%\end{macro}
+%
+% \subsection{Provide a kernel command}
+%
+% \begin{macro}{\IfFormatAtLeastTF}
+%   Not present in older kernels: use the \LaTeXe{} mechanism as this is correct
+%   for this case.
+%    \begin{macrocode}
+\providecommand \IfFormatAtLeastTF { \@ifl@t@r \fmtversion }
+%    \end{macrocode}
+% \end{macro}
+%
+% \subsection{Top-level scratch space}
+%
+% \begin{macro}{\l_@@_tmp_tl}
+%   Scratch space for the interfaces.
+%    \begin{macrocode}
+\tl_new:N \l_@@_tmp_tl
+%    \end{macrocode}
+% \end{macro}
+%
+%    \begin{macrocode}
+%</init>
+%    \end{macrocode}
+%
+%    \begin{macrocode}
+%<*options>
+%    \end{macrocode}
+%
+% \subsection{Load time options}
+%
+% \begin{variable}{\l_@@_column_type_tl}
+%    \begin{macrocode}
+\keys_define:nn { siunitx }
+  {
+    table-column-type .tl_set:N =
+      \l_@@_column_type_tl
+  }
+\keys_set:nn { siunitx }
+  {
+    table-column-type = S
+  }
+%    \end{macrocode}
+% \end{variable}
+%
+% \subsection{Option handling}
+%
+% Some messages.
+%    \begin{macrocode}
+\msg_new:nnn { siunitx } { option-deprecated }
+  {
+    Option~"#1"~has~been~deprecated~in~this~release.\\ \\
+    Use~"#2"~as~a~replacement.
+  }
+%    \end{macrocode}
+%
+% \begin{variable}{\g_@@_deprecated_seq}
+%   Used to avoid repeatedly warning about deprecated options: needed at the
+%   top level.
+%    \begin{macrocode}
+\seq_new:N \g_@@_deprecated_seq
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{macro}{\@@_deprecated_info:nn}
+%   To avoid repeated messages.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_deprecated_info:nn #1#2
+  {
+    \seq_if_in:NnF \g_@@_deprecated_seq {#1}
+      { \msg_info:nnnn { siunitx } { option-deprecated } {#1} {#2} }
+    \seq_gput_right:Nn \g_@@_deprecated_seq {#1}
+  }
+%    \end{macrocode}
+% \end{macro}
+%
+%    \begin{macrocode}
+\IfFormatAtLeastTF { 2022-06-01 }
+  { \ProcessKeyOptions [ siunitx ] }
+  {
+    \RequirePackage { l3keys2e }
+    \ProcessKeysOptions { siunitx }
+  }
+%    \end{macrocode}
+%
+%    \begin{macrocode}
+%</options>
+%    \end{macrocode}
+%
+% \subsection{User interfaces}
+%
+%    \begin{macrocode}
+%<*interfaces>
+%    \end{macrocode}
+%
+% The user interfaces are defined in terms of documented code-level ones.
+% This is all done here, and will appear in the \file{.sty} file before the
+% relevant code. Things could be re-arranged by \pkg{DocStrip} but there is no
+% advantage.
+%
+% User level interfaces are all created by \pkg{ltcmd}/\pkg{xparse}.
+%    \begin{macrocode}
+\IfFormatAtLeastTF { 2020-10-01 }
+  { }
+  { \RequirePackage { xparse } }
+%    \end{macrocode}
+%
+% \subsubsection{Preamble commands}
+%
+% \begin{macro}
+%   {
+%     \DeclareSIPower     ,
+%     \DeclareSIPrefix    ,
+%     \DeclareSIQualifier ,
+%     \DeclareSIUnit
+%   }
+%   Pass data to the code layer.
+%    \begin{macrocode}
+\NewDocumentCommand \DeclareSIPower { +m +m m }
+  {
+    \siunitx_declare_power:NNn #1 #2 {#3}
+  }
+\NewDocumentCommand \DeclareSIPrefix { +m m m }
+  {
+    \siunitx_declare_prefix:Nnn #1 {#3} {#2}
+  }
+\NewDocumentCommand \DeclareSIQualifier { +m m }
+  {
+    \siunitx_declare_qualifier:Nn #1 {#2}
+  }
+\NewDocumentCommand \DeclareSIUnit { o +m m }
+  {
+    \IfNoValueTF {#1}
+      { \siunitx_declare_unit:Nn #2 {#3} }
+      { \siunitx_declare_unit:Nnn #2 {#3} {#1} }
+  }
+%    \end{macrocode}
+% \end{macro}
+%
+% \subsubsection{Document commands}
+%
+% \begin{macro}{\qty}
+%    \begin{macrocode}
+\AtBeginDocument
+  {
+    \@ifpackageloaded { physics }
+      {
+        \msg_new:nnn { siunitx } { physics-pkg }
+          {
+            Detected~the~"physics"~package: \\
+            omitting~definition~of~\token_to_str:N \qty.
+            \\ \\
+            If~you~want~to~use~\qty with~the~siunitx~definition,~add~
+            \\ \\
+            \iow_indent:n
+              {
+                \token_to_str:N \AtBeginDocument
+                  { 
+                    \token_to_str:N \RenewCommandCopy
+                      \token_to_str:N \qty \token_to_str:N \SI
+                  }
+              }
+            \\ \\
+            to~your~preamble.
+          }
+        \msg_warning:nn { siunitx } { physics-pkg }
+      }
+      { }
+  }
+\@ifpackageloaded { physics }
+  { \use_none:nnnn }
+  { }
+\NewDocumentCommand \qty { O { } m > { \TrimSpaces } m }
+  {
+    \mode_leave_vertical:
+    \group_begin:
+      \siunitx_unit_options_apply:n {#3}
+      \keys_set:nn { siunitx } {#1}
+      \siunitx_quantity:nn {#2} {#3}
+    \group_end:
+  }
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\ang, \num, \unit}
+%   All of a standard form: start a paragraph (if required), set local
+%   key values, do the formatting, print the result.
+%    \begin{macrocode}
+\NewDocumentCommand \ang { O { } > { \SplitArgument { 2 } { ; } } m }
+  {
+    \mode_leave_vertical:
+    \group_begin:
+      \keys_set:nn { siunitx } {#1}
+      \@@_angle:nnn #2
+    \group_end:
+  }
+\NewDocumentCommand \num { O { } m }
+  {
+    \mode_leave_vertical:
+    \group_begin:
+      \keys_set:nn { siunitx } {#1}
+      \siunitx_number_format:nN {#2} \l_@@_tmp_tl
+      \siunitx_print_number:V \l_@@_tmp_tl
+    \group_end:
+  }
+\NewDocumentCommand \unit { O { } > { \TrimSpaces } m }
+  {
+    \mode_leave_vertical:
+    \group_begin:
+      \siunitx_unit_options_apply:n {#2}
+      \keys_set:nn { siunitx } {#1}
+      \siunitx_unit_format:nN {#2} \l_@@_tmp_tl
+      \siunitx_print_unit:V \l_@@_tmp_tl
+    \group_end:
+  }
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}
+%   {\qtylist, \numlist, \qtyproduct, \numproduct, \qtyrange, \numproduct}
+%   Interfaces for compound values.
+%    \begin{macrocode}
+\NewDocumentCommand \qtylist
+  { O { } > { \SplitList { ; } } m > { \TrimSpaces } m }
+  {
+    \mode_leave_vertical:
+    \group_begin:
+      \siunitx_unit_options_apply:n {#3}
+      \keys_set:nn { siunitx } {#1}
+      \siunitx_quantity_list:nn {#2} {#3}
+    \group_end:
+  }
+\NewDocumentCommand \numlist { O { } > { \SplitList { ; } } m }
+  {
+    \mode_leave_vertical:
+    \group_begin:
+      \keys_set:nn { siunitx } {#1}
+      \siunitx_number_list:nn {#2}
+    \group_end:
+  }
+\NewDocumentCommand \qtyproduct
+  { O { } > { \SplitList { x } } m > { \TrimSpaces } m }
+  {
+    \mode_leave_vertical:
+    \group_begin:
+      \siunitx_unit_options_apply:n {#3}
+      \keys_set:nn { siunitx } {#1}
+      \siunitx_quantity_product:nn {#2} {#3}
+    \group_end:
+  }
+\NewDocumentCommand \numproduct
+  { O { } > { \SplitList { x } } > { \TrimSpaces } m }
+  {
+    \mode_leave_vertical:
+    \group_begin:
+      \keys_set:nn { siunitx } {#1}
+      \siunitx_number_product:n {#2}
+    \group_end:
+  }
+\NewDocumentCommand \qtyrange { O { } m m > { \TrimSpaces } m }
+  {
+    \mode_leave_vertical:
+    \group_begin:
+      \siunitx_unit_options_apply:n {#4}
+      \keys_set:nn { siunitx } {#1}
+      \siunitx_quantity_range:nnn {#2} {#3} {#4}
+    \group_end:
+  }
+\NewDocumentCommand \numrange { O { } m m }
+  {
+    \mode_leave_vertical:
+    \group_begin:
+      \keys_set:nn { siunitx } {#1}
+      \siunitx_number_range:nn {#2} {#3}
+    \group_end:
+  }
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\complexnum, \complexqty}
+%   Interfaces for complex numbers.
+%    \begin{macrocode}
+\use:e
+  {
+    \NewDocumentCommand \exp_not:N \complexnum
+      { O { } > { \SplitArgument { 1 } { \c_colon_str } } m }
+  }
+  {
+    \mode_leave_vertical:
+    \group_begin:
+      \keys_set:nn { siunitx } {#1}
+      \@@_complex_number_aux:nn #2
+    \group_end:
+  }
+\use:e
+  {
+    \NewDocumentCommand \exp_not:N \complexqty
+      { O { } > { \SplitArgument { 1 } { \c_colon_str } } m  m }
+  }
+  {
+    \mode_leave_vertical:
+    \group_begin:
+      \siunitx_unit_options_apply:n {#3}
+      \keys_set:nn { siunitx } {#1}
+      \@@_complex_quantity_aux:nnn #2 {#3}
+    \group_end:
+  }
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\tablenum}
+%   Slightly odd set up at present: we have to have the |\ignorespaces|.
+%    \begin{macrocode}
+\NewDocumentCommand \tablenum { O { } m }
+  {
+    \mode_leave_vertical:
+    \group_begin:
+      \keys_set:nn { siunitx } {#1}
+      \siunitx_cell_begin:w
+        \ignorespaces #2
+      \siunitx_cell_end:
+    \group_end:
+  }
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\sisetup}
+%   A very thin wrapper.
+%    \begin{macrocode}
+\NewDocumentCommand \sisetup { m }
+  { \keys_set:nn { siunitx } {#1} }
+%    \end{macrocode}
+% \end{macro}
+%
+% \subsection{\enquote{Glue} commands}
+%
+% \begin{macro}{\@@_angle:nnn}
+%   The document level interface for \cs{ang} needs some \enquote{glue} to
+%   work with the code-level API.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_angle:nnn #1#2#3
+  {
+    \tl_if_novalue:nTF {#2}
+      { \siunitx_angle:n {#1} }
+      {
+        \tl_if_novalue:nTF {#3}
+          { \siunitx_angle:nnn {#1} {#2} { } }
+          { \siunitx_angle:nnn {#1} {#2} {#3} }
+      }
+  }
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\@@_complex_number_aux:nn}
+% \begin{macro}{\@@_complex_quantity_aux:nnn}
+%   The same idea for complex values.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_complex_number_aux:nn #1#2
+  {
+    \tl_if_novalue:nTF {#2}
+      { \siunitx_complex_number:n {#1} }
+      { \siunitx_complex_number:nn {#1} {#2} }
+  }
+\cs_new_protected:Npn \@@_complex_quantity_aux:nnn #1#2#3
+  {
+    \tl_if_novalue:nTF {#2}
+      { \siunitx_complex_quantity:nn {#1} {#3} }
+      { \siunitx_complex_quantity:nnn {#1} {#2} {#3} }
+  }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% \subsection{Table column}
+%
+% User interfaces in tabular constructs are provided using the mechanisms from
+% the \pkg{array} package.
+%    \begin{macrocode}
+\RequirePackage { array }
+%    \end{macrocode}
+%
+% \begin{macro}{\@@_declare_column:Nnn}
+%   Creating numerical columns requires that these are declared before anything
+%   else in \cs{NC@list}: this is necessary to work with optional arguments.
+%   This means a bit of manual effort after the simple declaration of a new
+%   column type.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_declare_column:Nnn #1#2#3
+  {
+    \cs_if_exist:cT { NC@find@ #1 }
+      {
+        \cs_undefine:c { NC@find@ #1 }
+        \cs_set_protected:Npn \@@_tmp:w ##1 \NC@do #1 ##2 \q_stop
+          { \NC@list {##1##2} }
+        \exp_after:wN \@@_tmp:w \the \NC@list \q_stop
+        \msg_warning:nnn { siunitx } { column-overwritten } {#1}
+      }
+    \newcolumntype {#1} { }
+    \cs_set_protected:Npn \@@_tmp:w \NC@do ##1##2 \NC@do #1
+      { \NC@list { \NC@do ##1 \NC@do #1 ##2 } }
+    \exp_after:wN \@@_tmp:w \the \NC@list
+    \exp_args:NNc \renewcommand * { NC@rewrite@ #1 } [ 1 ] [ ]
+      {
+        \@temptokena \expandafter
+          {
+            \the \@temptokena
+            > {#2} c < {#3}
+          }
+        \NC@find
+      }
+  }
+\msg_new:nnn { siunitx } { column-overwritten }
+  { Tabular~column~type~"#1"~overwritten~with~siunitx~definition. }
+%    \end{macrocode}
+%   When \pkg{mdwtab} is loaded the syntax required is slightly different.
+%    \begin{macrocode}
+\AtBeginDocument
+  {
+    \@ifpackageloaded { mdwtab }
+      {
+        \cs_set_protected:Npn \@@_declare_column:Nnn #1#2#3
+          {
+            \cs_if_exist:cT { NC@find@ #1 }
+               {
+                 \cs_undefine:c { NC@find@ #1 }
+                 \msg_warning:nnn { siunitx } { column-overwritten } {#1}
+               }
+            \newcolumntype {#1} [ 1 ] [ ]
+              { > {#2} c < {#3} }
+           }
+      }
+      { }
+    \tl_map_inline:Nn \l_@@_column_type_tl
+      {
+        \@@_declare_column:Nnn #1
+          {
+            \keys_set:nn { siunitx } {##1}
+            \siunitx_cell_begin:w
+          }
+          { \siunitx_cell_end: }
+      }
+  }
+%    \end{macrocode}
+% \end{macro}
+%
+% \subsection{Document commands in bookmarks}
+%
+% In bookmarks, the \pkg{siunitx} document commands need to produce simple
+% strings that represent their input as far as possible.
+%
+% \begin{macro}{\@@_bookmark_cmd:Nn}
+%   To keep things fast, expandable versions of the document command are
+%   created only once. As here we are at the top-level for internal names,
+%   we can use the various parts of \pkg{siunitx-compound} that would otherwise
+%   be inaccessible.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_bookmark_cmd:Nnn #1#2#3
+  {
+    \exp_args:Nc \DeclareExpandableDocumentCommand
+      { \cs_to_str:N #1 \c_space_tl ( pdfstring ~ context ) }
+      {#2} {#3}
+  }
+\@@_bookmark_cmd:Nnn \qty { o m m } { #2 ~ #3 }
+\@@_bookmark_cmd:Nnn \ang { m } { \@@_angle:n {#1} }
+\@@_bookmark_cmd:Nnn \num { o m } { #2 }
+\@@_bookmark_cmd:Nnn \unit { o m } { #2 }
+\@@_bookmark_cmd:Nnn \numlist { o m }
+  {
+    \@@_list_use:nnVVV {#2} { }
+      \l_siunitx_list_separator_pair_tl
+      \l_siunitx_list_separator_tl
+      \l_siunitx_list_separator_final_tl
+  }
+\@@_bookmark_cmd:Nnn \qtylist { o m m }
+  {
+    \@@_list_use:nnVVV {#2} {#3}
+      \l_siunitx_list_separator_pair_tl
+      \l_siunitx_list_separator_tl
+      \l_siunitx_list_separator_final_tl
+  }
+\@@_bookmark_cmd:Nnn \numproduct { o m } { }
+\@@_bookmark_cmd:Nnn \qtyproduct { o m m } { }
+\@@_bookmark_cmd:Nnn \numrange { o m m }
+  { #2 \tl_use:N \l_siunitx_range_phrase_tl #3 }
+\@@_bookmark_cmd:Nnn \qtyrange { o m m m }
+  { #2 ~ #4 \tl_use:N \l_siunitx_range_phrase_tl #3 ~ #4 }
+%    \end{macrocode}
+% \end{macro}
+% We also need the v2 names.
+%    \begin{macrocode}
+\@@_bookmark_cmd:Nnn \si { o m } { #2 }
+\@@_bookmark_cmd:Nnn \SI { o m O { } m } { #3 #2 ~ #4 }
+\@@_bookmark_cmd:Nnn \SIlist { o m m }
+  {
+    \@@_list_use:nnVVV {#2} {#3}
+      \l_siunitx_list_separator_pair_tl
+      \l_siunitx_list_separator_tl
+      \l_siunitx_list_separator_final_tl
+  }
+\@@_bookmark_cmd:Nnn \SIrange { o m m m }
+  { #2 ~ #4 \tl_use:N \l_siunitx_range_phrase_tl #3 ~ #4 }
+%    \end{macrocode}
+%
+% \begin{variable}{\c_@@_bookmark_seq}
+%   Commands usable in bookmarks
+%    \begin{macrocode}
+\seq_const_from_clist:Nn \c_@@_bookmark_seq
+  {
+    \ang , \qty , \num , \unit ,
+    \numlist , \qtylist ,
+    \numrange , \qtyrange ,
+    \si , \SI , \SIlist , \SIrange
+  }
+%    \end{macrocode}
+% \end{variable}
+%
+% Activate the document commands here: the unit macros are handled in
+% \pkg{siunitx-final}.
+%    \begin{macrocode}
+\AtBeginDocument
+  {
+    \@ifpackageloaded { hyperref }
+      {
+        \pdfstringdefDisableCommands
+          {
+            \seq_map_inline:Nn \c_@@_bookmark_seq
+              {
+                \cs_set_eq:Nc #1
+                  { \cs_to_str:N #1 \c_space_tl ( pdfstring ~ context ) }
+              }
+          }
+        \pdfstringdefDisableCommands
+          {
+            \siunitx_unit_pdfstring_context:
+            \cs_if_exist:NT \FB@fg { \def \fg { \FB@fg } }
+            \edef \H
+              {
+                \exp_not:c { PU-cmd }
+                \exp_not:N \H
+                \exp_not:c { PU \token_to_str:N \H }
+              }
+          }
+      }
+      { }
+  }
+%    \end{macrocode}
+%
+% \begin{macro}[EXP]{\@@_angle:n}
+% \begin{macro}[EXP]{\@@_angle:w}
+%   Expandable splitting of the angle: simply enough, also outputs the
+%    \begin{macrocode}
+\cs_new:Npn \@@_angle:n #1
+  { \@@_angle:w #1 ; ; ; \q_stop }
+\cs_new:Npn \@@_angle:w #1 ; #2 ; #3 ; #4 \q_stop
+  {
+    \tl_if_blank:nF {#1}
+      { #1 \degree }
+    \tl_if_blank:nF {#2}
+      {
+        \tl_if_blank:nF {#1} { \c_space_tl }
+        #2 \arcminute
+      }
+    \tl_if_blank:nF {#3}
+      {
+        \tl_if_blank:nF {#1#2} { \c_space_tl }
+        #3 \arcsecond
+      }
+  }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}[EXP]
+%   {\@@_list_use:nnnnn, \@@_list_use:nnVVV, \@@_list_use_aux:nnnnn}
+% \begin{macro}[EXP]{\@@_list_use_auxi:w}
+% \begin{macro}[EXP]{\@@_list_use_auxii:nnw, \@@_list_use_auxiii:nnw}
+% \begin{macro}[EXP]{\@@_list_count:n}
+% \begin{macro}[EXP]{\@@_list_count:w}
+%   Copies of the ideas in the \pkg{l3clist} module but using |;| as a list
+%   separator. The functions have to be extended to allow for a unit argument.
+%    \begin{macrocode}
+\cs_new:Npn \@@_list_use:nnnnn #1#2#3#4#5
+  {
+    \tl_if_blank:nTF {#2}
+      { \@@_list_use_aux:nnnnn {#1} { } }
+      { \@@_list_use_aux:nnnnn {#1} { ~ #2 } }
+        {#3} {#4} {#5}
+  }
+\cs_generate_variant:Nn \@@_list_use:nnnnn { nnVVV }
+\cs_new:Npn \@@_list_use_aux:nnnnn #1#2#3#4#5
+  {
+    \int_case:nnF { \@@_list_count:n {#1} }
+      {
+        { 0 } { }
+        { 1 } { \@@_list_use_auxi:nw {#2} #1 ; ; { } }
+        { 2 } { \@@_list_use_auxi:nw {#2} #1 ; {#3} }
+      }
+      {
+        \@@_list_use_auxii:nnw {#2} { } #1 ;
+          \q_mark ; { \@@_list_use_auxii:nnw {#2} {#4} }
+          \q_mark ; { \@@_list_use_auxiii:nnw {#2} {#5} }
+          \q_stop { }
+      }
+  }
+\cs_new:Npn \@@_list_use_auxi:nw #1#2 ; #3 ; #4
+  { #2 #1 #4 #3 \tl_if_blank:nF {#3} {#1} }
+\cs_new:Npn \@@_list_use_auxii:nnw
+  #1#2#3 ; #4 ; #5 ; #6 \q_mark ; #7#8 \q_stop #9
+  { #7 {#4} ; {#5} ; #6 \q_mark ; {#7} #8 \q_stop { #9 #2 #3 #1 } }
+\cs_new:Npn \@@_list_use_auxiii:nnw #1#2#3 ; #4 \q_stop #5
+  { #5 #2 #3 #1 }
+\cs_new:Npx \@@_list_count:n #1
+  {
+    \exp_not:N \int_eval:n
+      {
+        0
+        \exp_not:N \@@_list_count:w \c_space_tl
+        #1 \exp_not:n { ; \q_recursion_tail ; \q_recursion_stop }
+      }
+  }
+\cs_new:Npx \@@_list_count:w #1 ;
+  {
+    \exp_not:n { \exp_args:Nf \quark_if_recursion_tail_stop:n } {#1}
+    \exp_not:N \tl_if_blank:nF {#1} { + 1 }
+    \exp_not:N \@@_list_count:w \c_space_tl
+  }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+%    \begin{macrocode}
+%</interfaces>
+%    \end{macrocode}
+%
+%    \begin{macrocode}
+%</package>
+%    \end{macrocode}
+%
+% \end{implementation}
+%
+% \PrintIndex

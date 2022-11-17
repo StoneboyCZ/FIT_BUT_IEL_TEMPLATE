@@ -1,0 +1,3022 @@
+% \iffalse meta-comment
+%
+% File: siunitx-unit.dtx Copyright (C) 2014-2022 Joseph Wright
+%
+% It may be distributed and/or modified under the conditions of the
+% LaTeX Project Public License (LPPL), either version 1.3c of this
+% license or (at your option) any later version.  The latest version
+% of this license is in the file
+%
+%    https://www.latex-project.org/lppl.txt
+%
+% This file is part of the "siunitx bundle" (The Work in LPPL)
+% and all files in that bundle must be distributed together.
+%
+% The released version of this bundle is available from CTAN.
+%
+% -----------------------------------------------------------------------
+%
+% The development version of the bundle can be found at
+%
+%    https://github.com/josephwright/siunitx
+%
+% for those people who are interested.
+%
+% -----------------------------------------------------------------------
+%
+%<*driver>
+\documentclass{l3doc}
+\ExplSyntaxOn
+\makeatletter
+\NewDocumentCommand \acro { m }
+  {
+    \textsc
+      {
+        \exp_args:NV \tl_if_head_eq_charcode:nNTF \f@series { m }
+          { \text_lowercase:n }
+          { \use:n }
+            {#1}
+      }
+  }
+\makeatother
+\ExplSyntaxOff
+\ProvideDocumentCommand\foreign{m}{\textit{#1}}
+% The next line is needed so that \GetFileInfo will be able to pick up
+% version data
+\usepackage{siunitx}
+\begin{document}
+  \DocInput{\jobname.dtx}
+\end{document}
+%</driver>
+% \fi
+%
+% \GetFileInfo{siunitx.sty}
+%
+% \title{^^A
+%   \pkg{siunitx-unit} -- Parsing and formatting units^^A
+%   \thanks{This file describes \fileversion,
+%     last revised \filedate.}^^A
+% }
+%
+% \author{^^A
+%  Joseph Wright^^A
+%  \thanks{^^A
+%    E-mail:
+%    \href{mailto:joseph.wright@morningstar2.co.uk}
+%      {joseph.wright@morningstar2.co.uk}^^A
+%   }^^A
+% }
+%
+% \date{Released \filedate}
+%
+% \maketitle
+%
+% \begin{documentation}
+%
+% This submodule is dedicated to formatting physical units. The main function,
+% \cs{siunitx_unit_format:nN}, takes user input specifying physical units and
+% converts it into a formatted token list suitable for typesetting in math
+% mode. While the formatter will deal correctly with \enquote{literal} user
+% input, the key strength of the module is providing a method to describe
+% physical units in a \enquote{symbolic} manner. The output format of these
+% symbolic units can then be controlled by a number of key--value options
+% made available by the module.
+%
+% A small number of \LaTeXe{} math mode commands are assumed to be available
+% as part of the formatted output. The \cs{mathchoice} command
+% (normally the \TeX{} primitive) is needed when using different settings
+% for inline and siplay |per-mode|. The commands \cs{frac}, \cs{mathrm},
+% \cs{mbox}, \verb*|\ | and \cs{,} are used by the standard module settings.
+% For the display of colored (highlighted) and cancelled units, the commands
+% \cs{textcolor} and \cs{cancel} are assumed to be available.
+%
+% \section{Formatting units}
+%
+% \begin{function}{\siunitx_unit_format:nN}
+%   \begin{syntax}
+%     \cs{siunitx_unit_format:nN} \Arg{units} \meta{tl~var}
+%   \end{syntax}
+%   This function converts the input \meta{units} into a processed
+%   \meta{tl~var} which can then be inserted in math mode to typeset the
+%   material. Where the \meta{units} are given in symbolic form, described
+%   elsewhere, this formatting process takes place in two stages: the
+%   \meta{units} are parsed into a structured form before the generation
+%   of the appropriate output form based on the active settings. When the
+%   \meta{units} are given as literals, processing is minimal: the
+%   characters |.| and |~| are converted to unit products (boundaries).
+%   In both cases, the result is a series of tokens intended to be typeset
+%   in math mode with appropriate choice of font for typesetting of the
+%   textual parts.
+%
+%   For example,
+%   \begin{verbatim}
+%     \siunitx_unit_format:nN { \kilo \metre \per \second } \l_tmpa_tl
+%   \end{verbatim}
+%   will, with standard settings, result in \cs{l_tmpa_tl} being set to
+%   \begin{verbatim}
+%     \mathrm{km}\,\mathrm{s}^{-1}
+%   \end{verbatim}
+% \end{function}
+%
+% \begin{function}{\siunitx_unit_format_extract_prefixes:nNN}
+%   \begin{syntax}
+%     \cs{siunitx_unit_format_extract_prefixes:nNN} \Arg{units} \meta{tl~var} \meta{fp~var}
+%   \end{syntax}
+%   This function formats the \meta{units} in the same way as described for
+%   \cs{siunitx_unit_format:nN}. When the input is given in symbolic form,
+%   any decimal unit prefixes will be extracted and the overall power of
+%   ten that these represent will be stored in the \meta{fp~var}.
+%
+%   For example,
+%   \begin{verbatim}
+%     \siunitx_unit_format_extract_prefixes:nNN { \kilo \metre \per \second }
+%       \l_tmpa_tl \l_tmpa_fp
+%   \end{verbatim}
+%   will, with standard settings, result in \cs{l_tmpa_tl} being set to
+%   \begin{verbatim}
+%     \mathrm{m}\,\mathrm{s}^{-1}
+%   \end{verbatim}
+%   with \cs{l_tmpa_fp} taking value~$3$. Note that the latter is a floating
+%   point variable: it is possible for non-integer values to be obtained here.
+% \end{function}
+%
+% \begin{function}{\siunitx_unit_format_combine_exponent:nnN}
+%   \begin{syntax}
+%     \cs{siunitx_unit_format_combine_exponent:nnN} \Arg{units} \Arg{exponent} \meta{tl~var}
+%   \end{syntax}
+%   This function formats the \meta{units} in the same way as described for
+%   \cs{siunitx_unit_format:nN}. The \meta{exponent} is combined with any
+%   prefix for the \emph{first} unit of the \meta{units}, and an updated
+%   prefix is introduced.
+%
+%   For example,
+%   \begin{verbatim}
+%     \siunitx_unit_format_combine_exponent:nnN { \metre \per \second }
+%       { 3 } \l_tmpa_tl
+%   \end{verbatim}
+%   will, with standard settings, result in \cs{l_tmpa_tl} being set to
+%   \begin{verbatim}
+%     \mathrm{km}\,\mathrm{s}^{-1}
+%   \end{verbatim}
+% \end{function}
+%
+% \begin{function}
+%   {
+%     \siunitx_unit_format_multiply:nnN ,
+%     \siunitx_unit_format_multiply_extract_prefixes:nnNN ,
+%     \siunitx_unit_format_multiply_combine_exponent:nnnN
+%   }
+%   \begin{syntax}
+%     \cs{siunitx_unit_format_multiply:nnN} \Arg{units} \Arg{factor} \meta{tl~var}
+%     \cs{siunitx_unit_format_multiply_extract_prefixes:nnNN}
+%       \Arg{units} \Arg{factor} \meta{tl~var} \meta{fp~var}
+%     \cs{siunitx_unit_format_multiply_combine_exponent:nnnN}
+%       \Arg{units} \Arg{factor} \Arg{exponent} \meta{tl~var}
+%   \end{syntax}
+%   These function formats the \meta{units} in the same way as described for
+%   \cs{siunitx_unit_format:nN}. The units are multiplied by the \meta{factor},
+%   and further processing takes place as previously described.
+%
+%   For example,
+%   \begin{verbatim}
+%     \siunitx_unit_format_multiply:nnN { \metre \per \second }
+%       { 3 } \l_tmpa_tl
+%   \end{verbatim}
+%   will, with standard settings, result in \cs{l_tmpa_tl} being set to
+%   \begin{verbatim}
+%     \mathrm{km}^{3}\,\mathrm{s}^{-3}
+%   \end{verbatim}
+% \end{function}
+%
+% \section{Defining symbolic units}
+%
+% \begin{function}{\siunitx_declare_prefix:Nnn, \siunitx_declare_prefix:Nnx}
+%   \begin{syntax}
+%     \cs{siunitx_declare_prefix:Nnn} \meta{prefix} \Arg{power} \Arg{symbol}
+%   \end{syntax}
+%   Defines a symbolic \meta{prefix} (which should be a control sequence
+%   such as |\kilo|) to be converted by the parser to the \meta{symbol}.
+%   The latter should consist of literal content (\foreign{e.g.}~|k|).
+%   In literal mode the \meta{symbol} will be typeset directly. The prefix
+%   should represent an integer \meta{power} of $10$, and this information
+%   may be used to convert from one or more \meta{prefix} symbols to an
+%   overall power applying to a unit. See also
+%   \cs{siunitx_declare_prefix:Nn}.
+% \end{function}
+%
+% \begin{function}{\siunitx_declare_prefix:Nn}
+%   \begin{syntax}
+%     \cs{siunitx_declare_prefix:Nn} \meta{prefix} \Arg{symbol}
+%   \end{syntax}
+%   Defines a symbolic \meta{prefix} (which should be a control sequence
+%   such as |\kilo|) to be converted by the parser to the \meta{symbol}.
+%   The latter should consist of literal content (\foreign{e.g.}~|k|).
+%   In literal mode the \meta{symbol} will be typeset directly. In contrast
+%   to \cs{siunitx_declare_prefix:Nnn}, there is no assumption about the
+%   mathematical nature of the \meta{prefix}, \foreign{i.e.}~the prefix may
+%   represent a power of any base. As a result, no conversion of the
+%   \meta{prefix} to a numerical power will be possible.
+% \end{function}
+%
+% \begin{function}{\siunitx_declare_power:NNn}
+%   \begin{syntax}
+%     \cs{siunitx_declare_power:NNn} \meta{pre-power} \meta{post-power} \Arg{value}
+%   \end{syntax}
+%   Defines \emph{two} symbolic \meta{powers} (which should be control
+%   sequences such as |\squared|) to be converted by the parser to the
+%   \meta{value}. The latter should be an integer or floating point number in
+%   the format defined for \pkg{l3fp}. Powers may precede a unit or be give
+%   after it: both forms are declared at once, as indicated by the argument
+%   naming. In literal mode, the \meta{value} will be applied as
+%   a superscript to either the next token in the input (for the
+%   \meta{pre-power}) or appended to the previously-typeset material
+%   (for the \meta{post-power}).
+% \end{function}
+%
+% \begin{function}{\siunitx_declare_qualifier:Nn}
+%   \begin{syntax}
+%     \cs{siunitx_declare_qualifier:Nn} \meta{qualifier} \Arg{meaning}
+%   \end{syntax}
+%   Defines a symbolic \meta{qualifier} (which should be a control sequence
+%   such as |\catalyst|) to be converted by the parser to the \meta{meaning}.
+%   The latter should consist of literal content (\foreign{e.g.}~|cat|). In
+%   literal mode the \meta{meaning} will be typeset following a space after
+%   the unit to which it applies.
+% \end{function}
+%
+% \begin{function}
+%   {
+%     \siunitx_declare_unit:Nn,
+%     \siunitx_declare_unit:Nx,
+%     \siunitx_declare_unit:Nnn,
+%     \siunitx_declare_unit:Nxn
+%   }
+%   \begin{syntax}
+%     \cs{siunitx_declare_unit:Nn}  \meta{unit} \Arg{meaning}
+%     \cs{siunitx_declare_unit:Nnn} \meta{unit} \Arg{meaning} \Arg{options}
+%   \end{syntax}
+%   Defines a symbolic \meta{unit} (which should be a control sequence
+%   such as |\kilogram|) to be converted by the parser to the \meta{meaning}.
+%   The latter may consist of literal content (\foreign{e.g.}~|kg|), other
+%   symbolic unit commands (\foreign{e.g.}~|\kilo\gram|) or a mixture of the two.
+%   In literal mode the \meta{meaning} will be typeset directly. The version
+%   taking an \meta{options} argument may be used to support per-unit
+%   options: these are applied at the top level or using
+%   \cs{siunitx_unit_options_apply:n}.
+% \end{function}
+%
+% \begin{variable}{\l_siunitx_unit_font_tl}
+%    The font function which is applied to the text of units when constructing
+%    formatted units: set by |font-command|.
+% \end{variable}
+%
+% \begin{variable}{\l_siunitx_unit_fraction_tl}
+%    The fraction function which is applied whne constructing fractional units:
+%    set by |fraction-command|.
+% \end{variable}
+%
+% \begin{variable}{\l_siunitx_unit_symbolic_seq}
+%   This sequence contains all of the symbolic names defined:
+%   these will be in the form of control sequences such as |\kilogram|.
+%   The order of the sequence is unimportant. This includes prefixes and
+%   powers as well as units themselves.
+% \end{variable}
+%
+% \begin{variable}{\l_siunitx_unit_seq}
+%   This sequence contains all of the symbolic \emph{unit} names defined:
+%   these will be in the form of control sequences such as |\kilogram|.
+%   In contrast to \cs{l_siunitx_unit_symbolic_seq}, it \emph{only} holds
+%   units themselves
+% \end{variable}
+%
+% \section{Per-unit options}
+%
+% \begin{function}{\siunitx_unit_options_apply:n}
+%   \begin{syntax}
+%     \cs{siunitx_unit_options_apply:n} \meta{unit(s)}
+%   \end{syntax}
+%   Applies any unit-specific options set up using
+%   \cs{siunitx_declare_unit:Nnn}. This allows there use outside of unit
+%   formatting, for example to influence spacing in quantities. The options
+%   are applied only once at a given group level, which allows for user
+%   over-ride \foreign{via} |\keys_set:nn { siunitx } { ... }|.
+% \end{function}
+%
+% \section{Units in (PDF) strings}
+%
+% \begin{function}{\siunitx_unit_pdfstring_context:}
+%   \begin{syntax}
+%     \cs{group_begin:}
+%       \cs{siunitx_unit_pdfstring_context:}
+%       \meta{Expansion context} \meta{units}
+%     \cs{group_end:}
+%   \end{syntax}
+%   Sets symbol unit macros to generate text directly. This is needed in
+%   expansion contexts where units must be converted to simple text. This
+%   function is itself not expandable, so must be using within a
+%   surrounding group as show in the example.
+% \end{function}
+%
+% \section{Pre-defined symbolic unit components}
+%
+% The unit parser is defined to recognise a number of pre-defined units,
+% prefixes and powers, and also interpret a small selection of
+% \enquote{generic} symbolic parts.
+%
+% Broadly, the pre-defined units are those defined by the \textsc{bipm} in the
+% documentation for the \emph{International System of Units}
+% (\acro{SI})~\cite{BIPM}. As far as possible, the names given to the command
+% names for units are those used by the \acro{bipm}, omitting spaces and using
+% only \acro{ASCII} characters. The standard symbols are also taken from the
+% same documentation. In the following documentation, the order of the
+% description of units broadly follows the \acro{SI}~Brochure.
+%
+% \begin{function}
+%   {
+%     \kilogram ,
+%     \metre    ,
+%     \meter    ,
+%     \mole     ,
+%     \kelvin   ,
+%     \candela  ,
+%     \second   ,
+%     \ampere
+%   }
+%   The base units as defined in the \acro{SI} Brochure~\cite{base-units}.
+%   Notice that \cs{meter} is defined as an alias for \cs{metre} as the former
+%   spelling is common in the US (although the latter is the official spelling).
+% \end{function}
+%
+% \begin{function}{\gram}
+%   The base unit \cs{kilogram} is defined using an \acro{SI} prefix: as such
+%   the (derived) unit \cs{gram} is required by the module to correctly produce
+%   output for the \cs{kilogram}.
+% \end{function}
+%
+% \begin{function}
+%   {
+%     \yocto ,
+%     \zepto ,
+%     \atto  ,
+%     \femto ,
+%     \pico  ,
+%     \nano  ,
+%     \micro ,
+%     \milli ,
+%     \centi ,
+%     \deci  ,
+%     \deca  ,
+%     \deka  ,
+%     \hecto ,
+%     \kilo  ,
+%     \mega  ,
+%     \giga  ,
+%     \tera  ,
+%     \peta  ,
+%     \exa   ,
+%     \zetta ,
+%     \yotta
+%   }
+%   Prefixes, all of which are integer powers of $10$: the powers are stored
+%   internally by the module and can be used for conversion from prefixes to
+%   their numerical equivalent. These prefixes are documented in Section~3.1
+%   of the \acro{SI}~Brochure.
+%
+%   Note that the \cs{kilo} prefix is required to
+%   define the base \cs{kilogram} unit. Also note the two spellings available
+%   for \cs{deca}/\cs{deka}.
+% \end{function}
+%
+% \begin{function}
+%   {
+%     \becquerel     ,
+%     \degreeCelsius ,
+%     \coulomb       ,
+%     \farad         ,
+%     \gray          ,
+%     \hertz         ,
+%     \henry         ,
+%     \joule         ,
+%     \katal         ,
+%     \lumen         ,
+%     \lux           ,
+%     \newton        ,
+%     \ohm           ,
+%     \pascal        ,
+%     \radian        ,
+%     \siemens       ,
+%     \sievert       ,
+%     \steradian     ,
+%     \tesla         ,
+%     \volt          ,
+%     \watt          ,
+%     \weber
+%   }
+%   The defined \acro{SI}~units with defined names and symbols, as given in
+%   Table~4 of the \acro{SI}~Brochure. Notice that the names
+%   of the units are lower case with the exception of \cs{degreeCelsius}, and
+%   that this unit name includes \enquote{degree}.
+% \end{function}
+%
+% \begin{function}
+%   {
+%     \astronomicalunit ,
+%     \bel              ,
+%     \dalton           ,
+%     \day              ,
+%     \decibel          ,
+%     \electronvolt     ,
+%     \hectare          ,
+%     \hour             ,
+%     \litre            ,
+%     \liter            ,
+%     \neper            ,
+%     \minute           ,
+%     \tonne
+%   }
+%   Units accepted for use with the \acro{SI}: here \cs{minute} is a unit of
+%   time not of plane angle. These units are taken from Table~8 of the
+%   \acro{SI}~Brochure.
+%
+%   For the unit \cs{litre}, both |l| and |L| are listed
+%   as acceptable symbols: the latter is the standard setting of the module.
+%   The alternative spelling \cs{liter} is also given for this unit for US
+%   users (as with \cs{metre}, the official spelling is \enquote{re}).
+% \end{function}
+%
+% \begin{function}
+%   {
+%     \arcminute ,
+%     \arcsecond ,
+%     \degree
+%   }
+%   Units for plane angles accepted for use with the \acro{SI}: to avoid a
+%   clash with units for time, here \cs{arcminute} and \cs{arcsecond} are
+%   used in place of \cs{minute} and \cs{second}. These units are taken from
+%   Table~8 of the \acro{SI}~Brochure.
+% \end{function}
+%
+% \begin{function}{\percent}
+%   The mathematical concept of percent, usable with the \acro{SI} as detailed
+%   in Section~5.4.7 of the \acro{SI}~Brochure.
+% \end{function}
+%
+% \begin{function}{\square, \cubic}
+%   \begin{syntax}
+%     \cs{square} \meta{prefix} \meta{unit}
+%     \cs{cubic} \meta{prefix} \meta{unit}
+%   \end{syntax}
+%   Pre-defined unit powers which apply to the next \meta{prefix}/\meta{unit}
+%   combination.
+% \end{function}
+%
+% \begin{function}{\squared, \cubed}
+%   \begin{syntax}
+%     \meta{prefix} \meta{unit} \cs{squared}
+%     \meta{prefix} \meta{unit} \cs{cubed}
+%   \end{syntax}
+%   Pre-defined unit powers which apply to the preceding
+%   \meta{prefix}/\meta{unit} combination.
+% \end{function}
+%
+% \begin{function}{\per}
+%   \begin{syntax}
+%     \cs{per} \meta{prefix} \meta{unit} \meta{power}
+%   \end{syntax}
+%   Indicates that the next \meta{prefix}/\meta{unit}/\meta{power} combination
+%   is reciprocal, \foreign{i.e.}~raises it to the power $-1$. This symbolic
+%   representation may be applied in addition to a \cs{power}, and will work
+%   correctly if the \cs{power} itself is negative. In literal mode \cs{per}
+%   will print a slash (\enquote{$/$}).
+% \end{function}
+%
+% \begin{function}{\cancel}
+%   \begin{syntax}
+%     \cs{cancel} \meta{prefix} \meta{unit} \meta{power}
+%   \end{syntax}
+%   Indicates that the next \meta{prefix}/\meta{unit}/\meta{power} combination
+%   should be \enquote{cancelled out}. In the parsed output, the entire unit
+%   combination will be given as the argument to a function \cs{cancel}, which
+%   is assumed to be available at a higher level. In literal mode, the same
+%   higher-level \cs{cancel} will be applied to the next token. It is the
+%   responsibility of the calling code to provide an appropriate definition
+%   for \cs{cancel} outside of the scope of the unit parser.
+% \end{function}
+%
+% \begin{function}{\highlight}
+%   \begin{syntax}
+%     \cs{highlight} \Arg{color} \meta{prefix} \meta{unit} \meta{power}
+%   \end{syntax}
+%   Indicates that the next \meta{prefix}/\meta{unit}/\meta{power} combination
+%   should be highlighted in the specified \meta{color}. In the parsed output,
+%   the entire unit combination will be given as the argument to a function
+%   \cs{textcolor}, which is assumed to be available at a higher level. In
+%   literal mode, the same higher-level \cs{textcolor} will be applied to the
+%   next token. It is the responsibility of the calling code to provide an
+%   appropriate definition for \cs{textcolor} outside of the scope of the unit
+%   parser.
+% \end{function}
+%
+% \begin{function}{\of}
+%   \begin{syntax}
+%     \meta{prefix} \meta{unit} \meta{power} \cs{of} \Arg{qualifier}
+%   \end{syntax}
+%   Indicates that the \meta{qualifier} applies to the current
+%   \meta{prefix}/\meta{unit}/\meta{power} combination. In parsed mode, the
+%   display of the result will depend upon module options. In literal mode,
+%   the \meta{qualifier} will be printed in parentheses following the preceding
+%   \meta{unit} and a full-width space.
+% \end{function}
+%
+% \begin{function}{\raiseto, \tothe}
+%   \begin{syntax}
+%     \cs{raiseto} \Arg{power} \meta{prefix} \meta{unit}
+%     \meta{prefix} \meta{unit} \cs{tothe} \Arg{power}
+%   \end{syntax}
+%   Indicates that the \meta{power} applies to the current
+%   \meta{prefix}/\meta{unit} combination. As shown, \cs{raiseto} applies to
+%   the next \meta{unit} whereas \cs{tothe} applies to the preceding unit. In
+%   literal mode the \cs{power} will be printed as a superscript attached to
+%   the next token (\cs{raiseto}) or preceding token (\cs{tothe}) as
+%   appropriate.
+% \end{function}
+%
+% \subsection{Key--value options}
+%
+% The options defined by this submodule are available within the \pkg{l3keys}
+% |siunitx| tree.
+%
+% \begin{function}{bracket-unit-denominator}
+%   \begin{syntax}
+%     |bracket-unit-denominator| = |true|\verb"|"|false|
+%   \end{syntax}
+%   Switch to determine whether brackets are added to the denominator part of
+%   a unit when printed using inline fractional form (with |per-mode| as
+%   |repeated-symbol| or |symbol|). The standard setting is |true|.
+% \end{function}
+%
+% \begin{function}{extract-mass-in-kilograms}
+%   \begin{syntax}
+%     |extract-mass-in-kilograms| = |true|\verb"|"|false|
+%   \end{syntax}
+%   Determines whether prefix extraction treats kilograms as a base unit; when
+%   set |false|, grams are used. The standard setting is |true|.
+% \end{function}
+%
+% \begin{function}{forbid-literal-units}
+%   \begin{syntax}
+%     |forbid-literal-units| = |true|\verb"|"|false|
+%   \end{syntax}
+%   Switch which determines if literal units are allowed when parsing is
+%   active; does not apply when |parse-units| is |false|.
+% \end{function}
+%
+% \begin{function}{fraction-command}
+%   \begin{syntax}
+%     |fraction-command| = \meta{command}
+%   \end{syntax}
+%   Command used to create fractional output when |per-mode| is set to
+%   |fraction|. The standard setting is |\frac|.
+% \end{function}
+%
+% \begin{function}{inter-unit-product}
+%   \begin{syntax}
+%     |inter-unit-product| = \meta{separator}
+%   \end{syntax}
+%   Inserted between unit combinations in parsed mode, and used to replace
+%   |.| and |~| in literal mode. The standard setting is |\,|.
+% \end{function}
+%
+% \begin{function}{parse-units}
+%   \begin{syntax}
+%     |parse-units| = |true|\verb"|"|false|
+%   \end{syntax}
+%   Determines whether parsing of unit symbols is attempted or literal
+%   mode is used directly. The standard setting is |true|.
+% \end{function}
+%
+% \begin{function}{per-mode, inline-per-mode, display-per-mode}
+%   \begin{syntax}
+%     |per-mode| = |fraction|\verb"|"|power|\verb"|"|power-positive-first|\verb"|"|repeated-symbol|\verb"|"|single-symbol|\verb"|"|symbol|
+%   \end{syntax}
+%   Selects how the negative powers (\cs{per}) are formatted: a choice from
+%   the options |fraction|, |power|, |power-positive-first|, |repeated-symbol|,
+%   |single-symbol| and |symbol|. The option |fraction|
+%   generates fractional output when appropriate using the command specified by
+%   the |fraction-command| option. The setting |power| uses reciprocal powers
+%   leaving the units in the order of input, while |power-positive-first| uses
+%   the same display format but sorts units such that the positive powers
+%   come before negative ones. The |symbol| setting uses a symbol (specified
+%   by |per-symbol|) between positive and negative powers, while
+%   |repeated-symbol| uses the same symbol but places it before \emph{every}
+%   unit with a negative power (this is mathematically \enquote{wrong} but
+%   often seen in real work). The option |single-symbol| will use a symbol if
+%   exactly one is required (\foreign{i.e.}~with a single negative power), and
+%   will otherwise use powers. The standard setting is |power|.
+%
+%  The |inline-...| and |display-...| settings take the same options and work
+%  in exactly the same way, but are restricted in where they apply. The
+%  |display| version only applies in display math contexts, and the |inline|
+%  version applies in all others.
+% \end{function}
+%
+% \begin{function}{per-symbol}
+%   \begin{syntax}
+%     |per-symbol| = \meta{symbol}
+%   \end{syntax}
+%   Specifies the symbol to be used to denote negative powers when the option
+%   |per-mode| is set to |repeated-symbol| or |symbol|. The standard setting
+%   is |/|.
+% \end{function}
+%
+% \begin{function}{per-symbol-script-correction}
+%   \begin{syntax}
+%     |per-symbol-script-correction| = \meta{insert}
+%   \end{syntax}
+%   Specifies the tokens used to correct spacing when the symbol set by
+%   |per-symbol| is immediately preceded by a superscript power. The
+%   standard setting is |\!|.
+% \end{function}
+%
+% \begin{function}{power-half-as-sqrt}
+%   \begin{syntax}
+%     |power-half-as-sqrt| = |true|\verb"|"|false|
+%   \end{syntax}
+%   Used to determine whether a power of exactly half is converted to
+%   \cs{sqrt} in the output. The standard setting is |false|
+% \end{function}
+%
+% \begin{function}{qualifier-mode}
+%   \begin{syntax}
+%     |qualifier-mode| = |bracket|\verb"|"|combine|\verb"|"|phrase|\verb"|"|subscript|
+%   \end{syntax}
+%   Selects how qualifiers are formatted: a choice from the options |bracket|,
+%   |combine|, |phrase| and |subscript|. The option |bracket| wraps the qualifier
+%   in parenthesis, |combine| joins the qualifier with the unit directly, |phrase|
+%   joins the material using |qualifier-phrase| as a link, and
+%   |subscript| formats the qualifier as a subscript. The standard setting is
+%   |subscript|.
+% \end{function}
+%
+% \begin{function}{qualifier-phrase}
+%   \begin{syntax}
+%     |qualifier-phrase| = \meta{phrase}
+%   \end{syntax}
+%   Defines the \meta{phrase} used when |qualifier-mode| is set to |phrase|.
+% \end{function}
+%
+% \begin{function}{sticky-per}
+%   \begin{syntax}
+%     |sticky-per| = |true|\verb"|"|false|
+%   \end{syntax}
+%   Used to determine whether \cs{per} should be applied one a unit-by-unit
+%   basis (when |false|) or should apply to all following units
+%   (when |true|). The latter mode is somewhat akin conceptually to the
+%   \TeX{} \cs{over} primitive. The standard setting is |false|.
+% \end{function}
+%
+% \begin{function}{unit-font-command}
+%   \begin{syntax}
+%     |unit-font-command| = \meta{command}
+%   \end{syntax}
+%   Command applied to text during output of units: should be command usable
+%   in math mode for font selection. Notice that in a typical unit this does
+%   not (necessarily) apply to all output, for example powers or brackets.
+%   The standard setting is |\mathrm|.
+% \end{function}
+%
+% \end{documentation}
+%
+% \begin{implementation}
+%
+% \section{\pkg{siunitx-unit} implementation}
+%
+% Start the \pkg{DocStrip} guards.
+%    \begin{macrocode}
+%<*package>
+%    \end{macrocode}
+%
+% Identify the internal prefix (\LaTeX3 \pkg{DocStrip} convention): only
+% internal material in this \emph{submodule} should be used directly.
+%    \begin{macrocode}
+%<@@=siunitx_unit>
+%    \end{macrocode}
+%
+% \subsection{Initial set up}
+%
+% The mechanisms defined here need a few variables to exist and to be
+% correctly set: these don't belong to one subsection and so are created
+% in a small general block.
+%
+%   Variants not provided by \pkg{expl3}.
+%    \begin{macrocode}
+\cs_generate_variant:Nn \tl_replace_all:Nnn { NnV }
+%    \end{macrocode}
+%
+% \begin{variable}{\l_@@_tmp_bool}
+% \begin{variable}{\l_@@_tmp_fp}
+% \begin{variable}{\l_@@_tmp_int}
+% \begin{variable}{\l_@@_tmp_tl}
+%   Scratch space.
+%    \begin{macrocode}
+\bool_new:N \l_@@_tmp_bool
+\fp_new:N \l_@@_tmp_fp
+\int_new:N \l_@@_tmp_int
+\tl_new:N  \l_@@_tmp_tl
+%    \end{macrocode}
+% \end{variable}
+% \end{variable}
+% \end{variable}
+% \end{variable}
+%
+% \begin{variable}{\c_@@_math_subscript_tl}
+%   Useful tokens with awkward category codes.
+%    \begin{macrocode}
+\tl_const:Nx \c_@@_math_subscript_tl
+  { \char_generate:nn { `\_ } { 8 } }
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{variable}{\l_@@_parsing_bool}
+%   A boolean is used to indicate when the symbolic unit functions should
+%   produce symbolic or literal output. This is used when the symbolic names
+%   are used along with literal input, and ensures that there is a sensible
+%   fall-back for these cases.
+%    \begin{macrocode}
+\bool_new:N \l_@@_parsing_bool
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{variable}{\l_@@_test_bool}
+%   A switch used to indicate that the code is testing the input to find
+%   if there is any typeset output from individual unit macros. This is needed
+%   to allow the \enquote{base} macros to be found, and also to pick up the
+%   difference between symbolic and literal unit input.
+%    \begin{macrocode}
+\bool_new:N \l_@@_test_bool
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{macro}{\@@_if_symbolic:nTF}
+%   The test for symbolic units is needed in two places. First, there is the
+%   case of \enquote{pre-parsing} input to check if it can be parsed. Second,
+%   when parsing there is a need to check if the current unit is built up
+%   from others (symbolic) or is defined in terms of some literals. To do this,
+%   the approach used is to set all of the symbolic unit commands expandable
+%   and to do nothing, with the few special cases handled manually. We expand
+%   the input here twice: this handles the case where there is a mapping or
+%   similar in |#1| which returns its result in \cs{exp_not:n}.
+%    \begin{macrocode}
+\prg_new_protected_conditional:Npnn \@@_if_symbolic:n #1 { TF }
+  {
+    \group_begin:
+      \bool_set_true:N \l_@@_test_bool
+      \protected@edef \l_@@_tmp_tl {#1}
+      \protected@edef \l_@@_tmp_tl { \l_@@_tmp_tl }
+    \exp_args:NNV \group_end:
+    \tl_if_blank:nTF \l_@@_tmp_tl
+      { \prg_return_true: }
+      { \prg_return_false: }
+  }
+%    \end{macrocode}
+% \end{macro}
+%
+% \subsection{Defining symbolic unit}
+%
+% Unit macros and related support are created here. These exist only within
+% the scope of the unit processor code, thus not polluting document-level
+% namespace and allowing overlap with other areas in the case of useful short
+% names (for example \cs{pm}). Setting up the mechanisms to allow this requires
+% a few additional steps on top of simply saving the data given by the user
+% in creating the unit.
+%
+% \begin{variable}{\l_siunitx_unit_symbolic_seq}
+%   A list of all of the symbolic units, \foreign{etc.}, set up. This is needed
+%   to allow the symbolic names to be defined within the scope of the unit
+%   parser but not elsewhere using simple mappings.
+%    \begin{macrocode}
+\seq_new:N \l_siunitx_unit_symbolic_seq
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{variable}{\l_siunitx_unit_seq}
+%   A second list featuring only the units themselves.
+%    \begin{macrocode}
+\seq_new:N \l_siunitx_unit_seq
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{macro}{\@@_set_symbolic:Nnn}
+% \begin{macro}{\@@_set_symbolic:Npnn}
+% \begin{macro}{\@@_set_symbolic:Nnnn}
+%   The majority of the work for saving each symbolic definition is the same
+%   irrespective of the item being defined (unit, prefix, power, qualifier).
+%   This is therefore all carried out in a single internal function which
+%   does the common tasks. The three arguments here are the symbolic macro
+%   name, the literal output and the code to insert when doing full unit
+%   parsing. To allow for the \enquote{special cases} (where arguments are
+%   required) the entire mechanism is set up in a two-part fashion allowing
+%   for flexibility at the slight cost of additional functions.
+%
+%   Importantly, notice that the unit macros are declared as expandable. This
+%   is required so that literals can be correctly converted into a token list
+%   of material which does not depend on local redefinitions for the unit
+%   macros. That is required so that the unit formatting system can be grouped.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_set_symbolic:Nnn #1
+  { \@@_set_symbolic:Nnnn #1 { } }
+\cs_new_protected:Npn \@@_set_symbolic:Npnn #1#2#
+  { \@@_set_symbolic:Nnnn #1 {#2} }
+\cs_new_protected:Npn \@@_set_symbolic:Nnnn #1#2#3#4
+  {
+    \seq_put_right:Nn \l_siunitx_unit_symbolic_seq {#1}
+    \cs_set:cpn { @@_ \token_to_str:N #1 :w } #2
+      {
+        \bool_if:NF \l_@@_test_bool
+          {
+            \bool_if:NTF \l_@@_parsing_bool
+              {#4}
+              {#3}
+          }
+      }
+  }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\siunitx_declare_power:NNn}
+%   Powers can come either before or after the unit. As they always come
+%   (logically) in matching, we handle this by declaring two commands,
+%   and setting each up separately.
+%    \begin{macrocode}
+\cs_new_protected:Npn \siunitx_declare_power:NNn #1#2#3
+  {
+    \@@_set_symbolic:Nnn #1
+      { \@@_literal_power:nn {#3} }
+      { \@@_parse_power:nnN {#1} {#3} \c_true_bool }
+    \@@_set_symbolic:Nnn #2
+      { ^ {#3} }
+      { \@@_parse_power:nnN {#2} {#3} \c_false_bool }
+  }
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\siunitx_declare_prefix:Nn}
+% \begin{macro}{\siunitx_declare_prefix:Nnn, \siunitx_declare_prefix:Nnx}
+% \begin{variable}
+%   {\l_@@_prefixes_forward_prop, \l_@@_prefixes_reverse_prop}
+%   For prefixes there are a couple of options. In all cases, the basic
+%   requirement is to set up to parse the prefix using the appropriate
+%   internal function. For prefixes which are powers of $10$, there is also
+%   the need to be able to do conversion to/from the numerical equivalent.
+%   That is handled using two properly lists which can be used to supply
+%   the conversion data later.
+%    \begin{macrocode}
+\cs_new_protected:Npn \siunitx_declare_prefix:Nn #1#2
+  {
+    \@@_set_symbolic:Nnn #1
+      {#2}
+      { \@@_parse_prefix:Nn #1 {#2} }
+  }
+\cs_new_protected:Npn \siunitx_declare_prefix:Nnn #1#2#3
+  {
+    \siunitx_declare_prefix:Nn #1 {#3}
+    \prop_put:Nnn \l_@@_prefixes_forward_prop {#3} {#2}
+    \prop_put:Nnn \l_@@_prefixes_reverse_prop {#2} {#3}
+  }
+\cs_generate_variant:Nn \siunitx_declare_prefix:Nnn { Nnx }
+\prop_new:N \l_@@_prefixes_forward_prop
+\prop_new:N \l_@@_prefixes_reverse_prop
+%    \end{macrocode}
+% \end{variable}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\siunitx_declare_qualifier:Nn}
+%   Qualifiers are relatively easy to handle: nothing to do other than save
+%   the input appropriately.
+%    \begin{macrocode}
+\cs_new_protected:Npn \siunitx_declare_qualifier:Nn #1#2
+  {
+    \@@_set_symbolic:Nnn #1
+      { ~ ( #2 ) }
+      { \@@_parse_qualifier:nn {#1} {#2} }
+  }
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\siunitx_declare_unit:Nn, \siunitx_declare_unit:Nx}
+% \begin{macro}{\siunitx_declare_unit:Nnn, \siunitx_declare_unit:Nxn}
+%   For the unit parsing, allowing for variations in definition order requires
+%   that a test is made for the output of each unit at point of use.
+%    \begin{macrocode}
+\cs_new_protected:Npn \siunitx_declare_unit:Nn #1#2
+  { \siunitx_declare_unit:Nnn #1 {#2} { } }
+\cs_generate_variant:Nn \siunitx_declare_unit:Nn { Nx }
+\cs_new_protected:Npn \siunitx_declare_unit:Nnn #1#2#3
+  {
+    \seq_put_right:Nn \l_siunitx_unit_seq {#1}
+    \@@_set_symbolic:Nnn #1
+      {#2}
+      {
+        \@@_if_symbolic:nTF {#2}
+          {#2}
+          { \@@_parse_unit:Nn #1 {#2} }
+      }
+    \tl_clear_new:c { l_@@_options_ \token_to_str:N #1 _tl }
+    \tl_if_empty:nF {#3}
+      { \tl_set:cn { l_@@_options_ \token_to_str:N #1 _tl } {#3} }
+  }
+\cs_generate_variant:Nn \siunitx_declare_unit:Nnn { Nx }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% \subsection{Applying unit options}
+%
+% \begin{variable}{\l_@@_options_bool}
+%    \begin{macrocode}
+\bool_new:N \l_@@_options_bool
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{macro}{\siunitx_unit_options_apply:n}
+%   Options apply only if they have not already been set at this group
+%   level.
+%    \begin{macrocode}
+\cs_new_protected:Npn \siunitx_unit_options_apply:n #1
+  {
+    \bool_if:NF \l_@@_options_bool
+      {
+        \tl_if_single_token:nT {#1}
+          {
+            \tl_if_exist:cT { l_@@_options_ \token_to_str:N #1 _tl }
+              {
+                \keys_set:nv { siunitx }
+                  { l_@@_options_ \token_to_str:N #1 _tl }
+              }
+          }
+      }
+    \bool_set_true:N \l_@@_options_bool
+  }
+%    \end{macrocode}
+% \end{macro}
+%
+% \subsection{Non-standard symbolic units}
+%
+% A few of the symbolic units require non-standard definitions: these are
+% created here. They all use parts of the more general code but have particular
+% requirements which can only be addressed by hand. Some of these could in
+% principle be used in place of the dedicated definitions above, but at point
+% of use that would then require additional expansions for each unit parsed:
+% as the macro names would still be needed, this does not offer any real
+% benefits.
+%
+% \begin{macro}{\per}
+%   The \cs{per} symbolic unit is a bit special: it has a mechanism entirely
+%   different from everything else, so has to be set up by hand. In literal
+%   mode it is represented by a very simple symbol!
+%    \begin{macrocode}
+\@@_set_symbolic:Nnn \per
+  { / }
+  { \@@_parse_per: }
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\cancel}
+% \begin{macro}{\highlight}
+%   The two special cases, \cs{cancel} and \cs{highlight}, are easy to deal
+%   with when parsing. When not parsing, a precaution is taken to ensure that
+%   the user level equivalents always get a braced argument.
+%    \begin{macrocode}
+\@@_set_symbolic:Npnn \cancel
+  { }
+  { \@@_parse_special:n { \cancel } }
+\@@_set_symbolic:Npnn \highlight #1
+  { \@@_literal_special:nN { \textcolor {#1} } }
+  { \@@_parse_special:n { \textcolor {#1} } }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\of}
+%   The generic qualifier is simply the same as the dedicated ones except for
+%   needing to grab an argument.
+%    \begin{macrocode}
+\@@_set_symbolic:Npnn \of #1
+  { \  ( #1 ) }
+  { \@@_parse_qualifier:nn { \of {#1} } {#1} }
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\raiseto, \tothe}
+%   Generic versions of the pre-defined power macros. These require an
+%   argument and so cannot be handled using the general approach. Other than
+%   that, the code here is very similar to that in
+%   \cs{siunitx_unit_power_set:NnN}.
+%    \begin{macrocode}
+\@@_set_symbolic:Npnn \raiseto #1
+  { \@@_literal_power:nn {#1} }
+  { \@@_parse_power:nnN { \raiseto {#1} } {#1} \c_true_bool }
+\@@_set_symbolic:Npnn \tothe #1
+  { ^ {#1} }
+  { \@@_parse_power:nnN { \tothe {#1} } {#1} \c_false_bool }
+%    \end{macrocode}
+% \end{macro}
+%
+% \subsection{Main formatting routine}
+%
+% Unit input can take two forms, \enquote{literal} units (material to be
+% typeset directly) or \enquote{symbolic} units (macro-based). Before any
+% parsing or typesetting is carried out, a small amount of pre-parsing has to
+% be carried out to decide which of these cases applies.
+%
+% \begin{variable}
+%   {\l_siunitx_unit_font_tl, \l_@@_product_tl, \l_@@_mass_kilogram_bool}
+%   Options which apply to the main formatting routine, and so are not tied
+%   to either symbolic or literal input.
+%    \begin{macrocode}
+\keys_define:nn { siunitx }
+  {
+    extract-mass-in-kilograms .bool_set:N =
+      \l_@@_mass_kilogram_bool ,
+    inter-unit-product .tl_set:N =
+      \l_@@_product_tl ,
+    unit-font-command .tl_set:N =
+      \l_siunitx_unit_font_tl
+  }
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{variable}{\l_@@_formatted_tl}
+%   A token list for the final formatted result: may or may not be generated
+%   by the parser, depending on the nature of the input.
+%    \begin{macrocode}
+\tl_new:N \l_@@_formatted_tl
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{macro}{\siunitx_unit_format:nN}
+% \begin{macro}{\siunitx_unit_format_extract_prefixes:nNN}
+% \begin{macro}{\siunitx_unit_format_combine_exponent:nnN}
+% \begin{macro}{\siunitx_unit_format_multiply:nnN}
+% \begin{macro}{\siunitx_unit_format_multiply_extract_prefixes:nnNN}
+% \begin{macro}{\siunitx_unit_format_multiply_combine_exponent:nnnN}
+% \begin{macro}{\@@_format:nNN}
+% \begin{macro}{\@@_format_aux:}
+%   Formatting parsed units can take place either with the prefixes printed or
+%   separated out into a power of ten. This variation is handled using two
+%   separate functions: as this submodule does not really deal with numbers,
+%   formatting the numeral part here would be tricky and it is better therefore
+%   to have a mechanism to return a simple numerical power. At the same time,
+%   most uses will no want this more complex return format and so a version of
+%   the code which does not do this is also provided.
+%
+%   The main unit formatting routine groups all of the parsing/formatting, so
+%   that the only value altered will be the return token list. As definitions
+%   for the various unit macros are not globally created, the first step is to
+%   map over the list of names and active the unit definitions: these do
+%   different things depending on the switches set. There is then a decision to
+%   be made: is the unit input one that can be parsed (\enquote{symbolic}), or
+%   is is one containing one or more literals. In the latter case, there is a
+%   still the need to convert the input into an expanded token list as some
+%   parts of the input could still be using unit macros.
+%
+%   Notice that for \cs{siunitx_unit_format:nN} a second return value from the
+%   auxiliary has to be allowed for, but is simply discarded.
+%    \begin{macrocode}
+\cs_new_protected:Npn \siunitx_unit_format:nN #1#2
+  {
+    \bool_set_false:N \l_@@_prefix_exp_bool
+    \fp_zero:N \l_@@_combine_exp_fp
+    \fp_set:Nn \l_@@_multiple_fp { \c_one_fp }
+    \@@_format:nNN {#1} #2 \l_@@_tmp_fp
+  }
+\cs_new_protected:Npn \siunitx_unit_format_extract_prefixes:nNN #1#2#3
+  {
+    \bool_set_true:N \l_@@_prefix_exp_bool
+    \fp_zero:N \l_@@_combine_exp_fp
+    \fp_set:Nn \l_@@_multiple_fp { \c_one_fp }
+    \@@_format:nNN {#1} #2 #3
+  }
+\cs_new_protected:Npn \siunitx_unit_format_combine_exponent:nnN #1#2#3
+  {
+    \bool_set_false:N \l_@@_prefix_exp_bool
+    \fp_set:Nn \l_@@_combine_exp_fp {#2}
+    \fp_set:Nn \l_@@_multiple_fp { \c_one_fp }
+    \@@_format:nNN {#1} #3 \l_@@_tmp_fp
+  }
+\cs_new_protected:Npn \siunitx_unit_format_multiply:nnN #1#2#3
+  {
+    \bool_set_false:N \l_@@_prefix_exp_bool
+    \fp_zero:N \l_@@_combine_exp_fp
+    \fp_set:Nn \l_@@_multiple_fp {#2}
+    \@@_format:nNN {#1} #3 \l_@@_tmp_fp
+  }
+\cs_new_protected:Npn \siunitx_unit_format_multiply_extract_prefixes:nnNN
+  #1#2#3#4
+  {
+    \bool_set_true:N \l_@@_prefix_exp_bool
+    \fp_zero:N \l_@@_combine_exp_fp
+    \fp_set:Nn \l_@@_multiple_fp {#2}
+    \@@_format:nNN {#1} #3 #4
+  }
+\cs_new_protected:Npn \siunitx_unit_format_multiply_combine_exponent:nnnN
+  #1#2#3#4
+  {
+    \bool_set_false:N \l_@@_prefix_exp_bool
+    \fp_set:Nn \l_@@_combine_exp_fp {#3}
+    \fp_set:Nn \l_@@_multiple_fp {#2}
+    \@@_format:nNN {#1} #4 \l_@@_tmp_fp
+  }
+\cs_new_protected:Npn \@@_format:nNN #1#2#3
+  {
+    \group_begin:
+      \seq_map_inline:Nn \l_siunitx_unit_symbolic_seq
+        { \cs_set_eq:Nc ##1 { @@_ \token_to_str:N ##1 :w } }
+      \tl_clear:N \l_@@_formatted_tl
+      \fp_zero:N \l_@@_prefix_fp
+      \bool_if:NTF \l_@@_parse_bool
+        {
+          \@@_if_symbolic:nTF {#1}
+            {
+              \@@_parse:n {#1}
+              \prop_if_empty:NF \l_@@_parsed_prop
+                { \@@_format_parsed: }
+            }
+            {
+              \bool_if:NTF \l_@@_forbid_literal_bool
+                { \msg_error:nnn { siunitx } { literal-unit } {#1} }
+                { \@@_format_literal:n {#1} }
+            }
+        }
+        { \@@_format_literal:n {#1} }
+      \cs_set_protected:Npx \@@_format_aux:
+        {
+          \tl_set:Nn \exp_not:N #2
+            { \exp_not:V \l_@@_formatted_tl }
+          \fp_set:Nn \exp_not:N #3
+            { \fp_use:N \l_@@_prefix_fp }
+        }
+    \exp_after:wN \group_end:
+    \@@_format_aux:
+  }
+\cs_new_protected:Npn \@@_format_aux: { }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \subsection{Formatting literal units}
+%
+% While in literal mode no parsing occurs, there is a need to provide a few
+% auxiliary functions to handle one or two special cases.
+%
+% \begin{macro}[EXP]{\@@_literal_power:nn}
+%   For printing literal units which are given before the unit they apply to,
+%   there is a slight rearrangement. This is ex[EXP]pandable to cover the case of
+%   creation of a PDF string.
+%    \begin{macrocode}
+\cs_new:Npn \@@_literal_power:nn #1#2 { #2 ^ {#1} }
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\@@_literal_special:nN}
+%   When dealing with the special cases, there is an argument to absorb. This
+%   should be braced to be passed up to the user level, which is dealt with
+%   here.
+%    \begin{macrocode}
+\cs_new:Npn \@@_literal_special:nN #1#2 { #1 {#2} }
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\@@_format_literal:n}
+% \begin{macro}
+%   {
+%     \@@_format_literal_tilde:      ,
+%     \@@_format_literal_subscript:  ,
+%     \@@_format_literal_superscript:
+%   }
+% \begin{macro}{\@@_format_literal_auxi:w}
+% \begin{macro}{\@@_format_literal_auxii:w}
+% \begin{macro}{\@@_format_literal_auxiii:w}
+% \begin{macro}{\@@_format_literal_auxiv:n}
+% \begin{macro}{\@@_format_literal_auxv:nw}
+% \begin{macro}
+%   {
+%     \@@_format_literal_auxvi:nN   ,
+%     \@@_format_literal_auxvii:nN  ,
+%     \@@_format_literal_auxviii:nN
+%   }
+% \begin{macro}{\@@_format_literal_super:nn, \@@_format_literal_sub:nn}
+% \begin{macro}{\@@_format_literal_add:n}
+% \begin{macro}{\@@_format_literal_auxix:nn}
+% \begin{macro}{\@@_format_literal_auxx:nw}
+% \begin{variable}{\l_@@_separator_tl}
+%   To format literal units, there are two tasks to do. The input is
+%   \texttt{x}-type expanded to force any symbolic units to be converted into
+%   their literal representation: this requires setting the appropriate
+%   switch. In the resulting token list, all |.| and |~| tokens are then
+%   replaced by the current unit product token list. To enable this to happen
+%   correctly with a normal (active) |~|, a small amount of
+%   \enquote{protection} is needed first. To cover active sub- and superscript
+%   tokens, appropriate definitions are provided at this stage. Those have
+%   to be expandable macros rather than implicit character tokens.
+%
+%   As with other code dealing with user input, \cs{protected@edef} is used
+%   here rather than \cs{tl_set:Nx} as \LaTeXe{} robust commands may be
+%   present.
+%    \begin{macrocode}
+\group_begin:
+  \char_set_catcode_active:n { `\~ }
+  \cs_new_protected:Npx \@@_format_literal:n #1
+    {
+      \group_begin:
+        \exp_not:n { \bool_set_false:N \l_@@_parsing_bool }
+        \tl_set:Nn \exp_not:N \l_@@_tmp_tl {#1}
+        \tl_replace_all:Nnn \exp_not:N \l_@@_tmp_tl
+          { \token_to_str:N ^ } { ^ }
+        \tl_replace_all:Nnn \exp_not:N \l_@@_tmp_tl
+          { \token_to_str:N _ } { \c_@@_math_subscript_tl }
+        \char_set_active_eq:NN ^
+          \exp_not:N \@@_format_literal_superscript:
+        \char_set_active_eq:NN _
+          \exp_not:N \@@_format_literal_subscript:
+        \char_set_active_eq:NN \exp_not:N ~
+          \exp_not:N \@@_format_literal_tilde:
+        \exp_not:n
+          {
+            \protected@edef \l_@@_tmp_tl
+              { \l_@@_tmp_tl }
+            \tl_clear:N \l_@@_formatted_tl
+            \tl_if_empty:NF \l_@@_tmp_tl
+              {
+                \exp_after:wN \@@_format_literal_auxi:w
+                  \l_@@_tmp_tl .
+                  \q_recursion_tail . \q_recursion_stop
+              }
+            \exp_args:NNNV \group_end:
+            \tl_set:Nn \l_@@_formatted_tl
+              \l_@@_formatted_tl
+          }
+    }
+\group_end:
+\cs_new:Npx \@@_format_literal_subscript: { \c_@@_math_subscript_tl }
+\cs_new:Npn \@@_format_literal_superscript: { ^ }
+\cs_new:Npn \@@_format_literal_tilde: { . }
+%    \end{macrocode}
+%   To introduce the font changing commands while still allowing for line
+%   breaks in literal units, a loop is needed to replace one |.| at a time.
+%   To also allow for division, a second loop is used within that to handle
+%   |/|: as a result, the separator between parts has to be tracked.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_format_literal_auxi:w #1 .
+  {
+    \quark_if_recursion_tail_stop:n {#1}
+    \@@_format_literal_auxii:n {#1}
+    \tl_set_eq:NN \l_@@_separator_tl \l_@@_product_tl
+    \@@_format_literal_auxi:w
+  }
+\cs_set_protected:Npn \@@_format_literal_auxii:n #1
+  {
+    \@@_format_literal_auxiii:w
+      #1 / \q_recursion_tail / \q_recursion_stop
+  }
+\cs_new_protected:Npn \@@_format_literal_auxiii:w #1 /
+  {
+    \quark_if_recursion_tail_stop:n {#1}
+    \@@_format_literal_auxiv:n {#1}
+    \tl_set:Nn \l_@@_separator_tl { / }
+    \@@_format_literal_auxiii:w
+  }
+\cs_new_protected:Npn \@@_format_literal_auxiv:n #1
+  {
+    \@@_format_literal_auxv:nw { }
+      #1 \q_recursion_tail \q_recursion_stop
+  }
+%    \end{macrocode}
+%   To deal properly with literal formatting, we have to worry about super-
+%   and subscript markers. That can be complicated as they could come anywhere
+%   in the input: we handle that by iterating through the input and picking
+%   them out. This avoids any issue with losing braces for mid-input scripts.
+%   We also have to deal with fractions, hence needing a series of nested
+%   loops and a change of separator.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_format_literal_auxv:nw
+  #1#2 \q_recursion_stop
+  {
+    \tl_if_head_is_N_type:nTF {#2}
+      { \@@_format_literal_auxvi:nN }
+      {
+        \tl_if_head_is_group:nTF {#2}
+          { \@@_format_literal_auxix:nn }
+          { \@@_format_literal_auxx:nw }
+      }
+        {#1} #2 \q_recursion_stop
+  }
+\cs_new_protected:Npx \@@_format_literal_auxvi:nN #1#2
+  {
+    \exp_not:N \quark_if_recursion_tail_stop_do:Nn #2
+      { \exp_not:N \@@_format_literal_add:n {#1} }
+    \exp_not:N \token_if_eq_meaning:NNTF #2 ^
+      { \exp_not:N \@@_format_literal_super:nn {#1} }
+      {
+        \exp_not:N \token_if_eq_meaning:NNTF
+          #2 \c_@@_math_subscript_tl
+          { \exp_not:N \@@_format_literal_sub:nn {#1} }
+          { \exp_not:N \@@_format_literal_auxvii:nN {#1} #2 }
+      }
+  }
+%    \end{macrocode}
+%   We need to make sure |\protect| sticks with the next token.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_format_literal_auxvii:nN #1#2
+  {
+    \str_if_eq:nnTF {#2} { \protect }
+      { \@@_format_literal_auxviii:nN {#1} }
+      { \@@_format_literal_auxv:nw {#1#2} }
+  }
+\cs_new_protected:Npn \@@_format_literal_auxviii:nN #1#2
+  { \@@_format_literal_auxv:nw { #1 \protect #2 } }
+\cs_new_protected:Npn \@@_format_literal_super:nn #1#2
+  {
+    \quark_if_recursion_tail_stop:n {#2}
+    \@@_format_literal_add:n {#1}
+    \tl_put_right:Nn \l_@@_formatted_tl { ^ {#2} }
+    \@@_format_literal_auxvi:nN { }
+  }
+\cs_new_protected:Npx \@@_format_literal_sub:nn #1#2
+  {
+    \exp_not:N \quark_if_recursion_tail_stop:n {#2}
+    \exp_not:N \@@_format_literal_add:n {#1}
+    \tl_put_right:Nx \exp_not:N \l_@@_formatted_tl
+      {
+        \c_@@_math_subscript_tl
+          {
+            \exp_not:N \exp_not:V
+              \exp_not:N \l_siunitx_unit_font_tl
+                { \exp_not:N \exp_not:n {#2} }
+          }
+      }
+    \exp_not:N \@@_format_literal_auxvi:nN { }
+  }
+\cs_new_protected:Npn \@@_format_literal_add:n #1
+  {
+    \tl_put_right:Nx \l_@@_formatted_tl
+      {
+        \tl_if_empty:NF \l_@@_formatted_tl
+          { \exp_not:V \l_@@_separator_tl }
+        \tl_if_empty:nF {#1}
+          { \exp_not:V \l_siunitx_unit_font_tl { \exp_not:n {#1} } }
+      }
+    \tl_clear:N \l_@@_separator_tl
+  }
+\cs_new_protected:Npn \@@_format_literal_auxix:nn #1#2
+  { \@@_format_literal_auxv:nw { #1 {#2} } }
+\use:x
+  {
+    \cs_new_protected:Npn \exp_not:N \@@_format_literal_auxx:nw
+      ##1 \c_space_tl
+  }
+  { \@@_format_literal_auxv:nw {#1} }
+\tl_new:N \l_@@_separator_tl
+%    \end{macrocode}
+% \end{variable}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \subsection{(PDF) String creation}
+%
+% \begin{macro}{\siunitx_unit_pdfstring_context:}
+%   A simple function that sets up to make units equal to their text
+%   representation.
+%    \begin{macrocode}
+\cs_new_protected:Npn \siunitx_unit_pdfstring_context:
+  {
+    \bool_set_false:N \l_@@_parsing_bool
+    \seq_map_inline:Nn \l_siunitx_unit_symbolic_seq
+      { \cs_set_eq:Nc ##1 { @@_ \token_to_str:N ##1 :w } }
+  }
+%    \end{macrocode}
+% \end{macro}
+%
+% \subsection{Parsing symbolic units}
+%
+% Parsing units takes place by storing information about each unit in a
+% \texttt{prop}. As well as the unit itself, there are various other optional
+% data points, for example a prefix or a power. Some of these can come before
+% the unit, others only after. The parser therefore tracks the number of units
+% read and uses the current position to allocate data to individual units.
+%
+% The result of parsing is a property list (\cs{l_@@_parsed_prop}) which
+% contains one or more entries for each unit:
+% \begin{itemize}
+%   \item \texttt{prefix-$n$} The symbol for the prefix which applies to this
+%     unit, \foreign{e.g.} for \cs{kilo} with (almost certainly) would be
+%     |k|.
+%   \item \texttt{unit-$n$} The symbol for the unit itself, \foreign{e.g.}~for
+%     \cs{metre} with (almost certainly) would be |m|.
+%   \item \texttt{power-$n$} The power which a unit is raised to. During
+%     initial parsing this will (almost certainly) be positive, but is combined
+%     with \texttt{per-$n$} to give a \enquote{fully qualified} power before
+%     any formatting takes place
+%   \item \texttt{per-$n$} Indicates that \texttt{per} applies to the current
+%     unit: stored during initial parsing then combined with \texttt{power-$n$}
+%     (and removed from the list) before further work.
+%   \item \texttt{qualifier-$n$} Any qualifier which applies to the current
+%     unit.
+%   \item \texttt{special-$n$} Any \enquote{special effect} to apply to the
+%     current unit.
+%   \item \texttt{command-$1$} The command corresponding to \texttt{unit-$n$}:
+%     needed to track base units; used for \cs{gram} only.
+% \end{itemize}
+%
+% \begin{variable}{\l_@@_sticky_per_bool}
+%   There is one option when \emph{parsing} the input (as opposed to
+%   \emph{formatting} for output): how to deal with \cs{per}.
+%    \begin{macrocode}
+\keys_define:nn { siunitx }
+  {
+    sticky-per .bool_set:N = \l_@@_sticky_per_bool
+  }
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{variable}{\l_@@_parsed_prop}
+% \begin{variable}{\l_@@_per_bool}
+% \begin{variable}{\l_@@_position_int}
+%   Parsing units requires a small number of variables are available: a
+%   \texttt{prop} for the parsed units themselves, a \texttt{bool} to
+%   indicate if \cs{per} is active and an \texttt{int} to track how many units
+%   have be parsed.
+%    \begin{macrocode}
+\prop_new:N \l_@@_parsed_prop
+\bool_new:N \l_@@_per_bool
+\int_new:N \l_@@_position_int
+%    \end{macrocode}
+% \end{variable}
+% \end{variable}
+% \end{variable}
+%
+% \begin{macro}{\@@_parse:n}
+%   The main parsing function is quite simple. After initialising the variables,
+%   each symbolic unit is set up. The input is then simply inserted into the
+%   input stream: the symbolic units themselves then do the real work of
+%   placing data into the parsing system. There is then a bit of tidying up to
+%   ensure that later stages can rely on the nature of the data here.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_parse:n #1
+  {
+    \prop_clear:N \l_@@_parsed_prop
+    \bool_set_true:N \l_@@_parsing_bool
+    \bool_set_false:N \l_@@_per_bool
+    \bool_set_false:N \l_@@_test_bool
+    \int_zero:N \l_@@_position_int
+    \siunitx_unit_options_apply:n {#1}
+    #1
+    \int_step_inline:nn \l_@@_position_int
+      { \@@_parse_finalise:n {##1} }
+    \@@_parse_finalise:
+  }
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\@@_parse_add:nnnn}
+%   In all cases, storing a data item requires setting a temporary \texttt{tl}
+%   which will be used as the key, then using this to store the value. The
+%   \texttt{tl} is  set using \texttt{x}-type expansion as this will expand the
+%   unit index and any additional calculations made for this.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_parse_add:nnnn #1#2#3#4
+  {
+    \tl_set:Nx \l_@@_tmp_tl { #1 - #2 }
+    \prop_if_in:NVTF \l_@@_parsed_prop
+      \l_@@_tmp_tl
+      {
+        \msg_error:nnxx { siunitx } { duplicate-part }
+          { \exp_not:n {#1} } { \token_to_str:N #3 }
+      }
+      {
+        \prop_put:NVn \l_@@_parsed_prop
+          \l_@@_tmp_tl {#4}
+      }
+  }
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\@@_parse_prefix:Nn}
+% \begin{macro}{\@@_parse_power:nnN}
+% \begin{macro}{\@@_parse_qualifier:nn}
+% \begin{macro}{\@@_parse_special:n}
+%   Storage of the various optional items follows broadly the same pattern
+%   in each case. The data to be stored is passed along with an appropriate
+%   key name to the underlying storage system. The details for each type of
+%   item should be relatively clear. For example, prefixes have to come before
+%   their \enquote{parent} unit and so there is some adjustment to do to add
+%   them to the correct unit.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_parse_prefix:Nn #1#2
+  {
+    \int_set:Nn \l_@@_tmp_int { \l_@@_position_int + 1 }
+    \@@_parse_add:nnnn { prefix }
+      { \int_use:N \l_@@_tmp_int } {#1} {#2}
+  }
+\cs_new_protected:Npn \@@_parse_power:nnN #1#2#3
+  {
+    \tl_set:Nx \l_@@_tmp_tl
+      { unit- \int_use:N \l_@@_position_int }
+    \bool_lazy_or:nnTF
+      {#3}
+      {
+        \prop_if_in_p:NV
+          \l_@@_parsed_prop \l_@@_tmp_tl
+      }
+      {
+        \@@_parse_add:nnnn { power }
+          {
+            \int_eval:n
+              { \l_@@_position_int \bool_if:NT #3 { + 1 } }
+          }
+          {#1} {#2}
+      }
+      {
+        \msg_error:nnxx { siunitx }
+          { part-before-unit } { power } { \token_to_str:N #1 }
+      }
+  }
+\cs_new_protected:Npn \@@_parse_qualifier:nn #1#2
+  {
+    \tl_set:Nx \l_@@_tmp_tl
+      { unit- \int_use:N \l_@@_position_int }
+    \prop_if_in:NVTF \l_@@_parsed_prop \l_@@_tmp_tl
+      {
+        \@@_parse_add:nnnn { qualifier }
+          { \int_use:N \l_@@_position_int } {#1} {#2}
+      }
+      {
+        \msg_error:nnnn { siunitx }
+          { part-before-unit } { qualifier } { \token_to_str:N #1 }
+      }
+  }
+%    \end{macrocode}
+%  Special (exceptional) items should always come before the relevant units.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_parse_special:n #1
+  {
+    \@@_parse_add:nnnn { special }
+      { \int_eval:n { \l_@@_position_int + 1 } }
+      {#1} {#1}
+  }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\@@_parse_unit:Nn}
+%   Parsing units is slightly more involved than the other cases: this is the
+%   one place where the tracking value is incremented.  If the switch
+%   \cs{l_@@_per_bool} is set true then the current unit is also
+%   reciprocal: this can only happen if \cs{l_@@_sticky_per_bool} is also
+%   true, so only one test is required.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_parse_unit:Nn #1#2
+  {
+    \int_incr:N \l_@@_position_int
+    \tl_if_eq:nnT {#1} { \gram }
+      {
+        \@@_parse_add:nnnn { command }
+          { \int_use:N \l_@@_position_int }
+          {#1} {#1}
+      }
+    \@@_parse_add:nnnn { unit }
+      { \int_use:N \l_@@_position_int }
+      {#1} {#2}
+    \bool_if:NT \l_@@_per_bool
+      {
+        \@@_parse_add:nnnn { per }
+          { \int_use:N \l_@@_position_int }
+          { \per } { true }
+      }
+  }
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\@@_parse_per:}
+%   Storing the \cs{per} command requires adding a data item separate from
+%   the power which applies: this makes later formatting much more
+%   straight-forward. This data could in principle be combined with the
+%   \texttt{power}, but depending on the output format required that may make
+%   life  more complex. Thus this information is stored separately for later
+%   retrieval. If \cs{per} is set to be \enquote{sticky} then after parsing
+%   the first occurrence, any further uses are in error.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_parse_per:
+  {
+    \bool_if:NTF \l_@@_sticky_per_bool
+      {
+        \bool_set_true:N \l_@@_per_bool
+        \cs_set_protected:Npn \per
+          { \msg_error:nn { siunitx } { duplicate-sticky-per } }
+      }
+      {
+        \@@_parse_add:nnnn
+          { per } { \int_eval:n { \l_@@_position_int + 1 } }
+          { \per } { true }
+      }
+  }
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\@@_parse_finalise:n}
+%   If \cs{per} applies to the current unit, the power needs to be multiplied
+%   by $-1$. That is done using an \texttt{fp} operation so that non-integer
+%   powers are supported. The flag for \cs{per} is also removed as this means
+%   we don't have to check that the original power was positive. To be on
+%   the safe side, there is a check for a trivial power at this stage.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_parse_finalise:n #1
+  {
+    \tl_set:Nx \l_@@_tmp_tl { per- #1 }
+    \prop_if_in:NVT \l_@@_parsed_prop \l_@@_tmp_tl
+      {
+        \prop_remove:NV \l_@@_parsed_prop
+          \l_@@_tmp_tl
+        \tl_set:Nx \l_@@_tmp_tl { power- #1 }
+        \prop_get:NVNTF
+          \l_@@_parsed_prop
+          \l_@@_tmp_tl
+          \l_@@_part_tl
+          {
+            \tl_set:Nx \l_@@_part_tl
+              { \fp_eval:n { \l_@@_part_tl * -1 } }
+            \fp_compare:nNnTF \l_@@_part_tl = 1
+              {
+                \prop_remove:NV \l_@@_parsed_prop
+                  \l_@@_tmp_tl
+              }
+              {
+                \prop_put:NVV \l_@@_parsed_prop
+                  \l_@@_tmp_tl \l_@@_part_tl
+              }
+          }
+          {
+            \prop_put:NVn \l_@@_parsed_prop
+              \l_@@_tmp_tl { -1 }
+          }
+      }
+  }
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\@@_parse_finalise:}
+%   The final task is to check that there is not a \enquote{dangling} power
+%   or prefix: these are added to the \enquote{next} unit so are easy to
+%   test for.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_parse_finalise:
+  {
+    \clist_map_inline:nn { per , power , prefix }
+      {
+        \tl_set:Nx \l_@@_tmp_tl
+          { ##1 - \int_eval:n { \l_@@_position_int + 1 } }
+        \prop_if_in:NVT \l_@@_parsed_prop \l_@@_tmp_tl
+          { \msg_error:nnn { siunitx } { dangling-part } { ##1 } }
+      }
+  }
+%    \end{macrocode}
+% \end{macro}
+%
+% \subsection{Formatting parsed units}
+%
+% \begin{variable}
+%   {
+%     \l_siunitx_unit_fraction_tl    ,
+%     \l_@@_denominator_bracket_bool ,
+%     \l_@@_forbid_literal_bool      ,
+%     \l_@@_parse_bool               ,
+%     \l_@@_per_symbol_tl            ,
+%     \l_@@_per_script_tl            ,
+%     \l_@@_half_sqrt_bool           ,
+%     \l_@@_qualifier_mode_tl        ,
+%     \l_@@_qualifier_phrase_tl
+%   }
+%   Set up the options which apply to formatting.
+%    \begin{macrocode}
+\keys_define:nn { siunitx }
+  {
+    bracket-unit-denominator .bool_set:N =
+      \l_@@_denominator_bracket_bool ,
+    display-per-mode .choices:nn =
+      {
+        fraction             ,
+        power                ,
+        power-positive-first , 
+        repeated-symbol      ,
+        symbol               ,
+        single-symbol
+      }
+      { \str_set:Nn \l_@@_per_display_str {#1} } ,
+    forbid-literal-units .bool_set:N =
+      \l_@@_forbid_literal_bool ,
+    fraction-command .tl_set:N =
+      \l_siunitx_unit_fraction_tl ,
+    parse-units .bool_set:N =
+      \l_@@_parse_bool ,
+    inline-per-mode .choices:nn =
+      {
+        fraction             ,
+        power                ,
+        power-positive-first , 
+        repeated-symbol      ,
+        symbol               ,
+        single-symbol
+      }
+      { \str_set:Nn \l_@@_per_inline_str {#1} } ,
+    per-mode .meta:n =
+      { display-per-mode = {#1} , inline-per-mode  = {#1} } ,
+    per-symbol .tl_set:N =
+      \l_@@_per_symbol_tl ,
+    per-symbol-script-correction .tl_set:N =
+      \l_@@_per_script_tl ,
+    power-half-as-sqrt .bool_set:N =
+      \l_@@_half_sqrt_bool ,
+    qualifier-mode .choices:nn =
+      { bracket , combine , phrase , subscript }
+      { \tl_set_eq:NN \l_@@_qualifier_mode_tl \l_keys_choice_tl } ,
+    qualifier-phrase .tl_set:N =
+      \l_@@_qualifier_phrase_tl
+  }
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{variable}{\l_@@_bracket_bool}
+%   A flag to indicate that the unit currently under construction will require
+%   brackets if a power is added.
+%    \begin{macrocode}
+\bool_new:N \l_@@_bracket_bool
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{variable}{\l_@@_bracket_open_tl, \l_@@_bracket_close_tl}
+%   Abstracted out but currently purely internal.
+%    \begin{macrocode}
+\tl_new:N \l_@@_bracket_open_tl
+\tl_new:N \l_@@_bracket_close_tl
+\tl_set:Nn \l_@@_bracket_open_tl { ( }
+\tl_set:Nn \l_@@_bracket_close_tl { ) }
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{variable}{\l_@@_font_bool}
+%   A flag to control when font wrapping is applied to the output.
+%    \begin{macrocode}
+\bool_new:N \l_@@_font_bool
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{variable}{\l_@@_per_display_str, \l_@@_per_inline_str}
+%   The data storage for |per-mode| settings.
+%    \begin{macrocode}
+\str_new:N \l_@@_per_display_str
+\str_new:N \l_@@_per_inline_str
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{variable}
+%   {
+%     \l_@@_powers_positive_bool ,
+%     \l_@@_per_symbol_bool      ,
+%     \l_@@_two_part_bool
+%   }
+%   Dealing with the various ways that reciprocal (\cs{per}) can be handled
+%   requires a few different switches.
+%    \begin{macrocode}
+\bool_new:N \l_@@_per_symbol_bool
+\bool_new:N \l_@@_powers_positive_bool
+\bool_new:N \l_@@_two_part_bool
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{variable}{\l_@@_numerator_bool}
+%   Indicates that the current unit should go into the numerator when splitting
+%   into two parts (fractions or other \enquote{sorted} styles).
+%    \begin{macrocode}
+\bool_new:N \l_@@_numerator_bool
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{variable}{\l_@@_qualifier_mode_tl}
+%   For storing the text of options which are best handled by picking
+%   function names.
+%    \begin{macrocode}
+\tl_new:N \l_@@_qualifier_mode_tl
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{variable}{\l_@@_combine_exp_fp}
+%   For combining an exponent with the first unit.
+%    \begin{macrocode}
+\fp_new:N \l_@@_combine_exp_fp
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{variable}{\l_@@_prefix_exp_bool}
+%   Used to determine if prefixes are converted into powers. Note that
+%   while this may be set as an option \enquote{higher up}, at this point it
+%   is handled as an internal switch (see the two formatting interfaces for
+%   reasons).
+%    \begin{macrocode}
+\bool_new:N \l_@@_prefix_exp_bool
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{variable}{\l_@@_prefix_fp}
+%   When converting prefixes to powers, the calculations are done as an
+%   \texttt{fp}.
+%    \begin{macrocode}
+\fp_new:N \l_@@_prefix_fp
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{variable}{\l_@@_multiple_fp}
+%   For multiplying units.
+%    \begin{macrocode}
+\fp_new:N \l_@@_multiple_fp
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{variable}{\l_@@_current_script_bool, \l_@@_script_bool}
+%   A pair of flags to track whether the last entry in the numerator has a
+%   superscript. This is tracked to deal with spacing immediately before
+%   a slash (symbol), if required. Two flags are needed as otherwise the
+%   denominator interferes.
+%    \begin{macrocode}
+\bool_new:N \l_@@_current_script_bool
+\bool_new:N \l_@@_script_bool
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{variable}{\l_@@_current_tl, \l_@@_part_tl}
+%   Building up the (partial) formatted unit requires some token list storage.
+%   Each part of the unit combination that is recovered also has to be
+%   placed in a token list: this is a dedicated one to leave the scratch
+%   variables available.
+%    \begin{macrocode}
+\tl_new:N \l_@@_current_tl
+\tl_new:N \l_@@_part_tl
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{variable}{\l_@@_denominator_tl}
+%   For fraction-like units, space is needed for the denominator as well as
+%   the numerator (which is handled using \cs{l_@@_formatted_tl}).
+%    \begin{macrocode}
+\tl_new:N \l_@@_denominator_tl
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{variable}{\l_@@_total_int}
+%   The formatting routine needs to know both the total number of units and
+%   the current unit. Thus an \texttt{int} is required in addition to
+%   \cs{l_@@_position_int}.
+%    \begin{macrocode}
+\int_new:N \l_@@_total_int
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{macro}{\@@_format_parsed:}
+% \begin{macro}
+%   {\@@_format_parsed:n, \@@_format_parsed:V, \@@_format_parsed_aux:n}
+%   The main formatting routine is essentially a loop over each position,
+%   reading the various parts of the unit to build up complete unit
+%   combination. When the two types of output need to be different, the
+%   formatter has to be run twice.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_format_parsed:
+  {
+    \str_if_eq:NNTF
+      \l_@@_per_inline_str
+      \l_@@_per_display_str
+      { \@@_format_parsed:V \l_@@_per_inline_str }
+      {
+        \group_begin:
+          \@@_format_parsed:V \l_@@_per_inline_str
+        \exp_args:NNNV \group_end:
+        \tl_set:Nn \l_@@_tmp_tl \l_@@_formatted_tl
+        \group_begin:
+          \@@_format_parsed:V \l_@@_per_display_str
+        \exp_args:NNNV \group_end:
+        \tl_set:Nn \l_@@_formatted_tl \l_@@_formatted_tl
+        \tl_set:Nx \l_@@_formatted_tl
+          {
+            \mathchoice
+              { \exp_not:V \l_@@_formatted_tl }
+              { \exp_not:V \l_@@_tmp_tl }
+              { \exp_not:V \l_@@_tmp_tl }
+              { \exp_not:V \l_@@_tmp_tl }
+          }
+       }
+  }
+\cs_new_protected:Npn \@@_format_parsed:n #1
+  {
+    \int_set_eq:NN \l_@@_total_int \l_@@_position_int
+    \use:c { @@_format_init_ #1 : }
+    \tl_clear:N \l_@@_denominator_tl
+    \tl_clear:N \l_@@_formatted_tl
+    \fp_zero:N \l_@@_prefix_fp
+    \int_zero:N \l_@@_position_int
+    \fp_compare:nNnF \l_@@_combine_exp_fp = \c_zero_fp
+      { \@@_format_combine_exp: }
+    \fp_compare:nNnF \l_@@_multiple_fp = \c_one_fp
+      { \@@_format_multiply: }
+    \bool_lazy_and:nnT
+      { \l_@@_prefix_exp_bool }
+      { \l_@@_mass_kilogram_bool }
+      { \@@_format_mass_to_kilogram: }
+    \int_do_while:nNnn
+      \l_@@_position_int < \l_@@_total_int
+      {
+        \bool_set_false:N \l_@@_bracket_bool
+        \bool_set_false:N \l_@@_current_script_bool
+        \tl_clear:N \l_@@_current_tl
+        \bool_set_false:N \l_@@_font_bool
+        \bool_set_true:N \l_@@_numerator_bool
+        \int_incr:N \l_@@_position_int
+        \clist_map_inline:nn { prefix , unit , qualifier , power , special }
+          { \@@_format_parsed_aux:n {##1} }
+        \@@_format_output:
+      }
+    \@@_format_finalise:
+  }
+\cs_generate_variant:Nn \@@_format_parsed:n { V }
+\cs_new_protected:Npn \@@_format_parsed_aux:n #1
+  {
+    \tl_set:Nx \l_@@_tmp_tl
+      { #1 - \int_use:N \l_@@_position_int }
+    \prop_get:NVNT \l_@@_parsed_prop
+      \l_@@_tmp_tl \l_@@_part_tl
+      { \use:c { @@_format_ #1 : } }
+  }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}
+%   {
+%     \@@_format_init_fracton:              ,
+%     \@@_format_init_power:                ,
+%     \@@_format_init_power-positive-first: ,
+%     \@@_format_init_repeated-symbol:      ,
+%     \@@_format_init_symbol:               ,
+%     \@@_format_init_single-symbol:        ,
+%   }
+%   To set up the various versions of |per-mode|.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_format_init_fraction:
+  {
+    \bool_set_false:N \l_@@_per_symbol_bool
+    \bool_set_true:N \l_@@_powers_positive_bool
+    \bool_set_true:N \l_@@_two_part_bool
+  }
+\cs_new_protected:Npn \@@_format_init_power:
+  {
+    \bool_set_false:N \l_@@_per_symbol_bool
+    \bool_set_false:N \l_@@_powers_positive_bool
+    \bool_set_false:N \l_@@_two_part_bool
+  }
+\cs_new_protected:cpn { @@_format_init_power-positive-first: }
+  {
+    \bool_set_false:N \l_@@_per_symbol_bool
+    \bool_set_false:N \l_@@_powers_positive_bool
+    \bool_set_true:N \l_@@_two_part_bool
+  }
+\cs_new_protected:cpn { @@_format_init_repeated-symbol: }
+  {
+    \bool_set_true:N \l_@@_per_symbol_bool
+    \bool_set_true:N \l_@@_powers_positive_bool
+    \bool_set_false:N \l_@@_two_part_bool
+  }
+\cs_new_protected:Npn \@@_format_init_symbol:
+  {
+    \bool_set_true:N \l_@@_per_symbol_bool
+    \bool_set_true:N \l_@@_powers_positive_bool
+    \bool_set_true:N \l_@@_two_part_bool
+  }
+\cs_new_protected:cpn { @@_format_init_single-symbol: }
+  {
+    \@@_format_init_power:
+    \@@_format_symbol_or_power:
+  }
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\@@_format_combine_exp:}
+%   To combine an exponent into the first prefix, we first adjust for any
+%   power, then deal with any existing prefix, before looking up the
+%   final result.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_format_combine_exp:
+  {
+    \prop_get:NnNF \l_@@_parsed_prop { power-1 } \l_@@_tmp_tl
+      { \tl_set:Nn \l_@@_tmp_tl { 1 } }
+    \fp_set:Nn \l_@@_tmp_fp
+      { \l_@@_combine_exp_fp / \l_@@_tmp_tl }
+    \prop_get:NnNTF \l_@@_parsed_prop { prefix-1 } \l_@@_tmp_tl
+      {
+        \prop_get:NVNF \l_@@_prefixes_forward_prop
+          \l_@@_tmp_tl \l_@@_tmp_tl
+          {
+            \prop_get:NnN \l_@@_parsed_prop { prefix-1 } \l_@@_tmp_tl
+            \msg_error:nnx { siunitx } { non-numeric-exponent }
+              { \l_@@_tmp_tl }
+            \tl_set:Nn \l_@@_tmp_tl { 0 }
+          }
+      }
+      { \tl_set:Nn \l_@@_tmp_tl { 0 } }
+    \tl_set:Nx \l_@@_tmp_tl
+      { \fp_eval:n { \l_@@_tmp_fp + \l_@@_tmp_tl } }
+    \fp_compare:nNnTF \l_@@_tmp_tl = \c_zero_fp
+      { \prop_remove:Nn \l_@@_parsed_prop { prefix-1 } }
+      {
+        \prop_get:NVNTF \l_@@_prefixes_reverse_prop
+          \l_@@_tmp_tl \l_@@_tmp_tl
+          { \prop_put:NnV \l_@@_parsed_prop { prefix-1 } \l_@@_tmp_tl }
+          {
+            \msg_error:nnx { siunitx } { non-convertible-exponent }
+              { \l_@@_tmp_tl }
+          }
+      }
+  }
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\@@_format_multiply:}
+%   A simple mapping.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_format_multiply:
+  {
+    \int_step_inline:nn { \prop_count:N \l_@@_parsed_prop  }
+      {
+        \prop_get:NnNF \l_@@_parsed_prop { power- ##1 } \l_@@_tmp_tl
+          { \tl_set:Nn \l_@@_tmp_tl { 1 } }
+        \fp_set:Nn \l_@@_tmp_fp
+          { \l_@@_tmp_tl * \l_@@_multiple_fp }
+        \fp_compare:nNnTF \l_@@_tmp_fp = \c_one_fp
+          { \prop_remove:N \l_@@_parsed_prop { power- ##1 } }
+          {
+            \prop_put:Nnx \l_@@_parsed_prop { power- ##1 }
+              { \fp_use:N \l_@@_tmp_fp }
+          }
+      }
+  }
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\@@_format_mass_to_kilogram:}
+%   To deal correctly with prefix extraction in combination with kilograms, we
+%   need to coerce the prefix for grams. Currently, only this one special case
+%   is recorded in the property list, so we do not actually need to check the
+%   value. If there is then no prefix we do a bit of gymnastics to create one
+%   and then shift the starting point for the prefix extraction.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_format_mass_to_kilogram:
+  {
+    \int_step_inline:nn \l_@@_total_int
+      {
+        \prop_if_in:NnT \l_@@_parsed_prop { command- ##1 }
+          {
+            \prop_if_in:NnF \l_@@_parsed_prop { prefix- ##1 }
+              {
+                \group_begin:
+                  \bool_set_false:N \l_@@_parsing_bool
+                  \tl_set:Nx \l_@@_tmp_tl { \kilo }
+                \exp_args:NNNV \group_end:
+                \tl_set:Nn \l_@@_tmp_tl \l_@@_tmp_tl
+                \prop_put:NnV \l_@@_parsed_prop { prefix- ##1 }
+                  \l_@@_tmp_tl
+                \prop_get:NnNF \l_@@_parsed_prop { power- ##1 }
+                  \l_@@_tmp_tl
+                  { \tl_set:Nn \l_@@_tmp_tl { 1 } }
+                \fp_set:Nn \l_@@_prefix_fp
+                  { \l_@@_prefix_fp - 3 * \l_@@_tmp_tl }
+              }
+          }
+      }
+  }
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\@@_format_symbol_or_power:}
+%   Check if there is exactly one negative power align with at least one
+%   positive one. Assuming there is, flip from (effectively) |power| to
+%   |symbol|.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_format_symbol_or_power:
+  {
+    \int_compare:nNnT \l_@@_total_int > 1
+      {
+        \bool_set_false:N \l_@@_tmp_bool
+        \int_step_inline:nn \l_@@_total_int
+          {
+            \prop_get:NnNT \l_@@_parsed_prop { power- ##1 }
+              \l_@@_tmp_tl
+              {
+                \int_compare:nNnT \l_@@_tmp_tl < 0
+                  {
+                    \bool_if:NTF \l_@@_tmp_bool
+                      { \bool_set_false:N \l_@@_tmp_bool }
+                      { \bool_set_true:N \l_@@_tmp_bool }
+                  }
+              }
+          }
+        \bool_if:NT \l_@@_tmp_bool
+          { \@@_format_init_symbol: }
+      }
+  }
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}[EXP]{\@@_format_bracket:N}
+%   A quick utility function which wraps up a token list variable in brackets
+%   if they are required.
+%    \begin{macrocode}
+\cs_new:Npn \@@_format_bracket:N #1
+  {
+    \bool_if:NTF \l_@@_bracket_bool
+      {
+        \exp_not:V \l_@@_bracket_open_tl
+        \exp_not:V #1
+        \exp_not:V \l_@@_bracket_close_tl
+      }
+      { \exp_not:V #1 }
+  }
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\@@_format_power:}
+% \begin{macro}[EXP]{\@@_format_power_aux:w}
+% \begin{macro}
+%   {
+%     \@@_format_power_positive: ,
+%     \@@_format_power_negative:
+%   }
+% \begin{macro}[EXP]{\@@_format_power_negative_aux:w}
+% \begin{macro}{\@@_format_power_superscript:}
+%   Formatting powers requires a test for negative numbers and depending on
+%   output format requests some adjustment to the stored value. This could be
+%   done using an \texttt{fp} function, but that would be slow compared to
+%   a dedicated if lower-level approach based on delimited arguments.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_format_power:
+  {
+    \@@_format_font:
+    \exp_after:wN \@@_format_power_aux:w
+      \l_@@_part_tl - \q_stop
+      { \@@_format_power_negative: }
+      { \@@_format_power_positive: }
+  }
+\cs_new:Npn \@@_format_power_aux:w #1 - #2 \q_stop
+  { \tl_if_empty:nTF {#1} }
+%    \end{macrocode}
+%   In the case of positive powers, there is little to do: add the power
+%   as a superscript (the parser ensures that this is $\neq 1$, so we do not
+%   need a test here).
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_format_power_positive:
+  { \@@_format_power_superscript: }
+%    \end{macrocode}
+%   Dealing with negative powers starts by flipping the switch used to track
+%   where in the final output the current part should get added to. For the
+%   case where the output is fraction-like, strip off the |~| then ensure that
+%   the result is not the trivial power~$1$. Assuming all is well, addition
+%   to the current unit combination goes ahead.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_format_power_negative:
+  {
+    \bool_set_false:N \l_@@_numerator_bool
+    \bool_if:NTF \l_@@_powers_positive_bool
+      {
+        \tl_set:Nx \l_@@_part_tl
+          {
+            \exp_after:wN \@@_format_power_negative_aux:w
+              \l_@@_part_tl \q_stop
+          }
+        \str_if_eq:VnF \l_@@_part_tl { 1 }
+          { \@@_format_power_superscript: }
+      }
+      { \@@_format_power_superscript: }
+  }
+\cs_new:Npn \@@_format_power_negative_aux:w - #1 \q_stop
+  { \exp_not:n {#1} }
+%    \end{macrocode}
+%   Adding the power as a superscript has the slight complication that there
+%   is the possibility of needing some brackets.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_format_power_superscript:
+  {
+    \bool_lazy_and:nnTF
+      { \l_@@_half_sqrt_bool }
+      { \str_if_eq_p:Vn \l_@@_part_tl { 0.5 } }
+      {
+        \tl_set:Nx \l_@@_current_tl
+          {
+            \exp_not:N \sqrt
+              { \exp_not:V \l_@@_current_tl }
+          }
+      }
+      {
+        \exp_after:wN \@@_format_power_superscipt:w
+          \l_@@_part_tl . . \q_stop
+      }
+  }
+\cs_new_protected:Npn \@@_format_power_superscipt:w #1 . #2 . #3 \q_stop
+  {
+    \tl_if_blank:nTF {#2}
+      {
+        \tl_set:Nx \l_@@_current_tl
+          {
+            \@@_format_bracket:N \l_@@_current_tl
+            ^ { \exp_not:n {#1} }
+          }
+      }
+      {
+        \tl_set:Nx \l_@@_tmp_tl
+          {
+            { }
+            \tl_if_head_eq_charcode:nNTF {#1} -
+              { { - } { \exp_not:o { \use_none:n #1 } } }
+              { { } { \exp_not:n {#1} } }
+            {#2}
+            { }
+            { }
+            { 0 }
+          }
+        \tl_set:Nx \l_@@_current_tl
+          {
+            \@@_format_bracket:N \l_@@_current_tl
+            ^ { \siunitx_number_output:N \l_@@_tmp_tl }
+          }
+      }
+    \bool_set_true:N \l_@@_current_script_bool
+    \bool_set_false:N \l_@@_bracket_bool
+  }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\@@_format_prefix:}
+% \begin{macro}
+%   {
+%     \@@_format_prefix_exp:   ,
+%     \@@_format_prefix_gram:  ,
+%     \@@_format_prefix_symbol:
+%   }
+%   Formatting for prefixes depends on whether they are to be expressed as
+%   symbols or collected up to be returned as a power of $10$. The latter
+%   case requires a bit of processing, which includes checking that the
+%   conversion is possible and allowing for any power that applies to the
+%   current unit.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_format_prefix:
+  {
+    \bool_if:NTF \l_@@_prefix_exp_bool
+      { \@@_format_prefix_exp: }
+      { \@@_format_prefix_symbol: }
+  }
+\cs_new_protected:Npn \@@_format_prefix_exp:
+  {
+    \prop_get:NVNTF \l_@@_prefixes_forward_prop
+      \l_@@_part_tl \l_@@_part_tl
+      {
+        \bool_if:NT \l_@@_mass_kilogram_bool
+          {
+            \tl_set:Nx \l_@@_tmp_tl
+              { command- \int_use:N \l_@@_position_int }
+            \prop_if_in:NVT \l_@@_parsed_prop \l_@@_tmp_tl
+              { \@@_format_prefix_gram: }
+          }
+        \tl_set:Nx \l_@@_tmp_tl
+          { power- \int_use:N \l_@@_position_int }
+        \prop_get:NVNF \l_@@_parsed_prop
+          \l_@@_tmp_tl \l_@@_tmp_tl
+          { \tl_set:Nn \l_@@_tmp_tl { 1 } }
+        \fp_add:Nn \l_@@_prefix_fp
+          { \l_@@_tmp_tl * \l_@@_part_tl }
+      }
+      { \@@_format_prefix_symbol: }
+  }
+%    \end{macrocode}
+%   When the units in use are grams, we may need to deal with conversion to
+%   kilograms.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_format_prefix_gram:
+  {
+    \tl_set:Nx \l_@@_part_tl
+      { \int_eval:n { \l_@@_part_tl - 3 } }
+    \group_begin:
+      \bool_set_false:N \l_@@_parsing_bool
+      \tl_set:Nx \l_@@_current_tl { \kilo }
+    \exp_args:NNNV \group_end:
+    \tl_set:Nn \l_@@_current_tl \l_@@_current_tl
+  }
+\cs_new_protected:Npn \@@_format_prefix_symbol:
+  { \tl_set_eq:NN \l_@@_current_tl \l_@@_part_tl }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\@@_format_qualifier:}
+% \begin{macro}
+%   {
+%     \@@_format_qualifier_bracket:   ,
+%     \@@_format_qualifier_combine:   ,
+%     \@@_format_qualifier_phrase:    ,
+%     \@@_format_qualifier_subscript:
+%   }
+%  There are various ways that a qualifier can be added to the output. The
+%  idea here is to modify the \enquote{base} text appropriately and then add
+%  to the current unit. Notice that when the qualifier is just treated as
+%  \enquote{text}, the auxiliary is actually a no-op.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_format_qualifier:
+  {
+    \bool_set_false:N \l_@@_current_script_bool
+    \use:c
+      {
+        @@_format_qualifier_
+        \l_@@_qualifier_mode_tl :
+      }
+    \tl_put_right:NV \l_@@_current_tl \l_@@_part_tl
+  }
+\cs_new_protected:Npn \@@_format_qualifier_bracket:
+  {
+    \@@_format_font:
+    \tl_set:Nx \l_@@_part_tl
+      {
+        \exp_not:V \l_@@_bracket_open_tl
+        \exp_not:V \l_siunitx_unit_font_tl
+          { \exp_not:V \l_@@_part_tl }
+        \exp_not:V \l_@@_bracket_close_tl
+      }
+  }
+\cs_new_protected:Npn \@@_format_qualifier_combine: { }
+\cs_new_protected:Npn \@@_format_qualifier_phrase:
+  {
+    \@@_format_font:
+    \tl_set:Nx \l_@@_part_tl
+      {
+        \exp_not:V \l_@@_qualifier_phrase_tl
+        \exp_not:V \l_siunitx_unit_font_tl
+          { \exp_not:V \l_@@_part_tl }
+      }
+  }
+\cs_new_protected:Npn \@@_format_qualifier_subscript:
+  {
+    \@@_format_font:
+    \tl_set:Nx \l_@@_part_tl
+      {
+        \c_@@_math_subscript_tl
+          {
+            \exp_not:V \l_siunitx_unit_font_tl
+              { \exp_not:V \l_@@_part_tl }
+          }
+      }
+  }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\@@_format_special:}
+%   Any special odds and ends are handled by simply making the current
+%   combination into an argument for the recovered code. Font control
+%   needs to be \emph{inside} the special formatting here.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_format_special:
+  {
+    \tl_set:Nx \l_@@_current_tl
+      {
+        \exp_not:V \l_@@_part_tl
+         {
+           \bool_if:NTF \l_@@_font_bool
+             { \use:n }
+             { \exp_not:V \l_siunitx_unit_font_tl }
+              { \exp_not:V \l_@@_current_tl }
+         }
+      }
+    \bool_set_true:N \l_@@_font_bool
+  }
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\@@_format_unit:}
+%   A very simple task: add the unit to the output currently being
+%   constructed.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_format_unit:
+  {
+    \tl_put_right:NV
+      \l_@@_current_tl \l_@@_part_tl
+  }
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\@@_format_output:}
+% \begin{macro}
+%   {\@@_format_output_aux:, \@@_format_output_denominator:}
+% \begin{macro}
+%   {
+%     \@@_format_output_aux:nn ,
+%     \@@_format_output_aux:nV ,
+%     \@@_format_output_aux:nv
+%   }
+%   The first step here is to make a choice based on whether the current
+%   part should be stored as part of the numerator or denominator of a
+%   fraction. In all cases, if the switch \cs{l_@@_numerator_bool} is
+%   true then life is simple: add the current part to the numerator with
+%   a standard separator
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_format_output:
+  {
+    \@@_format_font:
+    \bool_set_false:N \l_@@_bracket_bool
+    \use:c
+      {
+        @@_format_output_
+        \bool_if:NTF \l_@@_numerator_bool
+          { aux: }
+          { denominator: }
+      }
+  }
+\cs_new_protected:Npn \@@_format_output_aux:
+  {
+    \bool_set_eq:NN \l_@@_script_bool
+      \l_@@_current_script_bool
+    \@@_format_output_aux:nV { formatted }
+      \l_@@_product_tl
+  }
+%    \end{macrocode}
+%   There are a few things to worry about at this stage if the current part
+%   is in the denominator.  Powers have already been dealt with and some
+%   formatting outcomes only need a branch at the final point of building
+%   the entire unit. That means that there are three possible outcomes here:
+%   if collecting two separate parts, add to the denominator with a product
+%   separator, or if only building one token list there may be a need to use
+%   a symbol separator. When the |repeated-symbol| option is in use there may
+%   be a need to add a leading |1| to the output in the case where the
+%   first unit is in the denominator: that can be picked up by looking for
+%   empty output in combination with the flag for using a symbol in the output
+%   but not a two-part strategy.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_format_output_denominator:
+  {
+    \bool_if:NTF \l_@@_two_part_bool
+      {
+        \bool_lazy_and:nnT
+          { \l_@@_denominator_bracket_bool }
+          { ! \tl_if_empty_p:N \l_@@_denominator_tl }
+          { \bool_set_true:N \l_@@_bracket_bool }
+        \@@_format_output_aux:nV { denominator }
+          \l_@@_product_tl
+      }
+      {
+        \bool_lazy_and:nnT
+          { \l_@@_per_symbol_bool }
+          { \tl_if_empty_p:N \l_@@_formatted_tl }
+          { \tl_set:Nn \l_@@_formatted_tl { 1 } }
+        \@@_format_output_aux:nv { formatted }
+          {
+            l_@@_
+            \bool_if:NTF \l_@@_per_symbol_bool
+              { per_symbol }
+              { product }
+            _tl
+          }
+      }
+  }
+\cs_new_protected:Npn \@@_format_output_aux:nn #1#2
+  {
+    \tl_set:cx { l_@@_ #1 _tl }
+      {
+         \exp_not:v { l_@@_ #1 _tl }
+         \tl_if_empty:cF { l_@@_ #1 _tl }
+           { \exp_not:n {#2} }
+         \exp_not:V \l_@@_current_tl
+      }
+  }
+\cs_generate_variant:Nn \@@_format_output_aux:nn { nV , nv }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\@@_format_font:}
+%   A short auxiliary which checks if the font has been applied to the
+%   main part of the output: if not, add it and set the flag.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_format_font:
+  {
+    \bool_if:NF \l_@@_font_bool
+      {
+        \tl_set:Nx \l_@@_current_tl
+          {
+            \exp_not:V \l_siunitx_unit_font_tl
+              { \exp_not:V \l_@@_current_tl }
+          }
+        \bool_set_true:N \l_@@_font_bool
+      }
+  }
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\@@_format_finalise:}
+% \begin{macro}
+%   {
+%     \@@_format_finalise_autofrac:   ,
+%     \@@_format_finalise_fractional: ,
+%     \@@_format_finalise_power:
+%   }
+%   Finalising the unit format is really about picking up the cases involving
+%   fractions: these require assembly of the parts with the need to add
+%   additional material in some cases
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_format_finalise:
+  {
+    \tl_if_empty:NF \l_@@_denominator_tl
+      {
+        \bool_if:NTF \l_@@_powers_positive_bool
+          { \@@_format_finalise_fractional: }
+          { \@@_format_finalise_power: }
+      }
+  }
+%    \end{macrocode}
+%   For fraction-like output, there are three possible choices and two
+%   actual styles. In all cases, if the numerator is empty then it is set
+%   here to |1|.  To deal with the \enquote{auto-format} case, the two
+%   styles (fraction and symbol) are handled in auxiliaries: this allows both
+%   to be used at the same time! Beyond that, the key here is to use a
+%   single \cs{tl_set:Nx} to keep down the number of assignments.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_format_finalise_fractional:
+  {
+    \tl_if_empty:NT \l_@@_formatted_tl
+      { \tl_set:Nn \l_@@_formatted_tl { 1 } }
+    \bool_if:NTF \l_@@_per_symbol_bool
+      { \@@_format_finalise_symbol: }
+      { \@@_format_finalise_fraction: }
+  }
+%    \end{macrocode}
+%   When using a fraction function the two parts are now assembled.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_format_finalise_fraction:
+  {
+    \tl_set:Nx \l_@@_formatted_tl
+      {
+        \exp_not:V \l_siunitx_unit_fraction_tl
+          { \exp_not:V \l_@@_formatted_tl }
+          { \exp_not:V \l_@@_denominator_tl }
+      }
+  }
+%    \end{macrocode}
+%   Add the correction if required: no \cs{relax} needed as we know there is a
+%   non-expandable token following.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_format_finalise_symbol:
+  {
+    \tl_set:Nx \l_@@_formatted_tl
+      {
+        \exp_not:V \l_@@_formatted_tl
+        \bool_if:NT \l_@@_script_bool
+          { \exp_not:V \l_@@_per_script_tl }
+        \exp_not:V \l_@@_per_symbol_tl
+        \@@_format_bracket:N \l_@@_denominator_tl
+      }
+  }
+%    \end{macrocode}
+%   In the case of sorted powers, there is a test to make sure there was
+%   at least one positive power, and if so a simple join of the two parts
+%   with the appropriate product.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_format_finalise_power:
+  {
+    \tl_if_empty:NTF \l_@@_formatted_tl
+      {
+        \tl_set_eq:NN
+          \l_@@_formatted_tl
+          \l_@@_denominator_tl
+      }
+      {
+        \tl_set:Nx \l_@@_formatted_tl
+          {
+            \exp_not:V \l_@@_formatted_tl
+            \exp_not:V \l_@@_product_tl
+            \exp_not:V \l_@@_denominator_tl
+          }
+      }
+  }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% \subsection{Non-Latin character support}
+%
+% \begin{macro}{\@@_non_latin:n}
+% \begin{macro}{\@@_non_latin:nnnn}
+%   A small amount of code to make it convenient to include non-Latin
+%   characters in units without having to directly include them in the
+%   sources directly. We only make the first token active as some packages
+%   (\foreign{e.g.}~\pkg{kotex}) do this. For Unicode engines, we
+%   might run into some odd situations where active characters are in
+%   use (\foreign{e.g.}~\pkg{luainputenc}), so take precautions here
+%   too,
+%    \begin{macrocode}
+\bool_lazy_or:nnTF
+  { \sys_if_engine_luatex_p: }
+  { \sys_if_engine_xetex_p: }
+  {
+    \cs_new:Npn \@@_non_latin:n #1
+      {
+        \exp_after:wN \exp_after:wN \exp_after:wN
+          \exp_not:N \char_generate:nn {#1} { \char_value_catcode:n {#1} }
+      }
+  }
+  {
+    \cs_new:Npn \@@_non_latin:n #1
+      {
+        \exp_last_unbraced:Nf \@@_non_latin:nnnn
+          { \char_to_utfviii_bytes:n {#1} }
+      }
+    \cs_new:Npn \@@_non_latin:nnnn #1#2#3#4
+      {
+        \exp_after:wN \exp_after:wN \exp_after:wN
+          \exp_not:N \char_generate:nn {#1} { 13 }
+        \char_generate:nn {#2} { 12 }
+        \tl_if_blank:nF {#3}
+          { \char_generate:nn {#3} { 12 } }
+      }
+  }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% \subsection{Pre-defined unit components}
+%
+% Quite a number of units can be predefined: while this is a code-level module,
+% there is little point having a unit parser which does not start off able to
+% parse any units!
+%
+% \begin{macro}
+%   {
+%     \kilogram ,
+%     \metre    ,
+%     \meter    ,
+%     \mole     ,
+%     \kelvin   ,
+%     \candela  ,
+%     \second   ,
+%     \ampere
+%   }
+%   The basic \acro{SI} units: technically the correct spelling is \cs{metre}
+%   but US users tend to use \cs{meter}.
+%    \begin{macrocode}
+\siunitx_declare_unit:Nn \kilogram { \kilo \gram }
+\siunitx_declare_unit:Nn \metre    { m }
+\siunitx_declare_unit:Nn \meter    { \metre }
+\siunitx_declare_unit:Nn \mole     { mol }
+\siunitx_declare_unit:Nn \second   { s }
+\siunitx_declare_unit:Nn \ampere   { A }
+\siunitx_declare_unit:Nn \kelvin   { K }
+\siunitx_declare_unit:Nn \candela  { cd }
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\gram}
+%   The gram is an odd unit as it is needed for the base unit kilogram.
+%    \begin{macrocode}
+\siunitx_declare_unit:Nn \gram { g }
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}
+%   {
+%     \yocto ,
+%     \zepto ,
+%     \atto  ,
+%     \femto ,
+%     \pico  ,
+%     \nano  ,
+%     \micro ,
+%     \milli ,
+%     \centi ,
+%     \deci
+%  }
+%   The various \acro{SI} multiple prefixes are defined here: first the small
+%   ones.
+%    \begin{macrocode}
+\siunitx_declare_prefix:Nnn \yocto { -24 } { y }
+\siunitx_declare_prefix:Nnn \zepto { -21 } { z }
+\siunitx_declare_prefix:Nnn \atto  { -18 } { a }
+\siunitx_declare_prefix:Nnn \femto { -15 } { f }
+\siunitx_declare_prefix:Nnn \pico  { -12 } { p }
+\siunitx_declare_prefix:Nnn \nano  {  -9 } { n }
+\siunitx_declare_prefix:Nnx \micro { -6 } { \@@_non_latin:n { "03BC } }
+\siunitx_declare_prefix:Nnn \milli { -3 } { m }
+\siunitx_declare_prefix:Nnn \centi { -2 } { c }
+\siunitx_declare_prefix:Nnn \deci  { -1 } { d }
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}
+%   {
+%     \deca  ,
+%     \deka  ,
+%     \hecto ,
+%     \kilo  ,
+%     \mega  ,
+%     \giga  ,
+%     \tera  ,
+%     \peta  ,
+%     \exa   ,
+%     \zetta ,
+%     \yotta
+%   }
+%   Now the large ones.
+%    \begin{macrocode}
+\siunitx_declare_prefix:Nnn \deca  { 1 }  { da }
+\siunitx_declare_prefix:Nnn \deka  { 1 }  { da }
+\siunitx_declare_prefix:Nnn \hecto { 2 }  { h }
+\siunitx_declare_prefix:Nnn \kilo  { 3 }  { k }
+\siunitx_declare_prefix:Nnn \mega  { 6 }  { M }
+\siunitx_declare_prefix:Nnn \giga  { 9 }  { G }
+\siunitx_declare_prefix:Nnn \tera  { 12 } { T }
+\siunitx_declare_prefix:Nnn \peta  { 15 } { P }
+\siunitx_declare_prefix:Nnn \exa   { 18 } { E }
+\siunitx_declare_prefix:Nnn \zetta { 21 } { Z }
+\siunitx_declare_prefix:Nnn \yotta { 24 } { Y }
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}
+%   {
+%     \becquerel     ,
+%     \degreeCelsius ,
+%     \coulomb       ,
+%     \farad         ,
+%     \gray          ,
+%     \hertz         ,
+%     \henry         ,
+%     \joule         ,
+%     \katal         ,
+%     \lumen         ,
+%     \lux
+%  }
+%    Named derived units: first half of alphabet.
+%    \begin{macrocode}
+\siunitx_declare_unit:Nn \becquerel { Bq }
+\siunitx_declare_unit:Nx \degreeCelsius { \@@_non_latin:n { "00B0 } C }
+\siunitx_declare_unit:Nn \coulomb   { C }
+\siunitx_declare_unit:Nn \farad     { F }
+\siunitx_declare_unit:Nn \gray      { Gy }
+\siunitx_declare_unit:Nn \hertz     { Hz }
+\siunitx_declare_unit:Nn \henry     { H }
+\siunitx_declare_unit:Nn \joule     { J }
+\siunitx_declare_unit:Nn \katal     { kat }
+\siunitx_declare_unit:Nn \lumen     { lm }
+\siunitx_declare_unit:Nn \lux       { lx }
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}
+%   {
+%     \newton    ,
+%     \ohm       ,
+%     \pascal    ,
+%     \radian    ,
+%     \siemens   ,
+%     \sievert   ,
+%     \steradian ,
+%     \tesla     ,
+%     \volt      ,
+%     \watt      ,
+%     \weber
+%  }
+%    Named derived units: second half of alphabet.
+%    \begin{macrocode}
+\siunitx_declare_unit:Nn \newton    { N }
+\siunitx_declare_unit:Nx \ohm       { \@@_non_latin:n { "2126 } }
+\siunitx_declare_unit:Nn \pascal    { Pa }
+\siunitx_declare_unit:Nn \radian    { rad }
+\siunitx_declare_unit:Nn \siemens   { S }
+\siunitx_declare_unit:Nn \sievert   { Sv }
+\siunitx_declare_unit:Nn \steradian { sr }
+\siunitx_declare_unit:Nn \tesla     { T }
+\siunitx_declare_unit:Nn \volt      { V }
+\siunitx_declare_unit:Nn \watt      { W }
+\siunitx_declare_unit:Nn \weber     { Wb }
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}
+%   {
+%     \astronomicalunit ,
+%     \bel              ,
+%     \dalton           ,
+%     \day              ,
+%     \decibel          ,
+%     \electronvolt     ,
+%     \hectare          ,
+%     \hour             ,
+%     \litre            ,
+%     \liter            ,
+%     \minute           ,
+%     \neper            ,
+%     \tonne
+%  }
+%   Non-\acro{SI}, but accepted for general use. Once again there are two
+%   spellings, here for litre and with different output in this case.
+%    \begin{macrocode}
+\siunitx_declare_unit:Nn \astronomicalunit { au }
+\siunitx_declare_unit:Nn \bel              { B }
+\siunitx_declare_unit:Nn \decibel          { \deci \bel }
+\siunitx_declare_unit:Nn \dalton           { Da }
+\siunitx_declare_unit:Nn \day              { d }
+\siunitx_declare_unit:Nn \electronvolt     { eV }
+\siunitx_declare_unit:Nn \hectare          { ha }
+\siunitx_declare_unit:Nn \hour             { h }
+\siunitx_declare_unit:Nn \litre            { L }
+\siunitx_declare_unit:Nn \liter            { \litre }
+\siunitx_declare_unit:Nn \minute           { min }
+\siunitx_declare_unit:Nn \neper            { Np }
+\siunitx_declare_unit:Nn \tonne            { t }
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}
+%   {
+%     \arcminute ,
+%     \arcsecond ,
+%     \degree
+%  }
+%   Arc units: again, non-\acro{SI}, but accepted for general use.
+%    \begin{macrocode}
+\siunitx_declare_unit:Nx \arcminute { \@@_non_latin:n { "02B9 } }
+\siunitx_declare_unit:Nx \arcsecond { \@@_non_latin:n { "02BA } }
+\siunitx_declare_unit:Nx \degree { \@@_non_latin:n { "00B0 } }
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\percent}
+%   For percent, the raw character is the most flexible way of handling output.
+%    \begin{macrocode}
+\siunitx_declare_unit:Nx \percent { \cs_to_str:N \% }
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\square, \squared, \cubic, \cubed}
+%   Basic powers.
+%    \begin{macrocode}
+\siunitx_declare_power:NNn \square \squared { 2 }
+\siunitx_declare_power:NNn \cubic  \cubed   { 3 }
+%    \end{macrocode}
+% \end{macro}
+%
+% \subsection{Messages}
+%
+%    \begin{macrocode}
+\msg_new:nnnn { siunitx } { dangling-part }
+  { Found~#1~part~with~no~unit. }
+  {
+    Each~#1~part~must~be~associated~with~a~unit:~a~#1~part~was~found~
+    but~no~following~unit~was~given.
+  }
+\msg_new:nnnn { siunitx } { duplicate-part }
+  { Duplicate~#1~part:~#2. }
+  {
+    Each~unit~may~have~only~one~#1:\\
+    the~additional~#1~part~'#2'~will~be~ignored.
+  }
+\msg_new:nnnn { siunitx } { duplicate-sticky-per }
+  { Duplicate~\token_to_str:N \per. }
+  {
+    When~the~'sticky-per'~option~is~active,~only~one~
+    \token_to_str:N \per \  may~appear~in~a~unit.
+  }
+\msg_new:nnnn { siunitx } { literal-unit }
+  { Literal~units~disabled. }
+  {
+    You~gave~the~literal~input~'#1'~
+    but~literal~unit~output~is~disabled.
+  }
+\msg_new:nnnn { siunitx } { non-convertible-exponent }
+  { Exponent~'#1'~cannot~be~converted~into~a~symbolic~prefix. }
+  {
+    The~exponent~'#1'~does~not~match~with~any~of~the~symbolic~prefixes~
+    set~up.
+  }
+\msg_new:nnnn { siunitx } { non-numeric-exponent }
+  { Prefix~'#1'~does~not~have~a~numerical~value. }
+  {
+    The~prefix~'#1'~needs~to~be~combined~with~a~number,~but~it~has~no
+    numerical~value.
+  }
+\msg_new:nnnn { siunitx } { part-before-unit }
+  { Found~#1~part~before~first~unit:~#2. }
+  {
+    The~#1~part~'#2'~must~follow~after~a~unit:~
+    it~cannot~appear~before~any~units~and~will~therefore~be~ignored.
+  }
+%    \end{macrocode}
+%
+% \subsection{Deprecated options}
+%
+% To handle |per-mode = symbol-or-fraction|, there needs to be allowance for
+% the fact that it is set up as a meta-option. That is done with appropriate
+% code here for the two newer options.
+%    \begin{macrocode}
+\keys_define:nn { siunitx }
+  {
+    display-per-mode / symbol-or-fraction .code:n =
+      {
+        \msg_info:nnnn { siunitx } { option-deprecated }
+          { per-mode~=~symbol-or-fraction }
+          { display-per-mode~=~fraction,~inline-per-mode~=~symbol }
+        \str_set:Nn \l_@@_per_display_str { fraction }
+      } ,
+    inline-per-mode / symbol-or-fraction .code:n =
+      {
+        \msg_info:nnnn { siunitx } { option-deprecated }
+          { per-mode~=~symbol-or-fraction }
+          { display-per-mode~=~fraction,~inline-per-mode~=~symbol }
+        \str_set:Nn \l_@@_per_inline_str { symbol }
+      }
+  }
+%    \end{macrocode}
+%
+% \subsection{Standard settings for module options}
+%
+% Some of these follow naturally from the point of definition
+% (\foreign{e.g.}~boolean variables are always |false| to begin with),
+% but for clarity everything is set here.
+%    \begin{macrocode}
+\keys_set:nn { siunitx }
+  {
+    bracket-unit-denominator     = true      ,
+    forbid-literal-units         = false     ,
+    fraction-command             = \frac     ,
+    inter-unit-product           = \,        ,
+    extract-mass-in-kilograms    = true      ,
+    parse-units                  = true      ,
+    per-mode                     = power     ,
+    per-symbol                   = /         ,
+    per-symbol-script-correction = \!        ,
+    power-half-as-sqrt           = false     ,
+    qualifier-mode               = subscript ,
+    qualifier-phrase             =           ,
+    sticky-per                   = false     ,
+    unit-font-command            = \mathrm
+  }
+%    \end{macrocode}
+%
+% Cover the case where the default font is sanserif.
+%    \begin{macrocode}
+\AtBeginDocument
+  {
+    \str_if_eq:eeT
+      { \exp_not:o { \familydefault } }
+      { \exp_not:n { \sfdefault } }
+      { \keys_set:nn { siunitx } { unit-font-command = \mathsf } }
+  }
+%    \end{macrocode}
+%
+%    \begin{macrocode}
+%</package>
+%    \end{macrocode}
+%
+% \end{implementation}
+%
+% \begin{thebibliography}{1}
+%   \bibitem{BIPM}
+%     \emph{The International System of Units (\acro{SI})},
+%     \url{https://www.bipm.org/en/measurement-units/}.
+%   \bibitem{base-units}
+%     \emph{SI base units},
+%     \url{https://www.bipm.org/en/measurement-units/si-base-units}.
+% \end{thebibliography}
+%
+% \PrintIndex

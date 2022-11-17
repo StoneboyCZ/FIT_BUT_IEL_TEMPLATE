@@ -1,0 +1,1225 @@
+% \iffalse meta-comment
+%
+% File: siunitx-complex.dtx Copyright (C) 2021,2022 Joseph Wright
+%
+% It may be distributed and/or modified under the conditions of the
+% LaTeX Project Public License (LPPL), either version 1.3c of this
+% license or (at your option) any later version.  The latest version
+% of this license is in the file
+%
+%    https://www.latex-project.org/lppl.txt
+%
+% This file is part of the "siunitx bundle" (The Work in LPPL)
+% and all files in that bundle must be distributed together.
+%
+% The released version of this bundle is available from CTAN.
+%
+% -----------------------------------------------------------------------
+%
+% The development version of the bundle can be found at
+%
+%    https://github.com/josephwright/siunitx
+%
+% for those people who are interested.
+%
+% -----------------------------------------------------------------------
+%
+%<*driver>
+\documentclass{l3doc}
+\ProvideDocumentCommand\foreign{m}{\textit{#1}}
+% The next line is needed so that \GetFileInfo will be able to pick up
+% version data
+\usepackage{siunitx}
+\begin{document}
+  \DocInput{\jobname.dtx}
+\end{document}
+%</driver>
+% \fi
+%
+% \GetFileInfo{siunitx.sty}
+%
+% \title{^^A
+%   \pkg{siunitx-complex} -- Complex numbers^^A
+%   \thanks{This file describes \fileversion,
+%     last revised \filedate.}^^A
+% }
+%
+% \author{^^A
+%  Joseph Wright^^A
+%  \thanks{^^A
+%    E-mail:
+%    \href{mailto:joseph.wright@morningstar2.co.uk}
+%      {joseph.wright@morningstar2.co.uk}^^A
+%   }^^A
+% }
+%
+% \date{Released \filedate}
+%
+% \maketitle
+%
+% \begin{documentation}
+%
+% This submodule is concerned with formatting complex numbers. It augments the
+% standard functions \cs{siunitx_number_format:nN} and \cs{siunitx_quantity:nn}
+% by allowing parsing of numbers with a complex part. There are no additional
+% assumptions concerning \LaTeXe{} commands in the submodule beyond those in the
+% core number and unit submodules.
+%
+% \begin{function}{\siunitx_complex_number:n}
+%   \begin{syntax}
+%     \cs{siunitx_complex_number:n} \Arg{number}
+%   \end{syntax}
+%   Parses the \meta{number} and splits into real and complex parts, which are
+%   then formatted as described for \cs{siunitx_number_format:nN}. The results
+%   are combined and printed using the standard functions in the module. If
+%   the setting \opt{complex-mode} is set to \meta{polar}, the input is
+%   parsed, converted to polar form and then passed to
+%   \cs{siunitx_complex_number:nn}. This parsing requires that the complex root
+%   is given as \texttt{i} at the \emph{end} of the value.
+% \end{function}
+%
+% \begin{function}{\siunitx_complex_number:nn}
+%   \begin{syntax}
+%     \cs{siunitx_complex_number:nn} \Arg{magnitude} \Arg{angle}
+%   \end{syntax}
+%   Parses the \meta{magnitude} and \meta{angle} and then formats each as
+%   described for \cs{siunitx_number_format:nN}. The two are separated by the
+%   angle symbol, which is treated as a numerical part. If
+%   \opt{complex-angle-unit} is set to \opt{degrees} then the unit symbol is
+%   added: this is printed as a unit in the usual way. If
+%   the setting \opt{complex-mode} is set to \meta{cartesian}, the input is
+%   parsed, converted to Cartesian form and then passed to
+%   \cs{siunitx_complex_number:n}.
+% \end{function}
+%
+% \begin{function}{\siunitx_complex_quantity:nn, \siunitx_complex_quantity:nnn}
+%   \begin{syntax}
+%     \cs{siunitx_complex_quantity:nn} \Arg{number} \Arg{units}
+%     \cs{siunitx_complex_quantity:nnn} \Arg{magnitude} \Arg{angle} \Arg{units}
+%   \end{syntax}
+%   These functions treat their numerical argument(s) as described
+%   for the corresponding \texttt{number} functions. They then typeset the
+%   entire numerical part and the unit as described for \cs{siunitx_quantity:nn}.
+% \end{function}
+%
+% \begin{function}{complex-angle-unit}
+%   \begin{syntax}
+%     |complex-angle-unit| = |degrees|\verb"|"|radians|
+%   \end{syntax}
+%   Sets how the unit for polar complex numbers is treated. This setting
+%   is used to determine how polar \emph{input} is interpreted, how
+%   conversion to polar form works and how output in polar form is typeset.
+%   The standard setting is |degrees|.
+% \end{function}
+%
+% \begin{function}{complex-mode}
+%   \begin{syntax}
+%     |complex-mode| = |cartesian|\verb"|"|input|\verb"|"|polar|
+%   \end{syntax}
+%   Selects how complex values are formatted: a choice from the options
+%   |cartesian|, |input| and |polar|. The option |cartesian| means that
+%   complex values will always be typeset in cartesian ($x + y\mathrm{i}$)
+%   format, whilst |polar| means that complex are typeset as a magnitude
+%   and angle. Finally, |input| setting means that the input format
+%   (\foreign{i.e.}~difference between \cs{siunitx_complex_number:n} and
+%   \cs{siunitx_complex_number:nn}) is maintained. The standard setting is
+%   |input|.
+% \end{function}
+%
+% \begin{function}{complex-root-position}
+%   \begin{syntax}
+%     |complex-root-position| = |after-number|\verb"|"|before-number|
+%   \end{syntax}
+%   Choice which determines where the complex root symbol is printed relative
+%   to the numbers. The standard setting is |after-number|.
+% \end{function}
+%
+% \begin{function}{complex-symbol-angle}
+%   \begin{syntax}
+%     |complex-symbol-angle| = \meta{symbol}
+%   \end{syntax}
+%   Sets the symbol used before the polar angle.
+% \end{function}
+%
+% \begin{function}{complex-symbol-degree}
+%   \begin{syntax}
+%     |complex-symbol-degree| = \meta{symbol}
+%   \end{syntax}
+%   Sets the symbol used for polar degrees.
+% \end{function}
+%
+% \begin{function}{input-complex-root}
+%   \begin{syntax}
+%     |input-complex-root| = \meta{tokens}
+%   \end{syntax}
+%   The token(s) considered as complexes roots for number parsing.
+%   The standard setting is |ij|.
+% \end{function}
+%
+% \begin{function}{output-complex-root}
+%   \begin{syntax}
+%     |output-complex-root| = \meta{tokens}
+%   \end{syntax}
+%   The token(s) used to show the complex root in output. The standard setting
+%   is |\mathrm{i}|.
+% \end{function}
+%
+% \begin{function}{print-complex-unity}
+%   \begin{syntax}
+%     |print-complex-unity| = |true|\verb"|"|false|
+%   \end{syntax}
+%   Switch to determine if the number \num{1} is printed for a complex
+%   part which is exactly unity.
+% \end{function}
+%
+% \end{documentation}
+%
+% \begin{implementation}
+%
+% Start the \pkg{DocStrip} guards.
+%    \begin{macrocode}
+%<*package>
+%    \end{macrocode}
+%
+% \section{\pkg{siunitx-complex} implementation}
+%
+% Identify the internal prefix (\LaTeX3 \pkg{DocStrip} convention): only
+% internal material in this \emph{submodule} should be used directly.
+%    \begin{macrocode}
+%<@@=siunitx_complex>
+%    \end{macrocode}
+%
+% \subsection{General setup}
+%
+% \begin{variable}{\l_@@_tmp_fp, \l_@@_tmp_tl}
+%    \begin{macrocode}
+\fp_new:N \l_@@_tmp_fp
+\tl_new:N \l_@@_tmp_tl
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{variable}{\l_@@_input_tl}
+%   The numerical input exactly as given by the user.
+%    \begin{macrocode}
+\tl_new:N \l_@@_input_tl
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{variable}{\l_@@_comparator_tl}
+%   A comparator, if found, is held here.
+%    \begin{macrocode}
+\tl_new:N \l_@@_comparator_tl
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{variable}{\l_@@_exp_tl}
+%   The exponent part of a parsed number.
+%    \begin{macrocode}
+\tl_new:N \l_@@_exp_tl
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{variable}{\l_@@_real_tl, \l_@@_img_tl}
+%   The real and imaginary parts of cartesian form, respectively.
+%    \begin{macrocode}
+\tl_new:N \l_@@_real_tl
+\tl_new:N \l_@@_img_tl
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{variable}{\l_@@_mag_tl, \l_@@_angle_tl}
+%   The magnitude and angle of polar form, respectively.
+%    \begin{macrocode}
+\tl_new:N \l_@@_mag_tl
+\tl_new:N \l_@@_angle_tl
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{variable}{\l_@@_join_tl, \l_@@_sign_tl}
+%   Staging posts for a joining and leading sign, respectively.
+%    \begin{macrocode}
+\tl_new:N \l_@@_join_tl
+\tl_new:N \l_@@_sign_tl
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{variable}
+%   {
+%     \l_@@_root_after_bool      ,
+%     \l_@@_force_cartesian_bool ,
+%     \l_@@_force_polar_bool     ,
+%     \l_@@_polar_degree_bool    ,
+%     \l_@@_symbol_angle_tl      ,
+%     \l_@@_symbol_degree_tl     ,
+%     \l_@@_input_root_tl        ,
+%     \l_@@_output_root_tl
+%   }
+%    \begin{macrocode}
+\bool_new:N \l_@@_root_after_bool
+\bool_new:N \l_@@_force_cartesian_bool
+\bool_new:N \l_@@_force_polar_bool
+\bool_new:N \l_@@_polar_degree_bool
+\keys_define:nn { siunitx }
+  {
+    complex-mode .choice: ,
+    complex-mode / cartesian .code:n =
+      {
+        \bool_set_true:N \l_@@_force_cartesian_bool
+        \bool_set_false:N \l_@@_force_polar_bool
+      } ,
+    complex-mode / polar .code:n =
+      {
+        \bool_set_false:N \l_@@_force_cartesian_bool
+        \bool_set_true:N \l_@@_force_polar_bool
+      } ,
+    complex-mode / input .code:n =
+      {
+        \bool_set_false:N \l_@@_force_cartesian_bool
+        \bool_set_false:N \l_@@_force_polar_bool
+      } ,
+    complex-angle-unit .choice: ,
+    complex-angle-unit / degrees .code:n =
+      { \bool_set_true:N \l_@@_polar_degree_bool } ,
+    complex-angle-unit / radians .code:n =
+      { \bool_set_false:N \l_@@_polar_degree_bool } ,
+    complex-root-position .choice: ,
+    complex-root-position / after-number .code:n =
+      { \bool_set_true:N \l_@@_root_after_bool } ,
+    complex-root-position / before-number .code:n =
+      { \bool_set_false:N \l_@@_root_after_bool } ,
+    complex-symbol-angle .tl_set:N =
+      \l_@@_symbol_angle_tl ,
+    complex-symbol-degree .tl_set:N =
+      \l_@@_symbol_degree_tl ,
+    input-complex-root .tl_set:N =
+      \l_@@_input_root_tl ,
+    output-complex-root .tl_set:N =
+      \l_@@_output_root_tl ,
+    print-complex-unity .bool_set:N =
+      \l_@@_print_unity_bool
+  }
+%    \end{macrocode}
+% \end{variable}
+%
+% \subsection{Parsing}
+%
+% \begin{macro}{\@@_parse:nNN}
+% \begin{macro}{\@@_parse_end:}
+% \begin{macro}{\@@_parse_clear:}
+%   Parsing for complex numbers needs some of the same approaches as the
+%   general parser. However, as the aim here is to do only enough to split
+%   the real and imaginary parts before handing off the the usual code,
+%   it's not a full repeat. Instead, we shortcut where we can. The |clear|
+%   function here is not only there to make this function shorter: it
+%   also allows a single way to zap any stored data if a parse error occurs.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_parse:nNN #1#2#3
+  {
+    \group_begin:
+      \@@_parse_clear:
+      \protected@edef \l_@@_arg_tl {#1}
+      \tl_set_eq:NN \l_@@_input_tl \l_@@_arg_tl
+      \siunitx_number_normalize_symbols:N \l_@@_arg_tl
+      \tl_if_empty:NF \l_@@_arg_tl
+        { \@@_parse_comparator: }
+      \@@_parse_check:
+      \cs_set_protected:Npx \@@_parse_end:
+        {
+          \tl_set:Nn \exp_not:N #2 { \exp_not:V \l_@@_real_tl }
+          \tl_set:Nn \exp_not:N #3 { \exp_not:V \l_@@_img_tl }
+        }
+    \exp_after:wN \group_end:
+    \@@_parse_end:
+  }
+\cs_new_protected:Npn \@@_parse_end: { }
+\cs_new_protected:Npn \@@_parse_clear:
+  {
+    \tl_clear:N \l_@@_real_tl
+    \tl_clear:N \l_@@_img_tl
+    \tl_clear:N \l_@@_exp_tl
+    \tl_clear:N \l_@@_sign_tl
+    \tl_clear:N \l_@@_join_tl
+  }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\@@_parse_check:}
+% \begin{macro}{\@@_parse_check:N}
+%   Now we tidy up and do the main work: passing to the standard formatter for
+%   final parsing.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_parse_check:
+  {
+    \tl_if_empty:NTF \l_@@_img_tl
+      { \@@_parse_check:N \l_@@_real_tl }
+      {
+        \tl_if_empty:NTF \l_@@_real_tl
+          { \@@_parse_check:N \l_@@_img_tl }
+          {
+            \@@_parse_check:N \l_@@_real_tl
+            \tl_set_eq:NN \l_@@_sign_tl \l_@@_join_tl
+            \@@_parse_check:N \l_@@_img_tl
+          }
+      }
+  }
+\cs_new_protected:Npn \@@_parse_check:N #1
+  {
+    \tl_set:Nx #1
+      {
+        \exp_not:V \l_@@_comparator_tl
+        \exp_not:V \l_@@_sign_tl
+        \exp_not:V #1
+        \exp_not:V \l_@@_exp_tl
+      }
+    \tl_clear:N \l_@@_comparator_tl
+    \tl_clear:N \l_@@_sign_tl
+    \siunitx_number_parse:VN #1 #1
+  }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\@@_parse_comparator:}
+% \begin{macro}{\@@_parse_comparator_aux:Nw}
+%   The first step is to extract any comparator: this is the same as
+%   for a full number parse.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_parse_comparator:
+  {
+    \exp_after:wN \@@_parse_comparator_aux:Nw
+      \l_@@_arg_tl \q_stop
+  }
+\cs_new_protected:Npn \@@_parse_comparator_aux:Nw #1#2 \q_stop
+  {
+    \tl_if_in:NnTF \l_siunitx_number_input_comparator_tl {#1}
+      {
+        \tl_set:Nn \l_@@_comparator_tl {#1}
+        \tl_set:Nn \l_@@_arg_tl {#2}
+      }
+      { \tl_clear:N \l_@@_comparator_tl }
+    \tl_if_empty:NF \l_@@_arg_tl
+      { \@@_parse_sign: }
+  }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\@@_parse_exponent:}
+% \begin{macro}{\@@_parse_exponent_auxi:w}
+% \begin{macro}{\@@_parse_exponent_auxii:nn}
+%   An exponent part of a number has to come at the end and can only occur
+%   once. Thus it is relatively easy to parse. The code here is a simplified
+%   version of that in \pkg{siunitx-number}: we only need to find \emph{some}
+%   exponent, not check on the detail. Notice that we need to retain the
+%   exponent marker here: that is done using the short-lived temporary
+%   variable.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_parse_exponent:
+  {
+    \tl_if_empty:NTF \l_siunitx_number_input_exponent_tl
+      { \@@_parse_root: }
+      {
+        \tl_set:Nx \l_@@_tmp_tl
+          { \tl_head:V \l_siunitx_number_input_exponent_tl }
+        \tl_map_inline:Nn \l_siunitx_number_input_exponent_tl
+          {
+            \tl_replace_all:NnV \l_@@_arg_tl
+              {##1} \l_@@_tmp_tl
+          }
+        \use:x
+          {
+            \cs_set_protected:Npn
+              \exp_not:N \@@_parse_exponent_auxi:w
+              ####1 \exp_not:V \l_@@_tmp_tl
+              ####2 \exp_not:V \l_@@_tmp_tl
+              ####3 \exp_not:N \q_stop
+          }
+            { \@@_parse_exponent_auxii:nn {##1} {##2} }
+        \use:x
+          {
+            \@@_parse_exponent_auxi:w
+              \exp_not:V \l_@@_arg_tl
+              \exp_not:V \l_@@_tmp_tl \exp_not:N \q_nil
+              \exp_not:V \l_@@_tmp_tl \exp_not:N \q_stop
+          }
+      }
+  }
+\cs_new_protected:Npn \@@_parse_exponent_auxi:w  { }
+\cs_new_protected:Npn \@@_parse_exponent_auxii:nn #1#2
+  {
+    \quark_if_nil:nF {#2}
+      {
+        \tl_set:Nn \l_@@_arg_tl {#1}
+        \tl_set:Nx \l_@@_exp_tl
+          { \exp_not:V \l_@@_tmp_tl \exp_not:n {#2} }
+      }
+    \@@_parse_root:
+  }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\@@_parse_root:}
+% \begin{macro}{\@@_parse_root_auxi:w}
+% \begin{macro}{\@@_parse_root_auxii:nn}
+%   Splitting at the complex root is much like splitting the exponent.
+%   After dealing with the case where there is no complex root allowed,
+%   use the first possible symbol to do the work.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_parse_root:
+  {
+    \tl_if_empty:NTF \l_@@_input_root_tl
+      { \tl_set_eq:NN \l_@@_real_tl \l_@@_arg_tl }
+      {
+        \tl_set:Nx \l_@@_tmp_tl
+          { \tl_head:V \l_@@_input_root_tl }
+        \tl_map_inline:Nn \l_@@_input_root_tl
+          {
+            \tl_replace_all:NnV \l_@@_arg_tl
+              {##1} \l_@@_tmp_tl
+          }
+        \use:x
+          {
+            \cs_set_protected:Npn
+              \exp_not:N \@@_parse_root_auxi:w
+              ####1 \exp_not:V \l_@@_tmp_tl
+              ####2 \exp_not:V \l_@@_tmp_tl
+              ####3 \exp_not:N \q_stop
+          }
+            { \@@_parse_root_auxii:nn {##1} {##2} }
+        \use:x
+          {
+            \@@_parse_root_auxi:w
+              \exp_not:V \l_@@_arg_tl
+              \exp_not:V \l_@@_tmp_tl \exp_not:N \q_nil
+              \exp_not:V \l_@@_tmp_tl \exp_not:N \q_stop
+          }
+      }
+  }
+\cs_new_protected:Npn \@@_parse_root_auxi:w  { }
+%    \end{macrocode}
+%   This is where the business end lies. We have four possibilities:
+%   \begin{itemize}
+%     \item There was no complex root at all: |#2| will be |\q_nil|
+%     \item All of the number is in the complex part with a leading
+%       root: |#1| will be empty. This includes the case where
+%       the input was \emph{just} a root symbol (plus possibly sign,
+%       exponent): we need to cover that.
+%     \item All of the number was before the complex root: |#2| will
+%       be empty and we need to check |#1| fully to split out the two
+%       parts
+%     \item The input has a real part with the complex part starting
+%       with the root symbol: just the last token needs to be separated.
+%   \end{itemize}
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_parse_root_auxii:nn #1#2
+  {
+    \quark_if_nil:nTF {#2}
+      { \tl_set:Nn \l_@@_real_tl {#1} }
+      {
+        \tl_set:Nn \l_@@_img_tl {#2}
+        \tl_if_blank:nTF {#1}
+          {
+            \tl_if_blank:nT {#2}
+              { \tl_set:Nn \l_@@_img_tl { 1 } }
+          }
+          {
+            \tl_if_blank:nTF {#2}
+              { \@@_parse_split:n {#1} }
+              { \@@_parse_sign_check:n {#1} }
+          }
+      }
+  }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\@@_parse_sign:}
+% \begin{macro}{\@@_parse_sign_aux:Nw}
+%   The first token of a number after a comparator could be a sign. A quick
+%   check is made and if found stored. There is no need to worry about the
+%   nature of the sign: we keep them regardless.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_parse_sign:
+  {
+    \exp_after:wN \@@_parse_sign_aux:Nw
+      \l_@@_arg_tl \q_stop
+  }
+\cs_new_protected:Npn \@@_parse_sign_aux:Nw #1#2 \q_stop
+  {
+    \tl_if_in:NnT \l_siunitx_number_input_sign_tl {#1}
+      {
+        \tl_set:Nn \l_@@_sign_tl {#1}
+        \tl_set:Nn \l_@@_arg_tl {#2}
+      }
+    \tl_if_empty:NF \l_@@_arg_tl
+      { \@@_parse_exponent: }
+  }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\@@_parse_sign_check:n}
+% \begin{macro}{\@@_parse_sign_check:nN}
+% \begin{macro}{\@@_parse_sign_check:nNw}
+%   Here, we want to check that the last token in the input is a sign.
+%   There cannot be anything after the sign, and there has to be at one
+%   token before the sign: we can therefore signal a parsing error if we
+%   need to.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_parse_sign_check:n #1
+  {
+    \@@_parse_sign_check:nN { } #1 \q_recursion_tail \q_recursion_stop
+  }
+\cs_new_protected:Npn \@@_parse_sign_check:nN #1#2
+  {
+    \quark_if_recursion_tail_stop_do:Nn #2
+      { \@@_parse_clear: }
+    \tl_if_in:NnTF \l_siunitx_number_input_sign_tl {#2}
+      { \@@_parse_sign_check:nNw {#1} #2 }
+      { \@@_parse_sign_check:nN {#1#2} }
+  }
+\cs_new_protected:Npn \@@_parse_sign_check:nNw
+  #1#2 #3 \q_recursion_tail \q_recursion_stop
+  {
+    \tl_if_blank:nTF {#3}
+      {
+        \tl_if_blank:nTF {#1}
+          { \@@_parse_clear: }
+          {
+            \tl_set:Nn \l_@@_real_tl {#1}
+            \tl_set:Nn \l_@@_join_tl {#2}
+          }
+      }
+      { \@@_parse_clear: }
+  }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\@@_parse_split:n}
+% \begin{macro}{\@@_parse_split:nN}
+% \begin{macro}{\@@_parse_split:w}
+%   Checking for a sign inside the leading part of the number is a simple loop.
+%   There is the possibility that there is no number in the imaginary part
+%   needs to be allowed for. Notice that we do a check that there is some
+%   real part: this covers for example an original input |++1i|, which
+%   otherwise would not be trapped.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_parse_split:n #1
+  {
+    \@@_parse_split:nN { } #1 \q_recursion_tail \q_recursion_stop
+  }
+\cs_new_protected:Npn \@@_parse_split:nN #1#2
+  {
+    \quark_if_recursion_tail_stop_do:Nn #2
+      { \tl_set:Nn \l_@@_img_tl {#1} }
+    \tl_if_in:NnTF \l_siunitx_number_input_sign_tl {#2}
+      {
+        \tl_set:Nn \l_@@_real_tl {#1}
+        \tl_set:Nn \l_@@_join_tl {#2}
+        \@@_parse_split:w
+      }
+      { \@@_parse_split:nN {#1#2} }
+  }
+\cs_new_protected:Npn \@@_parse_split:w #1 \q_recursion_tail \q_recursion_stop
+  {
+    \tl_set:Nx \l_@@_img_tl
+      {
+        \tl_if_blank:nTF {#1}
+          { 1 }
+          { \exp_not:n {#1} }
+     }
+    \tl_if_empty:NT \l_@@_real_tl
+      { \@@_parse_clear: }
+  }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\@@_parse_polar:nn}
+%   Almost trivial but repeated in a couple of places so worth an auxiliary.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_parse_polar:nn #1#2
+  {
+    \siunitx_number_parse:nN {#1} \l_@@_mag_tl
+    \group_begin:
+      \keys_set:nn { siunitx }
+        {
+          input-comparators       = ,
+          input-exponent-markers  = ,
+          input-open-uncertainty  = ,
+          input-close-uncertainty =
+        }
+      \siunitx_number_format:nN {#2} \l_@@_angle_tl
+    \exp_args:NNNV \group_end:
+    \tl_set:Nn \l_@@_angle_tl \l_@@_angle_tl
+  }
+%    \end{macrocode}
+% \end{macro}
+%
+% \section{Formatting}
+%
+% \begin{variable}{\l_@@_bracket_close_tl, \l_@@_bracket_open_tl}
+%   Purely internal for the present.
+%    \begin{macrocode}
+\tl_new:N \l_@@_bracket_close_tl
+\tl_new:N \l_@@_bracket_open_tl
+\tl_set:Nn \l_@@_bracket_open_tl { ( }
+\tl_set:Nn \l_@@_bracket_close_tl { ) }
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{variable}{\l_@@_unit_tl}
+%    \begin{macrocode}
+\tl_new:N \l_@@_unit_tl
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{macro}{\siunitx_complex_number:n}
+% \begin{macro}{\siunitx_complex_number:nn, \@@_number:nn}
+% \begin{macro}{\siunitx_complex_quantity:nn}
+% \begin{macro}{\siunitx_complex_quantity:nnn, \@@_quantity:nnn}
+%   The work here is pretty trivial: only conversion between forms makes
+%   things a bit more intricate.
+%    \begin{macrocode}
+\cs_new_protected:Npn \siunitx_complex_number:n #1
+  {
+    \bool_if:NTF \l_@@_force_polar_bool
+      {
+        \use:e
+          {
+            \siunitx_complex_number:nn
+               \@@_convert_polar:n {#1}
+          }
+      }
+      {
+        \bool_if:NTF \l_siunitx_number_parse_bool
+          {
+            \@@_parse:nNN {#1} \l_@@_real_tl \l_@@_img_tl
+            \@@_format_cartesian:n { }
+          }
+          {
+            \siunitx_number_format:nN {#1} \l_@@_tmp_tl
+            \siunitx_print_number:V \l_@@_tmp_tl
+          }
+      }
+  }
+\cs_new_protected:Npn \siunitx_complex_number:nn #1#2
+  {
+    \bool_lazy_or:nnTF
+      { \tl_if_blank_p:n {#1} }
+      { \tl_if_blank_p:n {#2} }
+      {
+        \msg_error:nnnn { siunitx } { invalid-polar-form }
+          {#1} {#2}
+      }
+      { \@@_number:nn {#1} {#2} }
+  }
+\cs_new_protected:Npn \@@_number:nn #1#2
+  {
+    \bool_if:NTF \l_@@_force_cartesian_bool
+      {
+        \exp_args:Ne \siunitx_complex_number:n
+          { \@@_convert_cartesian:nn {#1} {#2} }
+      }
+      {
+        \@@_parse_polar:nn {#1} {#2}
+        \@@_format_polar:n { }
+      }
+  }
+\cs_new_protected:Npn \siunitx_complex_quantity:nn #1#2
+  {
+    \bool_if:NTF \l_@@_force_polar_bool
+      {
+        \use:e
+          {
+            \siunitx_complex_quantity:nnn
+               \@@_convert_polar:n {#1}
+          }
+            {#2}
+      }
+      {
+        \bool_if:NTF \l_siunitx_number_parse_bool
+          {
+            \@@_parse:nNN {#1} \l_@@_real_tl \l_@@_img_tl
+            \@@_format_cartesian:n {#2}
+          }
+          { \siunitx_quantity:nn {#1} {#2} }
+      }
+  }
+\cs_new_protected:Npn \siunitx_complex_quantity:nnn #1#2#3
+  {
+    \bool_lazy_or:nnTF
+      { \tl_if_blank_p:n {#1} }
+      { \tl_if_blank_p:n {#2} }
+      {
+        \msg_error:nnnn { siunitx } { invalid-polar-form }
+          {#1} {#2}
+      }
+      { \@@_quantity:nnn {#1} {#2} {#3} }
+  }
+\cs_new_protected:Npn \@@_quantity:nnn #1#2#3
+  {
+    \bool_if:NTF \l_@@_force_cartesian_bool
+      {
+        \exp_args:Ne \siunitx_complex_quantity:nn
+          { \@@_convert_cartesian:nn {#1} {#2} }
+          {#3}
+      }
+      {
+        \@@_parse_polar:nn {#1} {#2}
+        \@@_format_polar:n {#3}
+      }
+  }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\@@_format_cartesian:n}
+% \begin{macro}{\@@_format_cartesian_auxi:n}
+% \begin{macro}{\@@_format_cartesian_auxii:n}
+% \begin{macro}{\@@_drop_exponent:nnnnnnn}
+% \begin{macro}{\@@_format_sign:nnnnnnn}
+% \begin{macro}{\@@_extract_exponent:nw}
+% \begin{macro}{\@@_extract_exponent_aux:w}
+% \begin{macro}[EXP]{\@@_format_bracket:n}
+%   We start here checking that there is something to do.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_format_cartesian:n #1
+  {
+    \bool_lazy_and:nnF
+      { \tl_if_empty_p:N \l_@@_real_tl }
+      { \tl_if_empty_p:N \l_@@_img_tl }
+      { \@@_format_cartesian_auxi:n {#1} }
+  }
+%    \end{macrocode}
+%  We split based on whether the number has a complex part at all,
+%  then print the result.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_format_cartesian_auxi:n #1
+  {
+    \tl_clear:N \l_@@_tmp_tl
+    \tl_if_empty:NTF \l_@@_img_tl
+      {
+        \siunitx_number_process:NN \l_@@_real_tl \l_@@_real_tl
+        \tl_set:Nx \l_@@_tmp_tl
+          { \siunitx_number_output:N \l_@@_real_tl }
+      }
+      { \@@_format_cartesian_auxii:n {#1} }
+    \tl_if_blank:nTF {#1}
+      { \siunitx_print_number:V \l_@@_tmp_tl }
+      { \siunitx_quantity_print:VV \l_@@_tmp_tl \l_@@_unit_tl }
+  }
+%    \end{macrocode}
+%   If we get to this stage we have both parts to a complex number. We
+%   need to process both and do some massaging, then it's just a question
+%   of reassembly with the right parts in the right places.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_format_cartesian_auxii:n #1
+  {
+    \@@_format_cartesian_units:n {#1}
+    \tl_if_empty:NF \l_@@_real_tl
+      { \exp_after:wN \@@_drop_exponent:nnnnnnn \l_@@_real_tl }
+    \exp_after:wN \@@_format_sign:nnnnnnn \l_@@_img_tl
+    \tl_set:Nx \l_@@_tmp_tl
+      { \siunitx_number_output:NN \l_@@_img_tl \q_nil }
+    \exp_after:wN \@@_extract_exponent:w \l_@@_tmp_tl \q_stop
+    \tl_set:Nx \l_@@_tmp_tl
+      {
+        \bool_lazy_or:nnTF
+          {
+            \bool_lazy_and_p:nn
+              { \l_siunitx_number_bracket_ambiguous_bool }
+              { ! \tl_if_empty_p:N \l_@@_exp_tl }
+          }
+          {
+            ! \bool_lazy_any_p:n
+              {
+                { \tl_if_blank_p:n {#1} }
+                { \tl_if_empty_p:N \l_@@_real_tl }
+                { \tl_if_empty_p:N \l_@@_img_tl }
+              }
+          }
+          { \@@_format_bracket:n }
+          { \use:n }
+          {
+            \siunitx_number_output:N \l_@@_real_tl
+            \exp_not:V \l_@@_sign_tl
+            \bool_if:NF \l_@@_root_after_bool
+              { \exp_not:V \l_@@_output_root_tl }
+             \exp_not:V \l_@@_tmp_tl
+            \bool_if:NT \l_@@_root_after_bool
+              { \exp_not:V \l_@@_output_root_tl }
+           }
+         \exp_not:V \l_@@_exp_tl
+      }
+  }
+%    \end{macrocode}
+%   No exponent for the real part. 
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_drop_exponent:nnnnnnn #1#2#3#4#5#6#7
+  { \tl_set:Nn \l_@@_real_tl { {#1} {#2} {#3} {#4} {#5} { } { 0 } } }
+%    \end{macrocode}
+%   Ensure the imaginary part has a sign.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_format_sign:nnnnnnn #1#2#3#4#5#6#7
+  {
+    \tl_set:Nx \l_@@_img_tl
+      {
+        { }
+        {
+          \tl_if_blank:nTF {#2}
+            { \tl_if_empty:NF \l_@@_real_tl { + } }
+            { \exp_not:n {#2} }
+        }
+        \exp_not:n { {#3} {#4} {#5} {#6} {#7} }
+      }
+  }
+%    \end{macrocode}
+%   Pull out the formatted exponent: we also need the sign.
+%   An imaginary part that is exactly $1$ is omitted, with only the complex
+%   root printed. That means checking and removing a lone $1$ here.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_extract_exponent:w
+  #1 \q_nil #2 \q_nil #3 \q_nil #4 \q_nil #5 \q_nil #6 \q_nil #7 \q_nil #8
+  \q_nil #9 \q_stop
+  {
+    \tl_set:Nn \l_@@_sign_tl {#1#2}
+    \bool_lazy_all:nTF
+      {
+        { ! \l_@@_print_unity_bool }
+        { \str_if_eq_p:nn {#3} { 1 } }
+        { \tl_if_blank_p:n {#5} }
+      }
+      { \@@_extract_exponent_aux:nw {#6#7#8} }
+      { \@@_extract_exponent_aux:nw {#3#4#5#6#7#8} }
+         #9 \q_stop
+  }
+\cs_new:Npn \@@_extract_exponent_aux:nw
+  #1#2 \q_nil #3 \q_nil #4 \q_stop
+  {
+    \tl_set:Nn \l_@@_tmp_tl {#1#2}
+    \tl_set:Nn \l_@@_exp_tl {#3#4}
+  }
+\cs_new_protected:Npn \@@_format_bracket:n #1
+  {
+    \exp_not:V \l_@@_bracket_open_tl
+    #1
+    \exp_not:V \l_@@_bracket_close_tl
+  }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\@@_format_cartesian_units:n}
+% \begin{macro}
+%   {
+%     \@@_format_cartesian_combine-exponent:n ,
+%     \@@_format_cartesian_extract-exponent:n ,
+%     \@@_format_cartesian_input:n
+%   }
+% \begin{macro}{\@@_format_extract-exponent:N}
+% \begin{macro}[EXP]{\@@_extract_exp:nnnnnnn}
+% \begin{macro}{\@@_drop_exp:N}
+% \begin{macro}[EXP]{\@@_drop_exp:nnnnnnnN}
+%   Formatting units needs to know the settings from the main module, and
+%   the flow is then much the same as in \pkg{siunitx-compound}. We only
+%   have to watch the fact there are two numbers to format.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_format_cartesian_units:n #1
+  {
+    \tl_if_blank:nTF {#1}
+      {
+        \siunitx_number_process:NN \l_@@_real_tl \l_@@_real_tl
+        \siunitx_number_process:NN \l_@@_img_tl \l_@@_img_tl
+      }
+      {
+        \use:c
+          { @@_format_cartesian_ \l_siunitx_quantity_prefix_mode_tl :n } {#1}
+      }
+  }
+\cs_new_protected:cpn { @@_format_cartesian_combine-exponent:n } #1
+  {
+    \tl_if_empty:NF \l_@@_real_tl
+      { \siunitx_number_process:NN \l_@@_real_tl \l_@@_real_tl }
+    \siunitx_number_process:NN \l_@@_img_tl \l_@@_img_tl
+    \fp_set:Nn \l_@@_tmp_fp
+     { \exp_after:wN \@@_extract_exp:nnnnnnn \l_@@_img_tl }
+    \@@_drop_exp:N \l_@@_real_tl
+    \@@_drop_exp:N \l_@@_img_tl
+    \siunitx_unit_format_combine_exponent:nnN {#1}
+      \l_@@_tmp_fp \l_@@_unit_tl
+  }
+\cs_new_protected:cpx { @@_format_cartesian_extract-exponent:n } #1
+  {
+    \exp_not:N \siunitx_unit_format_extract_prefixes:nNN {#1}
+      \exp_not:N \l_@@_unit_tl \exp_not:N \l_@@_tmp_fp
+    \exp_not:c { @@_format_extract-exponent:N }
+      \exp_not:N \l_@@_img_tl
+    \exp_not:N \tl_if_empty:NF \exp_not:N \l_@@_real_tl
+      {
+        \exp_not:c { @@_format_extract-exponent:N }
+          \exp_not:N \l_@@_real_tl
+      }
+  }
+\cs_new_protected:Npn \@@_format_cartesian_input:n #1
+  {
+    \siunitx_number_process:NN \l_@@_real_tl \l_@@_real_tl
+    \siunitx_number_process:NN \l_@@_img_tl \l_@@_img_tl
+    \siunitx_unit_format:nN {#1} \l_@@_unit_tl
+  }
+\cs_new_protected:cpn { @@_format_extract-exponent:N } #1
+  {
+    \tl_set:Nx #1
+      { \siunitx_number_adjust_exponent:Nn #1 \l_@@_tmp_fp }
+    \siunitx_number_process:NN #1 #1
+  }
+\cs_new:Npn \@@_extract_exp:nnnnnnn #1#2#3#4#5#6#7 { #6#7 }
+\cs_new_protected:Npn \@@_drop_exp:N #1
+  { \exp_after:wN \@@_drop_exp:nnnnnnnN #1 #1 }
+\cs_new_protected:Npn \@@_drop_exp:nnnnnnnN #1#2#3#4#5#6#7#8
+  { \tl_set:Nn #8 { {#1} {#2} {#3} {#4} {#5} { } { 0 } } }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}
+%   {
+%     \@@_format_polar:n            ,
+%     \@@_format_combine-exponent:n ,
+%     \@@_format_extract-exponent:n ,
+%     \@@_format_polar_input:n
+%   }
+%     We see similar ideas here to the Cartesian versions, but with only
+%     the magnitude to adjust, things are rather simpler in the exponent
+%     manipulations.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_format_polar:n #1
+  {
+    \tl_if_blank:nTF {#1}
+      { \siunitx_number_process:NN \l_@@_mag_tl \l_@@_mag_tl }
+      {
+        \use:c
+          { @@_format_polar_ \l_siunitx_quantity_prefix_mode_tl :n } {#1}
+      }
+    \tl_set:Nx \l_@@_tmp_tl
+      {
+        \siunitx_number_output:N \l_@@_mag_tl
+        \exp_not:V \l_@@_symbol_angle_tl
+        \mathord % TEMP
+        \exp_not:V \l_@@_angle_tl
+      }
+    \siunitx_print_number:V \l_@@_tmp_tl
+    \bool_if:NT \l_@@_polar_degree_bool
+      {
+        \exp_args:NV \siunitx_unit_format:nN \l_@@_symbol_degree_tl \l_@@_tmp_tl
+        \nobreak
+        \siunitx_print_unit:V \l_@@_tmp_tl
+      }
+    \siunitx_quantity_print:nV { } \l_@@_unit_tl
+  }
+\cs_new_protected:cpn { @@_format_polar_combine-exponent:n } #1
+  {
+    \siunitx_number_process:NN \l_@@_mag_tl \l_@@_mag_tl
+    \fp_set:Nn \l_@@_tmp_fp
+     { \exp_after:wN \@@_extract_exp:nnnnnnn \l_@@_mag_tl }
+    \@@_drop_exp:N \l_@@_mag_tl
+    \siunitx_unit_format_combine_exponent:nnN {#1}
+      \l_@@_tmp_fp \l_@@_unit_tl
+  }
+\cs_new_protected:cpx { @@_format_polar_extract-exponent:n } #1
+  {
+    \exp_not:N \siunitx_unit_format_extract_prefixes:nNN {#1}
+      \exp_not:N \l_@@_unit_tl \exp_not:N \l_@@_tmp_fp
+    \exp_not:c { @@_format_extract-exponent:N }
+      \exp_not:N \l_@@_mag_tl
+  }
+\cs_new_protected:Npn \@@_format_polar_input:n #1
+  {
+    \siunitx_number_process:NN \l_@@_mag_tl \l_@@_mag_tl
+    \siunitx_unit_format:nN {#1} \l_@@_unit_tl
+  }
+%    \end{macrocode}
+% \end{macro}
+%
+% \subsection{Conversion}
+%
+% \begin{macro}[EXP]
+%   {\@@_convert_cartesian:nn, \@@_convert_cartesian_aux:nn}
+% \begin{macro}[EXP]{\@@_convert_cartesian_aux:w}
+%   Conversion to Cartesian form is easy as we have two inputs and need to
+%   do no parsing here at all.
+%    \begin{macrocode}
+\cs_new:Npn \@@_convert_cartesian:nn #1#2
+  {
+    \exp_args:Nee \@@_convert_cartesian_aux:nn
+      {
+        \fp_to_tl:n
+          { (#1) * cos \bool_if:NT \l_@@_polar_degree_bool { d } (#2) }
+      }
+      {
+        \fp_to_tl:n
+          { (#1) * sin \bool_if:NT \l_@@_polar_degree_bool { d } (#2) }
+      }
+  }
+\cs_new:Npn \@@_convert_cartesian_aux:nn #1#2
+  {
+    \@@_convert_cartesian_aux:w #1 e e \q_mark #2 e e \q_stop
+  }
+\cs_new:Npn \@@_convert_cartesian_aux:w
+  #1 e #2 e #3 \q_mark #4 e #5 e #6 \q_stop
+  {
+    \fp_compare:nNnF {#1} = \c_zero_fp
+      {#1}
+    \fp_compare:nNnF {#4} = \c_zero_fp
+      {
+        \fp_compare:nNnF {#4} < \c_zero_fp { + }
+        #4 i
+      }
+    \tl_if_blank:nF {#2}
+      { e #2 }
+  }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}[EXP]{\@@_convert_polar:n}
+% \begin{macro}[EXP]{\@@_convert_polar_auxi:w}
+% \begin{macro}[EXP]{\@@_convert_polar_auxii:nw}
+% \begin{macro}[EXP]{\@@_convert_polar_auxiii:nnw}
+% \begin{macro}[EXP]{\@@_convert_polar_auxiv:nnw}
+% \begin{macro}[EXP]{\@@_convert_polar_auxv:nnw}
+% \begin{macro}[EXP]{\@@_convert_polar_auxvi:nnn}
+% \begin{macro}[EXP]{\@@_convert_polar_auxvii:nnn}
+% \begin{macro}[EXP]{\@@_convert_polar_auxviii:nn}
+%    A simplified parser for complex numbers which works by expansion,
+%    then converts to polar form.
+%    \begin{macrocode}
+\cs_new:Npn \@@_convert_polar:n #1
+  { \@@_convert_polar_auxi:w #1 e e \q_stop }
+\cs_new:Npn \@@_convert_polar_auxi:w #1 e #2 e #3 \q_stop
+  { \@@_convert_polar_auxii:nw {#2} #1 \q_stop }
+\cs_new:Npn \@@_convert_polar_auxii:nw #1#2#3 \q_stop
+  {
+    \bool_lazy_or:nnTF
+      { \str_if_eq_p:nn {#2} { i } }
+      { \str_if_eq_p:nn {#2#3} { +i } }
+      { \@@_convert_polar_auxvi:nnn { } { 1 } {#1} }
+      {
+        \str_if_eq:nnTF {#2#3} { -i }
+          { \@@_convert_polar_auxvi:nnn { } { -1 } {#1} }
+          { \@@_convert_polar_auxiii:nnw {#1} {#2} #3 + + \q_stop }
+      }
+  }
+\cs_new:Npn \@@_convert_polar_auxiii:nnw #1#2#3 + #4 + #5 \q_stop
+  {
+    \tl_if_blank:nTF {#4}
+      { \@@_convert_polar_auxiv:nnw {#1} {#2} #3 - - \q_stop }
+      {
+        \str_if_eq:nnTF {#4} { i }
+          { \@@_convert_polar_auxvi:nnn {#2#3} { 1 } {#1} }
+          { \@@_convert_polar_auxv:nnw {#2#3} {#1} #4 i \q_nil i \q_stop }
+      }
+  }
+\cs_new:Npn \@@_convert_polar_auxiv:nnw #1#2#3 - #4 - #5 \q_stop
+  {
+    \tl_if_blank:nTF {#4}
+      { \@@_convert_polar_auxv:nnw { } {#1} #2#3 i \q_nil i \q_stop }
+      {
+        \str_if_eq:nnTF {#4} { i }
+          { \@@_convert_polar_auxvi:nnn { } { -1 } {#1} }
+          { \@@_convert_polar_auxv:nnw {#2#3} {#1} -#4 i \q_nil i \q_stop }
+      }
+  }
+\cs_new:Npn \@@_convert_polar_auxv:nnw #1#2#3 i #4 i #5 \q_stop
+  {
+    \quark_if_nil:nTF {#4}
+      { { #3 \tl_if_blank:nF {#2} { e#2 } } { 0 } }
+      { \@@_convert_polar_auxvi:nnn {#1} {#3} {#2} }
+  }
+\cs_new:Npn \@@_convert_polar_auxvi:nnn #1#2#3
+  {
+    \exp_args:Neee \@@_convert_polar_auxvii:nnn
+      { \tl_if_blank:nTF {#1} { 0 } {#1} }
+      { \tl_if_blank:nTF {#2} { 0 } {#2} }
+      { \tl_if_blank:nF {#3} { e#3 } }
+  }
+\cs_new:Npn \@@_convert_polar_auxvii:nnn #1#2#3
+  {
+    \exp_args:Nee \@@_format_polar_auxviii:nn
+      { \fp_eval:n { sqrt ( (#1#3)^2 + (#2#3)^2 ) } }
+      {
+        \fp_eval:n
+          { atan \bool_if:NT \l_@@_polar_degree_bool { d } (#2 , #1) }
+      }
+  }
+\cs_new:Npn \@@_format_polar_auxviii:nn #1#2 { {#1} {#2} }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \subsection{Messages}
+%
+%    \begin{macrocode}
+\msg_new:nnnn { siunitx } { invalid-polar-form }
+  { Invalid~polar~form~"#1:#2". }
+  {
+    Complex~numbers~in~polar~form~must~have~both~a~magnitude~and~and~
+    angle.
+  }
+%    \end{macrocode}
+%
+% \subsection{Standard settings for module options}
+%
+% Some of these follow naturally from the point of definition
+% (\foreign{e.g.}~boolean variables are always |false| to begin with),
+% but for clarity everything is set here.
+%    \begin{macrocode}
+\keys_set:nn { siunitx }
+  {
+    complex-angle-unit    = degrees       ,
+    complex-mode          = input         ,
+    complex-root-position = after-number  ,
+    complex-symbol-angle  = \angle        ,
+    complex-symbol-degree = \degree       ,
+    input-complex-root    = ij            ,
+    output-complex-root   = \mathrm { i } ,
+    print-complex-unity   = false
+  }
+%    \end{macrocode}
+%
+%    \begin{macrocode}
+%</package>
+%    \end{macrocode}
+%
+% \end{implementation}
+%
+% \PrintIndex

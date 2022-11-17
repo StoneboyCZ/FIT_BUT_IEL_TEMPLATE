@@ -1,0 +1,1111 @@
+% \iffalse meta-comment
+%
+% File: siunitx-print.dtx Copyright (C) 2016-2019,2021,2022 Joseph Wright
+%
+% It may be distributed and/or modified under the conditions of the
+% LaTeX Project Public License (LPPL), either version 1.3c of this
+% license or (at your option) any later version.  The latest version
+% of this license is in the file
+%
+%    https://www.latex-project.org/lppl.txt
+%
+% This file is part of the "siunitx bundle" (The Work in LPPL)
+% and all files in that bundle must be distributed together.
+%
+% The released version of this bundle is available from CTAN.
+%
+% -----------------------------------------------------------------------
+%
+% The development version of the bundle can be found at
+%
+%    https://github.com/josephwright/siunitx
+%
+% for those people who are interested.
+%
+% -----------------------------------------------------------------------
+%
+%<*driver>
+\documentclass{l3doc}
+\ProvideDocumentCommand\foreign{m}{\textit{#1}}
+% The next line is needed so that \GetFileInfo will be able to pick up
+% version data
+\usepackage{siunitx}
+\begin{document}
+  \DocInput{\jobname.dtx}
+\end{document}
+%</driver>
+% \fi
+%
+% \GetFileInfo{siunitx.sty}
+%
+% \title{^^A
+%   \pkg{siunitx-print} -- Printing material with font control^^A
+%   \thanks{This file describes \fileversion,
+%     last revised \filedate.}^^A
+% }
+%
+% \author{^^A
+%  Joseph Wright^^A
+%  \thanks{^^A
+%    E-mail:
+%    \href{mailto:joseph.wright@morningstar2.co.uk}
+%      {joseph.wright@morningstar2.co.uk}^^A
+%   }^^A
+% }
+%
+% \date{Released \filedate}
+%
+% \maketitle
+%
+% \begin{documentation}
+%
+% \section{Printing quantities}
+%
+% This submodule is focussed on providing controlled printing for numbers and
+% units. Key to this is control of font: conventions for printing quantities
+% mean that the exact nature of the output is important. At the same time, this
+% module provides flexibility for the user in terms of which aspects of the font
+% are responsive to the surrounding general text. Printing material may also
+% take place in text or math mode.
+%
+% The printing routines assume that normal \LaTeXe{} font selection commands
+% are available, in particular \cs{bfseries}, \cs{mathrm}, \cs{mathversion},
+% \cs{fontfamily}, \cs{fontseries} and \cs{fontshape}, \cs{familydefault},
+% \cs{seriesdefault}, \cs{shapedefault} and \cs{selectfont}.
+% It also requires the standard
+% \LaTeXe{} kernel commands \cs{ensuremath}, \cs{mbox}, \cs{textsubscript} and
+% \cs{textsuperscript} for printing in text mode. The following packages are
+% also required to provide the functionality detailed.
+% \begin{itemize}
+%   \item \pkg{color}: support for color using \cs{textcolor}
+%   \item \pkg{textcomp}: \cs{textminus}, \cs{textpm} \cs{texttimes} and
+%     \cs{textcenteredperiod} for printing in text mode
+%   \item \pkg{amstext}: the \cs{text} command for printing in text mode
+% \end{itemize}
+% For detection of math mode fonts, as well as \cs{mathrm}, the existence of
+% \cs{symoperators} is assumed; other math font commands are not
+% \emph{required} to exist.
+%
+% \begin{function}
+%   {
+%     \siunitx_print_number:n, \siunitx_print_number:V,
+%       \siunitx_print_number:x,
+%     \siunitx_print_unit:n, \siunitx_print_unit:V,
+%       \siunitx_print_unit:x
+%   }
+%   \begin{syntax}
+%     \cs{siunitx_print_number:n} \Arg{material}
+%     \cs{siunitx_print_unit:n} \Arg{material}
+%   \end{syntax}
+%   Prints the \meta{material} according the the prevailing settings for the
+%   submodule as applicable to the \meta{type} of content (|number| or |unit|).
+%   The \meta{material} should comprise normal
+%   \LaTeX{} mark-up for numbers or units. In particular, units will typically
+%   use |\mathrm| to indicate material to be printed in the current upright
+%   roman font, and |^| and |_| will typically be used to indicate super- and
+%   subscripts, respectively. These elements will be correctly handled when
+%   printing for example using |\mathsf| in math mode, or using only text
+%   fonts.
+% \end{function}
+%
+% \begin{function}
+%   {\siunitx_print_match:n, \siunitx_print_math:n, \siunitx_print_text:n}
+%   \begin{syntax}
+%     \cs{siunitx_print_match:n} \Arg{material}
+%     \cs{siunitx_print_math:n} \Arg{material}
+%     \cs{siunitx_print_text:n} \Arg{material}
+%   \end{syntax}
+%   Prints the \meta{material} as described for \cs{siunitx_print_\dots:n} but
+%   with a fixed text or math mode output. The printing does \emph{not} set
+%   color (which is managed on a |unit|/|number| basis), but otherwise sets
+%   the font as described above. The |match| function uses either the prevailing
+%   math or text mode.
+% \end{function}
+%
+% \subsection{Key--value options}
+%
+% The options defined by this submodule are available within the \pkg{l3keys}
+% |siunitx| tree.
+%
+% \begin{function}{color}
+%   \begin{syntax}
+%     |color| = \meta{color}
+%   \end{syntax}
+%   Color to apply to printed output: the latter should be a named color
+%   defined for use with \cs{textcolor}. The standard setting is empty (no
+%   color).
+% \end{function}
+%
+% \begin{function}{mode}
+%   \begin{syntax}
+%     |mode| = |match|\verb"|"|math|\verb"|"|text|
+%   \end{syntax}
+%   Selects which mode (math or text) the output is printed in: a choice
+%   from the options |match|, |math| or |text|. The option |match| matches
+%   the mode prevailing at the point \cs{siunitx_print_\dots:n} is called. The
+%   |math| and |text| options choose the relevant \TeX{} mode for printing.
+%   The standard setting is |math|.
+% \end{function}
+%
+% \begin{function}{number-color}
+%   \begin{syntax}
+%     |number-color| = \meta{color}
+%   \end{syntax}
+%   Color to apply to numbers in output: the latter should be a named color
+%   defined for use with \cs{textcolor}. The standard setting is empty (no
+%   color).
+% \end{function}
+%
+% \begin{function}{number-mode}
+%   \begin{syntax}
+%     |number-mode| = |match|\verb"|"|math|\verb"|"|text|
+%   \end{syntax}
+%   Selects which mode (math or text) the numbers are printed in: a choice
+%   from the options |match|, |math| or |text|. The option |match| matches
+%   the mode prevailing at the point \cs{siunitx_prin_number:n} is called. The
+%   |math| and |text| options choose the relevant \TeX{} mode for printing.
+%   The standard setting is |math|.
+% \end{function}
+%
+% \begin{function}{propagate-math-font}
+%   \begin{syntax}
+%     |propagate-math-font| = |true|\verb"|"|false|
+%   \end{syntax}
+%   Switch to determine if the currently-active math font is applied within
+%   printed output. This is relevant only when \cs{siunitx_print_\dots:n} is
+%   called from within math mode: in text mode there is not active math
+%   font. When not active, math mode material will be typeset using
+%   standard math mode fonts without any changes being made to the
+%   supplied argument. The standard setting is |false|.
+% \end{function}
+%
+% \begin{function}{reset-math-version}
+%   \begin{syntax}
+%     |reset-math-version| = |true|\verb"|"|false|
+%   \end{syntax}
+%   Switch to determine whether the active \cs{mathversion} is reset to
+%   |normal| when printing in math mode. Note that math version is typically
+%   used to select \cs{boldmath}, though it is also be used by
+%   \foreign{e.g.}~\pkg{sansmath}. The standard setting is |true|.
+% \end{function}
+%
+% \begin{function}{reset-text-family}
+%   \begin{syntax}
+%     |reset-text-family| = |true|\verb"|"|false|
+%   \end{syntax}
+%   Switch to determine whether the active text family is reset to
+%   \cs{rmfamily} when printing in text mode. The standard setting is |true|.
+% \end{function}
+%
+% \begin{function}{reset-text-series}
+%   \begin{syntax}
+%     |reset-text-series| = |true|\verb"|"|false|
+%   \end{syntax}
+%   Switch to determine whether the active text series is reset to
+%   \cs{mdseries} when printing in text mode. The standard setting is |true|.
+% \end{function}
+%
+% \begin{function}{reset-text-shape}
+%   \begin{syntax}
+%     |reset-text-shape| = |true|\verb"|"|false|
+%   \end{syntax}
+%   Switch to determine whether the active text shape is reset to
+%   \cs{upshape} when printing in text mode. The standard setting is |true|.
+% \end{function}
+%
+% \begin{function}{text-family-to-math}
+%   \begin{syntax}
+%     |text-family-to-math| = |true|\verb"|"|false|
+%   \end{syntax}
+%   Switch to determine if the family of the current text font should be
+%   applied (where possible) to printing in math mode. The standard setting is
+%   |false|.
+% \end{function}
+%
+% \begin{function}{text-font-command}
+%   \begin{syntax}
+%     |text-font-command| = \meta{cmd}
+%   \end{syntax}
+%   Command applied to text during output, inserted after any reset of
+%   font set-up. This can therefore be used to apply non-standard font
+%   set up when printing in text mode. The standard setting is empty.
+% \end{function}
+%
+% \begin{function}{text-series-to-math}
+%   \begin{syntax}
+%     |text-series-to-math| = |true|\verb"|"|false|
+%   \end{syntax}
+%   Switch to determine if the weight of the current text font should be
+%   applied (where possible) to printing in math mode. This is achieved by
+%   setting the \cs{mathversion}, and so will override |reset-math-version|.
+%   The mappings between text and math weight are set . The standard setting is |false|.
+% \end{function}
+%
+% \begin{function}{text-subscript-command, text-superscript-command}
+%   \begin{syntax}
+%     |text-subscript-command| = \meta{cmd}
+%     |text-superscript-command| = \meta{cmd}
+%   \end{syntax}
+%   Sets the command used when printing material in sub- or superscript
+%   positions in text mode. The standard settings are \cs{textsubscript}
+%   and \cs{textsuperscript}, respectively.
+% \end{function}
+%
+% \begin{function}{unit-color}
+%   \begin{syntax}
+%     |unit-color| = \meta{color}
+%   \end{syntax}
+%   Color to apply to units in output: the latter should be a named color
+%   defined for use with \cs{textcolor}. The standard setting is empty (no
+%   color).
+% \end{function}
+%
+% \begin{function}{unit-mode}
+%   \begin{syntax}
+%     |unit-mode| = |match|\verb"|"|math|\verb"|"|text|
+%   \end{syntax}
+%   Selects which mode (math or text) units are printed in: a choice
+%   from the options |match|, |math| or |text|. The option |match| matches
+%   the mode prevailing at the point \cs{siunitx_print_\dots:n} is called. The
+%   |math| and |text| options choose the relevant \TeX{} mode for printing.
+%   The standard setting is |math|.
+% \end{function}
+%
+% \begin{function}{series-version-mapping}
+%   \begin{syntax}
+%     |series-version-mapping| |/| \meta{weight} = \meta{version}
+%   \end{syntax}
+%   Defines how \pkg{siunitx} maps from text font weight to math font
+%   version. The pre-defined weights are those used as-standard by
+%   \pkg{autoinst}:
+%   \begin{itemize}
+%     \item \texttt{ul}
+%     \item \texttt{el}
+%     \item \texttt{l}
+%     \item \texttt{sl}
+%     \item \texttt{m}
+%     \item \texttt{sb}
+%     \item \texttt{b}
+%     \item \texttt{eb}
+%     \item \texttt{ub}
+%   \end{itemize}
+%   As standard, the \texttt{m} weight maps to \texttt{normal} math version
+%   whilst all of the \texttt{b} weights map to \texttt{bold} and all of the
+%   \texttt{l} weights map to \texttt{light}.
+% \end{function}
+%
+% \end{documentation}
+%
+% \begin{implementation}
+%
+% \section{\pkg{siunitx-print} implementation}
+%
+% Start the \pkg{DocStrip} guards.
+%    \begin{macrocode}
+%<*package>
+%    \end{macrocode}
+%
+% Identify the internal prefix (\LaTeX3 \pkg{DocStrip} convention): only
+% internal material in this \emph{submodule} should be used directly.
+%    \begin{macrocode}
+%<@@=siunitx_print>
+%    \end{macrocode}
+%
+% \subsection{Initial set up}
+%
+% \begin{macro}{\@@_ams_text:n}
+%   The printing routines depend on \pkg{amstext} for text mode working.
+%   We also save the definition of \cs{text} here to use it internally, as the
+%   nature of the \emph{document} command may need to vary.
+%    \begin{macrocode}
+\RequirePackage { amstext }
+\cs_new_eq:NN \@@_ams_text:n \text
+%    \end{macrocode}
+% \end{macro}
+%
+% Color support is always required; to avoid a potential clash we delay to
+% the start of the document.
+%    \begin{macrocode}
+\AtBeginDocument { \RequirePackage { color } }
+%    \end{macrocode}
+%
+% \begin{macro}{\tl_replace_all:NVn}
+%   Required variants.
+%    \begin{macrocode}
+\cs_generate_variant:Nn \tl_replace_all:Nnn { NV }
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{variable}{\l_@@_tmp_tl}
+%   Scratch space.
+%    \begin{macrocode}
+\tl_new:N \l_@@_tmp_tl
+%    \end{macrocode}
+% \end{variable}
+%
+% \subsection{Printing routines}
+%
+% \begin{variable}
+%   {
+%     \l_@@_number_color_tl   ,
+%     \l_@@_number_mode_tl    ,
+%     \l_@@_unit_color_tl     ,
+%     \l_@@_unit_mode_tl      ,
+%     \l_@@_math_font_bool    ,
+%     \l_@@_math_version_bool ,
+%     \l_@@_math_family_bool  ,
+%     \l_@@_text_font_tl      ,
+%     \l_@@_text_sub_tl       ,
+%     \l_@@_text_super_tl     ,
+%     \l_@@_math_series_bool
+%   }
+%   Options which apply to the main formatting routine, and so are not tied
+%   to either symbolic or literal input.
+%    \begin{macrocode}
+\tl_new:N \l_@@_number_mode_tl
+\tl_new:N \l_@@_unit_mode_tl
+\keys_define:nn { siunitx }
+  {
+    color .meta:n =
+      { number-color = #1 , unit-color = #1 } ,
+    mode .meta:n =
+      { number-mode = #1 , unit-mode = #1 } ,
+    number-color .tl_set:N =
+      \l_@@_number_color_tl ,
+    number-mode .choices:nn =
+      { match , math , text }
+      {
+        \tl_set_eq:NN
+          \l_@@_number_mode_tl \l_keys_choice_tl
+      } ,
+    propagate-math-font .bool_set:N =
+      \l_@@_math_font_bool ,
+    reset-math-version .bool_set:N =
+      \l_@@_math_version_bool ,
+    reset-text-family .bool_set:N =
+      \l_@@_text_family_bool ,
+    reset-text-series .bool_set:N =
+      \l_@@_text_series_bool ,
+    reset-text-shape .bool_set:N =
+      \l_@@_text_shape_bool ,
+    text-family-to-math .bool_set:N =
+      \l_@@_math_family_bool ,
+    text-font-command .tl_set:N =
+      \l_@@_text_font_tl ,
+    text-subscript-command .tl_set:N =
+      \l_@@_text_sub_tl ,
+    text-superscript-command .tl_set:N =
+      \l_@@_text_super_tl ,
+    text-series-to-math .bool_set:N =
+      \l_@@_math_series_bool ,
+    unit-color .tl_set:N =
+      \l_@@_unit_color_tl ,
+    unit-mode .choices:nn =
+      { match , math , text }
+      {
+        \tl_set_eq:NN
+          \l_@@_unit_mode_tl \l_keys_choice_tl
+      }
+  }
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{variable}
+%   {
+%      \l_@@_version_ul_tl ,
+%      \l_@@_version_el_tl ,
+%      \l_@@_version_l_tl ,
+%      \l_@@_version_sl_tl ,
+%      \l_@@_version_m_tl ,
+%      \l_@@_version_sb_tl ,
+%      \l_@@_version_b_tl ,
+%      \l_@@_version_eb_tl ,
+%      \l_@@_version_ub_tl
+%   }
+%  One set of \enquote{focussed} options.
+%    \begin{macrocode}
+\keys_define:nn { siunitx / series-version-mapping }
+  {
+    ul . tl_set:N = \l_@@_version_ul_tl ,
+    el . tl_set:N = \l_@@_version_el_tl ,
+    l  . tl_set:N = \l_@@_version_l_tl ,
+    sl . tl_set:N = \l_@@_version_sl_tl ,
+    m  . tl_set:N = \l_@@_version_m_tl ,
+    sb . tl_set:N = \l_@@_version_sb_tl ,
+    b  . tl_set:N = \l_@@_version_b_tl ,
+    eb . tl_set:N = \l_@@_version_eb_tl ,
+    ub . tl_set:N = \l_@@_version_ub_tl
+  }
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{macro}
+%   {
+%     \siunitx_print_number:n, \siunitx_print_number:V,
+%       \siunitx_print_number:x,
+%     \siunitx_print_unit:n, \siunitx_print_unit:V,
+%       \siunitx_print_unit:x
+%   }
+% \begin{macro}{\@@_aux:nn}
+%   The main printing function doesn't actually need to do very much: just set
+%   the color and select the correct sub-function.
+%    \begin{macrocode}
+\cs_new_protected:Npn \siunitx_print_number:n #1
+  { \@@_aux:nn { number } {#1} }
+\cs_generate_variant:Nn \siunitx_print_number:n { V , x }
+\cs_new_protected:Npn \siunitx_print_unit:n #1
+  { \@@_aux:nn { unit } {#1} }
+\cs_generate_variant:Nn \siunitx_print_unit:n { V , x }
+\cs_new_protected:Npn \@@_aux:nn #1#2
+  {
+    \tl_if_empty:cTF { l_@@_ #1 _color_tl }
+      { \use:n }
+      { \exp_args:Nv \textcolor { l_@@_ #1 _color_tl } }
+        {
+          \use:c
+            {
+              siunitx_print_
+              \tl_use:c { l_@@_ #1 _mode_tl } :n
+            }
+              {#2}
+        }
+  }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\siunitx_print_match:n}
+%   When the \emph{output} mode should match the input, a simple selection of
+%   route can be made.
+%    \begin{macrocode}
+\cs_new_protected:Npn \siunitx_print_match:n #1
+  {
+    \mode_if_math:TF
+      { \siunitx_print_math:n {#1} }
+      { \siunitx_print_text:n {#1} }
+  }
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\@@_replace_font:N}
+%   A simple auxiliary for \enquote{zapping} the unit font.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_replace_font:N #1
+  {
+    \tl_if_empty:NF \l_siunitx_unit_font_tl
+      {
+        \tl_replace_all:NVn #1
+          \l_siunitx_unit_font_tl
+          { \use:n }
+      }
+  }
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{variable}
+%   {
+%      \c_@@_series_uc_tl ,
+%      \c_@@_series_ecl_tl ,
+%      \c_@@_series_c_tl ,
+%      \c_@@_series_sc_tl ,
+%      \c_@@_series_sx_tl ,
+%      \c_@@_series_x_tl ,
+%      \c_@@_series_ex_tl ,
+%      \c_@@_series_ux_tl
+%   }
+%  Font widths where the |m| for weight is omitted.
+%    \begin{macrocode}
+\clist_map_inline:nn { uc , ec , c , sc , sx , x , ex , ux }
+  { \tl_const:cn { c_@@_series_ #1 _tl } { m } }
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{variable}
+%   {
+%      \c_@@_series_l_tl ,
+%      \c_@@_series_m_tl ,
+%      \c_@@_series_b_tl
+%   }
+%  Font widths with one letter.
+%    \begin{macrocode}
+\clist_map_inline:nn { l , m , b }
+  { \tl_const:cn { c_@@_series_ #1 _tl } { #1 } }
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{variable}{\l_@@_math_html_tl}
+%    \begin{macrocode}
+\tl_new:N \l_@@_math_html_tl
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{macro}{\siunitx_print_math:n}
+% \begin{macro}[EXP]{\@@_extract_series:Nw}
+% \begin{macro}[EXP]{\@@_convert_series:n, \@@_convert_series:v}
+% \begin{macro}{\@@_math_version:nn, \@@_math_version:Vn}
+% \begin{macro}
+%   {
+%     \@@_math_auxi:n,
+%     \@@_math_auxii:n,
+%   }
+% \begin{macro}{\@@_math_text_setup:}
+% \begin{macro}{\@@_math_replace:Nn}
+% \begin{macro}
+%   {
+%     \@@_math_auxiii:n,
+%     \@@_math_auxiv:n,
+%     \@@_math_auxv:n
+%   }
+% \begin{macro}{\@@_math_auxvi:Nn}
+% \begin{macro}{\@@_math_auxvii:N}
+% \begin{macro}{\@@_math_auxviii:w}
+% \begin{macro}{\@@_math_auxix:Nn}
+% \begin{macro}{\@@_math_sub:n, \@@_math_super:n, \@@_math_script:n}
+% \begin{macro}{\@@_math_ensure:n}
+%   The first step in setting in math mode is to check on the math version.
+%   The starting point is the question of whether text series needs to
+%   propagate to math mode: if so, check on the mapping, otherwise check on
+%   the current math version.
+%    \begin{macrocode}
+\cs_new_protected:Npn \siunitx_print_math:n #1
+  {
+    \bool_lazy_and:nnTF
+      { \l_@@_math_series_bool }
+      { \str_if_eq_p:Vn \math@version { normal } }
+      {
+        \tl_set:Nx \l_@@_tmp_tl
+          { \exp_after:wN \@@_extract_series:Nw \f@series ? \q_stop }
+        \tl_if_empty:NTF \l_@@_tmp_tl
+          { \@@_math_auxi:n {#1} }
+          { \@@_math_version:Vn \l_@@_tmp_tl {#1} }
+      }
+      { \@@_math_auxi:n {#1} }
+  }
+%    \end{macrocode}
+%   Look up the math version from the text series. The weight is omitted
+%   if it is |m| plus there are either one or two letters, so we have a little
+%   work to do. To keep things fast, we use a hash table based lookup rather
+%   than a sequence or property list.
+%    \begin{macrocode}
+\cs_new:Npn \@@_extract_series:Nw #1#2 ? #3 \q_stop
+  {
+    \cs_if_exist:cTF { c_@@_series_ #1#2 _tl }
+      { \@@_convert_series:v { c_@@_series_ #1#2 _tl } }
+      {
+        \cs_if_exist:cTF { c_@@_series_ #1 _tl }
+          { \@@_convert_series:v { c_@@_series_ #1 _tl } }
+          { \@@_convert_series:n {#1#2} }
+      }
+  }
+\cs_new:Npn \@@_convert_series:n #1
+  { \tl_use:c { l_@@_version_ #1 _tl } }
+\cs_generate_variant:Nn \@@_convert_series:n { v }
+\cs_new_protected:Npn \@@_math_auxi:n #1
+  {
+    \bool_if:NTF \l_@@_math_version_bool
+      { \@@_math_version:nn { normal } {#1} }
+      { \@@_math_auxii:n {#1} }
+  }
+%    \end{macrocode}
+%   Any setting which changes the math version can only be set from text mode
+%   (as it applies at the level of a formula). As such, the first test is to
+%   see if that needs to be to check if the math version has to be set: if so,
+%   switch to text mode, sort it out and switch back. That of course means
+%   that in such cases, line breaking will not be possible.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_math_version:nn #1#2
+  {
+    \str_if_eq:VnTF \math@version { #1 }
+      { \@@_math_auxii:n {#2} }
+      {
+        \mode_if_math:TF
+          { \text }
+          { \use:n }
+            {
+              \mathversion {#1}
+              \@@_math_auxii:n {#2}
+            }
+       }
+  }
+\cs_generate_variant:Nn \@@_math_version:nn { V }
+%    \end{macrocode}
+%   At this point, force math mode then start dealing with setting math font
+%   based on text family. If the text family is roman, life is slightly
+%   different to if it is sanserif or monospaced. In all cases, the outcomes
+%   can be handled using the same routines as for normal math mode treatment.
+%   The test here is on a string basis as |\f@family| and the |\...default|
+%   commands have different |\long| status.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_math_auxii:n #1
+  {
+    \group_begin:
+      \tl_if_head_eq_meaning:nNTF {#1} \sfrac
+        {
+          \cs_set_protected:Npn \text ##1
+            {
+              \cs_set_eq:NN \text \@@_ams_text:n
+              \@@_math_text_setup:
+              ##1
+            }
+        }
+        { \@@_math_text_setup: }
+      \tl_set:Nn \l_@@_tmp_tl {#1}
+      \exp_after:wN \@@_math_replace:Nn
+        \l_@@_math_html_tl
+        \q_recursion_tail { } \q_recursion_stop
+      \exp_args:NV \@@_math_auxiii:n \l_@@_tmp_tl
+     \group_end:
+  }
+%    \end{macrocode}
+%   Within the math mode argument, there might be a nested \cs{text}, at which
+%   point we need to apply the text-mode support. Within \emph{that}, we need
+%   to reset \cs{text} to normal. There is one wrinkle, which is covered in the
+%   function above: the \cs{sfrac} command from \pkg{xfrac}. In the latter,
+%   there is a \cs{text} applied to the two arguments, and the material that is
+%   passed contains a lot of code: we cannot apply search-and-replace there.
+%   Instead, we delay things by one expansion.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_math_text_setup:
+  {
+    \cs_set_protected:Npn \text ##1
+      {
+        \cs_set_eq:NN \text \@@_ams_text:n
+        \siunitx_print_text:n {##1}
+      }
+  }
+\cs_new_protected:Npn \@@_math_replace:Nn #1#2
+  {
+    \quark_if_recursion_tail_stop:N #1
+    \tl_replace_all:Nnn \l_@@_tmp_tl {#1} {#2}
+    \@@_math_replace:Nn
+  }
+\cs_new_protected:Npn \@@_math_auxiii:n #1
+  {
+    \bool_if:NTF \l_@@_math_family_bool
+      {
+        \str_case_e:nnF { \f@family }
+          {
+            { \rmdefault } { \@@_math_auxv:n }
+            { \sfdefault } { \@@_math_auxix:Nn \mathsf }
+            { \ttdefault } { \@@_math_auxix:Nn \mathtt }
+          }
+          { \@@_math_auxiv:n }
+      }
+      { \@@_math_auxiv:n }
+        {#1}
+  }
+%    \end{macrocode}
+%   Now we deal with the font selection in math mode. There are two possible
+%   cases. First, we are retaining the current math font, and the active one is
+%   \cs{mathsf} or \cs{mathtt}: that needs to be applied to the argument.
+%   Alternatively, if the current font is not retained, ensure that
+%   normal math mode rules are active.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_math_auxiv:n #1
+  {
+    \bool_if:NTF \l_@@_math_font_bool
+      {
+        \@@_math_auxvii:N
+          \mathbf \mathit \mathsf \mathtt
+          \q_recursion_tail \q_recursion_stop
+      }
+      { \@@_math_auxv:n }
+        {#1}
+  }
+\cs_new_protected:Npn \@@_math_auxv:n #1
+  {
+    \bool_lazy_or:nnTF
+      { \int_compare_p:nNn \fam = { -1 } }
+      { \int_compare_p:nNn \fam = \symoperators }
+      { \@@_math_ensure:n }
+      { \@@_math_auxvi:Nn \mathrm }
+        {#1}
+  }
+\cs_new_protected:Npn \@@_math_auxvi:Nn #1#2
+  { \@@_math_ensure:n { #1 {#2} } }
+\cs_new_protected:Npn \@@_math_auxvii:N #1
+  {
+    \quark_if_recursion_tail_stop_do:Nn #1 { \@@_math_auxv:n }
+    \exp_after:wN \exp_after:wN \exp_after:wN \@@_math_auxviii:w
+      \cs:w \cs_to_str:N #1 \c_space_tl \cs_end:
+        \use@mathgroup ? { -2 } \q_stop #1
+  }
+\cs_new_protected:Npn \@@_math_auxviii:w #1 \use@mathgroup #2#3 #4 \q_stop #5
+  {
+    \int_compare:nNnTF \fam = {#3}
+      { \use_i_delimit_by_q_recursion_stop:nw { \@@_math_auxix:Nn #5 } }
+      { \@@_math_auxvii:N }
+  }
+%    \end{macrocode}
+%   Search-and-replace fun: deal with any font commands  in the argument and
+%   also inside sub/superscripts.
+%    \begin{macrocode}
+\cs_new_protected:Npx \@@_math_auxix:Nn #1#2
+  {
+    \group_begin:
+      \tl_set:Nn \exp_not:N \l_@@_tmp_tl {#2}
+      \@@_replace_font:N \exp_not:N \l_@@_tmp_tl
+      \tl_replace_all:Nnn \exp_not:N \l_@@_tmp_tl
+        { \char_generate:nn { `\_ } { 8 } }
+        { \exp_not:N \@@_math_sub:n }
+      \tl_replace_all:Nnn \exp_not:N \l_@@_tmp_tl
+        { ^ }
+        { \exp_not:N \@@_math_super:n }
+      \exp_not:N \exp_args:NNV \@@_math_auxvi:Nn
+        #1 \exp_not:N \l_@@_tmp_tl
+    \group_end:
+  }
+\cs_new_protected:Npx \@@_math_sub:n #1
+  {
+    \char_generate:nn { `\_ } { 8 }
+      { \exp_not:N \@@_math_script:n {#1} }
+  }
+\cs_new_protected:Npn \@@_math_super:n #1
+  { ^ { \@@_math_script:n {#1} } }
+\cs_new_protected:Npn \@@_math_script:n #1
+  {
+    \group_begin:
+      \tl_set:Nn \l_@@_tmp_tl {#1}
+      \@@_replace_font:N \l_@@_tmp_tl
+      \tl_use:N \l_@@_tmp_tl
+    \group_end:
+  }
+\cs_new_protected:Npn \@@_math_ensure:n #1
+  {
+    \tl_if_blank:nF {#1}
+      {
+        \mode_if_math:TF
+          {#1}
+          { $ #1 $ }
+      }
+  }
+%    \end{macrocode}
+%   For \pkg{tex4ht}, we need to have category code $12$ |^| tokens in math
+%   mode.
+%    \begin{macrocode}
+\AtBeginDocument
+  {
+    \@ifpackageloaded { tex4ht }
+      { \tl_set:Nx \l_@@_math_html_tl { ^ { \token_to_str:N ^ } } }
+      { }
+  }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\siunitx_print_text:n}
+% \begin{macro}{\@@_text_replace:n, \@@_text_replace_aux:n}
+% \begin{macro}[EXP]{\@@_text_replace_first:N}
+% \begin{macro}{\@@_text_replace:N}
+% \begin{macro}{\@@_text_replace:NNn}
+% \begin{macro}{\@@_text_replace:Nnnn}
+% \begin{macro}{\@@_text_replace_frac:n}
+% \begin{macro}{\@@_text_sub:n, \@@_text_super:n}
+% \begin{macro}{\@@_text_scripts:nnN}
+% \begin{macro}{\@@_text_scripts:}
+% \begin{macro}{\@@_text_scripts_one:NnN}
+% \begin{macro}{\@@_text_scripts_two:NnNn}
+% \begin{macro}{\@@_text_scripts_two:nn}
+% \begin{macro}{\@@_text_scripts_two:n}
+% \begin{macro}{\@@_text_fraction:Nnn}
+%   Typesetting in text mode is easy in font control terms but more tricky
+%   in the manipulation of the input. The easy part comes first.
+%    \begin{macrocode}
+\cs_new_protected:Npn \siunitx_print_text:n #1
+  {
+    \text
+      {
+        \bool_if:NT \l_@@_text_family_bool
+          { \fontfamily { \familydefault } }
+        \bool_if:NT \l_@@_text_series_bool
+          { \fontseries { \seriesdefault } }
+        \bool_if:NT \l_@@_text_shape_bool
+          { \fontshape { \shapedefault } }
+        \bool_lazy_any:nT
+          {
+            { \l_@@_text_family_bool }
+            { \l_@@_text_series_bool }
+            { \l_@@_text_shape_bool }
+          }
+          { \selectfont }
+        \tl_use:N \l_@@_text_font_tl
+        \exp_args:NnV \tl_if_head_eq_meaning:nNTF {#1} \l_siunitx_unit_fraction_tl
+          { \@@_text_fraction:Nnn #1 }
+          { \@@_text_replace:n {#1} }
+      }
+  }
+%    \end{macrocode}
+%   To get math mode material to print in text mode, various search-and-replace
+%   steps are needed. We use \tn{protected@edef} to deal with commands, partly
+%   for speed and partly as it deals with anything nested inside \cs{mathord}.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_text_replace:n #1
+  {
+    \group_begin:
+      \tl_if_head_eq_meaning:nNTF {#1} \mathchoice
+        { \@@_text_replace:Nnnnn #1 }
+        {
+          \tl_set:Nn \l_@@_tmp_tl {#1}
+          \tl_if_empty:NF \l_@@_tmp_tl
+            {
+                \tl_if_empty:NF \l_siunitx_unit_font_tl
+                  { \exp_after:wN \cs_set_eq:NN \l_siunitx_unit_font_tl \use:n }
+                \cs_set:Npn \mathord ##1
+                  { \@@_text_replace_first:N ##1 }
+              \group_begin:
+                \cs_set:Npn \pm { \: \exp_not:N \textpm \: }
+                \tl_map_inline:nn
+                  { \mp \ge \le \gg \ll \angle }
+                  {
+                    \cs_set:Npn ##1
+                      { \exp_not:N \ensuremath { \exp_not:N ##1 } }
+                  }
+                \cs_set:Npn \cdot { \: \exp_not:N \textperiodcentered \: }
+                \cs_set:Npn \sqrt ##1
+                  {
+                    \exp_not:N \ensuremath
+                      { \exp_not:N \sqrt { \exp_not:N \text {##1} } }
+                  }
+                \cs_set:Npn \times { \: \exp_not:N \texttimes \: }
+                \protected@edef \l_@@_tmp_tl
+                  { \exp_after:wN \@@_text_replace_first:N \l_@@_tmp_tl }
+              \exp_args:NNNV \group_end:
+              \tl_set:Nn \l_@@_tmp_tl \l_@@_tmp_tl
+              \@@_text_replace:N \l_@@_tmp_tl
+              \@@_text_replace_aux:n { \tl_use:N \l_@@_tmp_tl }
+            }
+        }
+    \group_end:
+  }
+\cs_new_protected:Npn \@@_text_replace_aux:n #1 {#1}
+\cs_new:Npn \@@_text_replace_first:N #1
+  {
+    \str_case:nnF {#1}
+      {
+        { \cdot }  { \exp_not:N \textperiodcentered }
+        { \pm }    { \exp_not:N \textpm }
+        { \times } { \exp_not:N \texttimes }
+      }
+      {#1}
+  }
+\cs_new_protected:Npx \@@_text_replace:N #1
+  {
+    \exp_not:N \@@_text_replace:NNn #1
+      -
+        { \exp_not:N \textminus }
+      \char_generate:nn { `\_ } { 8 }
+        { \exp_not:N \@@_text_sub:n }
+      ^
+        { \exp_not:N \@@_text_super:n }
+      \exp_not:N \q_recursion_tail
+        { ? }
+      \exp_not:N \q_recursion_stop
+  }
+\cs_new_protected:Npn \@@_text_replace:NNn #1#2#3
+  {
+    \quark_if_recursion_tail_stop:N #2
+    \tl_replace_all:Nnn #1 {#2} {#3}
+    \@@_text_replace:NNn #1
+  }
+\cs_new_protected:Npn \@@_text_replace:Nnnnn #1#2#3#4#5
+  {
+    \ensuremath
+      {
+        \mathchoice
+          { \@@_print_replace_frac:n {#2} }
+          { \@@_print_replace_frac:n {#3} }
+          { \@@_print_replace_frac:n {#4} }
+          { \@@_print_replace_frac:n {#5} }
+      }
+  }
+%    \end{macrocode}
+%   Almost the same as the lead-off but here we need to deal with re-inserting
+%   a text mode shift.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_print_replace_frac:n #1
+  {
+    \exp_args:NnV \tl_if_head_eq_meaning:nNTF {#1} \l_siunitx_unit_fraction_tl
+      { \@@_text_fraction:Nnn #1 }
+      { \mbox { \@@_text_replace:n {#1} } }
+  }
+%    \end{macrocode}
+%   When the \pkg{bidi} package is loaded, we need to make sure
+%   that \cs{text} is doing the correct thing.
+%    \begin{macrocode}
+\sys_if_engine_xetex:T
+  {
+    \AtBeginDocument
+      {
+         \@ifpackageloaded { bidi }
+           {
+             \cs_set_protected:Npn \@@_text_replace_aux:n #1 { \LRE {#1} }
+           }
+       { }
+      }
+  }
+%    \end{macrocode}
+%   Sub- and superscripts can be in any order in the source. The first step
+%   of handling them is therefore to do a look-ahead to work out whether
+%   only one or both are present.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_text_sub:n #1
+  {
+    \@@_text_scripts:VnN
+      \l_@@_text_sub_tl {#1} \@@_text_super:n
+  }
+\cs_new_protected:Npn \@@_text_super:n #1
+  {
+    \@@_text_scripts:VnN
+      \l_@@_text_super_tl {#1} \@@_text_sub:n
+  }
+\cs_new_protected:Npn \@@_text_scripts:nnN #1#2#3
+  {
+    \cs_set_protected:Npn \@@_text_scripts:
+      {
+        \if_meaning:w \l_peek_token #3
+          \exp_after:wN \@@_text_scripts_two:NnNn
+        \else:
+          \exp_after:wN \@@_text_scripts_one:Nn
+        \fi:
+          #1 {#2}
+      }
+    \peek_after:Nw \@@_text_scripts:
+  }
+\cs_generate_variant:Nn \@@_text_scripts:nnN { V }
+\cs_new_protected:Npn \@@_text_scripts: { }
+%    \end{macrocode}
+%   In the simple case of one script item, we have to do a search-and-replace
+%   to deal with anything inside the argument.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_text_scripts_one:Nn #1#2
+  {
+    \group_begin:
+      \tl_set:Nn \l_@@_tmp_tl {#2}
+      \@@_text_replace:N \l_@@_tmp_tl
+    \exp_args:NNV \group_end:
+    #1 \l_@@_tmp_tl
+  }
+%    \end{macrocode}
+%   For the two scripts case, we cannot use |\textsubscript|/|\textsuperscript|
+%   as they don't stack directly. Instead, we sort out the ordering then use
+%   an implementation for both parts that is the same as the kernel text
+%   scripts.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_text_scripts_two:NnNn #1#2#3#4
+  {
+    \cs_if_eq:NNTF #1 \textsubscript
+      { \@@_text_scripts_two:nn {#4} {#2} }
+      { \@@_text_scripts_two:nn {#2} {#4} }
+  }
+\cs_new_protected:Npx \@@_text_scripts_two:nn #1#2
+  {
+    \group_begin:
+      \exp_not:N \m@th
+      \exp_not:N \ensuremath
+        {
+          ^ { \exp_not:N \@@_text_scripts_two:n {#1} }
+          \char_generate:nn { `\_ } { 8 }
+            { \exp_not:N \@@_text_scripts_two:n {#2} }
+        }
+    \group_end:
+  }
+\cs_new_protected:Npn \@@_text_scripts_two:n #1
+  {
+    \mbox
+      {
+        \fontsize \sf@size \z@ \selectfont
+        \@@_text_scripts_one:Nn \use:n {#1}
+      }
+  }
+%    \end{macrocode}
+%   Fraction commands are always math mode, so we have to go back and forth:
+%   this is done after general font setting for performance reasons.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_text_fraction:Nnn #1#2#3
+  {
+    \ensuremath
+      {
+        #1
+          { \mbox { \@@_text_replace:n {#2} } }
+          { \mbox { \@@_text_replace:n {#3} } }
+      }
+  }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \subsection{Standard settings for module options}
+%
+% Some of these follow naturally from the point of definition
+% (\foreign{e.g.}~boolean variables are always |false| to begin with),
+% but for clarity everything is set here.
+%    \begin{macrocode}
+\keys_set:nn { siunitx }
+  {
+    color                    =                  ,
+    mode                     = math             ,
+    number-color             =                  ,
+    number-mode              = math             ,
+    propagate-math-font      = false            ,
+    reset-math-version       = true             ,
+    reset-text-shape         = true             ,
+    reset-text-series        = true             ,
+    reset-text-family        = true             ,
+    text-family-to-math      = false            ,
+    text-font-command        =                  ,
+    text-subscript-command   = \textsubscript   ,
+    text-superscript-command = \textsuperscript ,
+    text-series-to-math      = false            ,
+    unit-color               =                  ,
+    unit-mode                = math
+  }
+%    \end{macrocode}
+%
+% These are separate as they all fall inside the same key.
+%    \begin{macrocode}
+\keys_set:nn { siunitx / series-version-mapping }
+  {
+    ul = light  ,
+    el = light  ,
+    l  = light  ,
+    sl = light  ,
+    m  = normal ,
+    sb = bold   ,
+    b  = bold   ,
+    eb = bold   ,
+    ub = bold
+  }
+%    \end{macrocode}
+%
+%    \begin{macrocode}
+%</package>
+%    \end{macrocode}
+%
+% \end{implementation}
+%
+% \PrintIndex

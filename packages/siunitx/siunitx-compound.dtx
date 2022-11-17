@@ -1,0 +1,1156 @@
+% \iffalse meta-comment
+%
+% File: siunitx-compound.dtx Copyright (C) 2018-2021 Joseph Wright
+%
+% It may be distributed and/or modified under the conditions of the
+% LaTeX Project Public License (LPPL), either version 1.3c of this
+% license or (at your option) any later version.  The latest version
+% of this license is in the file
+%
+%    https://www.latex-project.org/lppl.txt
+%
+% This file is part of the "siunitx bundle" (The Work in LPPL)
+% and all files in that bundle must be distributed together.
+%
+% The released version of this bundle is available from CTAN.
+%
+% -----------------------------------------------------------------------
+%
+% The development version of the bundle can be found at
+%
+%    https://github.com/josephwright/siunitx
+%
+% for those people who are interested.
+%
+% -----------------------------------------------------------------------
+%
+%<*driver>
+\documentclass{l3doc}
+\ProvideDocumentCommand\foreign{m}{\textit{#1}}
+% The next line is needed so that \GetFileInfo will be able to pick up
+% version data
+\usepackage{siunitx}
+\begin{document}
+  \DocInput{\jobname.dtx}
+\end{document}
+%</driver>
+% \fi
+%
+% \GetFileInfo{siunitx.sty}
+%
+% \title{^^A
+%   \pkg{siunitx-compound} -- Compound numbers and quantities^^A
+%   \thanks{This file describes \fileversion,
+%     last revised \filedate.}^^A
+% }
+%
+% \author{^^A
+%  Joseph Wright^^A
+%  \thanks{^^A
+%    E-mail:
+%    \href{mailto:joseph.wright@morningstar2.co.uk}
+%      {joseph.wright@morningstar2.co.uk}^^A
+%   }^^A
+% }
+%
+% \date{Released \filedate}
+%
+% \maketitle
+%
+% \begin{documentation}
+%
+% \begin{function}{\siunitx_compound_number:n}
+%   \begin{syntax}
+%     \cs{siunitx_compound_number:n} \Arg{entries}
+%   \end{syntax}
+%   Prints a set of numbers in the \meta{entries}, each of which should
+%   be given as a \meta{balanced text}. Unlike \cs{siunitx_number_list:nn}, this
+%   function may semantically take any form
+% \end{function}
+%
+% \begin{function}{\siunitx_compound_quantity:nn}
+%   \begin{syntax}
+%     \cs{siunitx_compound_quantity:nn} \Arg{entries} \Arg{unit}
+%   \end{syntax}
+%   Prints a set of quantities in the \meta{entries}, each of which should
+%   be given as a \meta{balanced text}. Unlike \cs{siunitx_quantity_list:nn}, this
+%   function may semantically take any form
+% \end{function}
+%
+% \begin{function}{\siunitx_number_list:nn}
+%   \begin{syntax}
+%     \cs{siunitx_number_list:nn} \Arg{entries}
+%   \end{syntax}
+%   Prints the list of numbers in the \meta{entries}, each of which should
+%   be given as a \meta{balanced text}.
+% \end{function}
+%
+% \begin{function}{\siunitx_quantity_list:nn}
+%   \begin{syntax}
+%     \cs{siunitx_quantity_list:nn} \Arg{entries} \Arg{unit}
+%   \end{syntax}
+%   Prints the list of quantities in the \meta{entries}, each of which should
+%   be given as a \meta{balanced text}.
+% \end{function}
+%
+% \begin{function}{\siunitx_number_product:n}
+%   \begin{syntax}
+%     \cs{siunitx_number_product:n} \Arg{entries}
+%   \end{syntax}
+%   Prints the series of numbers in the \meta{entries}, each of which should
+%   be given as a \meta{balanced text}.
+% \end{function}
+%
+% \begin{function}{\siunitx_quantity_product:nn}
+%   \begin{syntax}
+%     \cs{siunitx_number_product:n} \Arg{entries} \Arg{unit}
+%   \end{syntax}
+%   Prints the series of quantities in the \meta{entries}, each of which should
+%   be given as a \meta{balanced text}.
+% \end{function}
+%
+% \begin{function}{\siunitx_number_range:nn}
+%   \begin{syntax}
+%     \cs{siunitx_number_range:nn} \Arg{start} \Arg{end}
+%   \end{syntax}
+%   Prints the range of numbers from the \meta{start} to the \meta{end}.
+% \end{function}
+%
+% \begin{function}{\siunitx_quantity_range:nnn}
+%   \begin{syntax}
+%     \cs{siunitx_number_range:nn} \Arg{start} \Arg{end} \Arg{unit}
+%   \end{syntax}
+%   Prints the range of quantities from the \meta{start} to the \meta{end}.
+% \end{function}
+%
+% \begin{variable}
+%   {
+%     \l_siunitx_list_separator_pair_tl,
+%     \l_siunitx_list_separator_tl,
+%     \l_siunitx_list_separator_final_tl
+%   }
+%   Separators for lists of numbers and quantities.
+% \end{variable}
+%
+% \begin{variable}{\l_siunitx_range_phrase_tl}
+%   Phrase (or similar) used between limits of a range.
+% \end{variable}
+%
+% \begin{function}{compound-exponents}
+%   \begin{syntax}
+%     |compound-exponents| = |combine|\verb"|"|combine-bracket|\verb"|"|individual|
+%   \end{syntax}
+% \end{function}
+%
+% \begin{function}{compound-final-separator}
+%   \begin{syntax}
+%     |compound-final-separator| = \meta{text}
+%   \end{syntax}
+% \end{function}
+%
+% \begin{function}{compound-pair-separator}
+%   \begin{syntax}
+%     |compound-pair-separator| = \meta{text}
+%   \end{syntax}
+% \end{function}
+%
+% \begin{function}{compound-separator}
+%   \begin{syntax}
+%     |compound-separator| = \meta{text}
+%   \end{syntax}
+% \end{function}
+%
+% \begin{function}{compound-separator-mode}
+%   \begin{syntax}
+%     |compound-separator-mode| = |number|\verb"|"|text|
+%   \end{syntax}
+% \end{function}
+%
+% \begin{function}{compound-units}
+%   \begin{syntax}
+%     |compound-units| = |bracket|\verb"|"|repeat|\verb"|"|single|
+%   \end{syntax}
+% \end{function}
+%
+% \begin{function}{list-exponents}
+%   \begin{syntax}
+%     |list-exponents| = |combine|\verb"|"|combine-bracket|\verb"|"|individual|
+%   \end{syntax}
+% \end{function}
+%
+% \begin{function}{list-final-separator}
+%   \begin{syntax}
+%     |list-final-separator| = \meta{text}
+%   \end{syntax}
+% \end{function}
+%
+% \begin{function}{list-pair-separator}
+%   \begin{syntax}
+%     |list-pair-separator| = \meta{text}
+%   \end{syntax}
+% \end{function}
+%
+% \begin{function}{list-separator}
+%   \begin{syntax}
+%     |list-separator| = \meta{text}
+%   \end{syntax}
+% \end{function}
+%
+% \begin{function}{list-units}
+%   \begin{syntax}
+%     |list-units| = |bracket|\verb"|"|repeat|\verb"|"|single|
+%   \end{syntax}
+% \end{function}
+%
+% \begin{function}{product-exponents}
+%   \begin{syntax}
+%     |product-exponents| = |combine|\verb"|"|combine-bracket|\verb"|"|individual|
+%   \end{syntax}
+% \end{function}
+%
+% \begin{function}{product-mode}
+%   \begin{syntax}
+%     |product-mode| = |phrase|\verb"|"|choice|
+%   \end{syntax}
+% \end{function}
+%
+% \begin{function}{product-phrase}
+%   \begin{syntax}
+%     |product-phrase| = \meta{text}
+%   \end{syntax}
+% \end{function}
+%
+% \begin{function}{product-symbol}
+%   \begin{syntax}
+%     |product-symbol| = \meta{symbol}
+%   \end{syntax}
+% \end{function}
+%
+% \begin{function}{range-exponents}
+%   \begin{syntax}
+%     |range-exponents| = |combine|\verb"|"|combine-bracket|\verb"|"|individual|
+%   \end{syntax}
+% \end{function}
+%
+% \begin{function}{range-phrase}
+%   \begin{syntax}
+%     |range-phrase| = \meta{text}
+%   \end{syntax}
+% \end{function}
+%
+% \begin{function}{range-units}
+%   \begin{syntax}
+%     |range-units| = |bracket|\verb"|"|repeat|\verb"|"|single|
+%   \end{syntax}
+% \end{function}
+%
+% \end{documentation}
+%
+% \begin{implementation}
+%
+% Start the \pkg{DocStrip} guards.
+%    \begin{macrocode}
+%<*package>
+%    \end{macrocode}
+%
+% \section{\pkg{siunitx-compound} implementation}
+%
+%    \begin{macrocode}
+\cs_generate_variant:Nn \keys_set:nn { nx }
+%    \end{macrocode}
+%
+% \subsection{General mechanism}
+%
+% Identify the internal prefix (\LaTeX3 \pkg{DocStrip} convention): only
+% internal material in this \emph{submodule} should be used directly.
+%    \begin{macrocode}
+%<@@=siunitx_compound>
+%    \end{macrocode}
+%
+% Typesetting lists, ranges and products of numbers or quantities has shared
+% features which mean they are best handled using a common mechanism. The aim
+% therefore is to abstract out enough of the process such that output-specific
+% aspects can be left to separate processes.
+%
+% \begin{variable}{\l_@@_tmp_fp, \l_@@_tmp_seq, \l_@@_tmp_tl}
+%   Scratch space.
+%    \begin{macrocode}
+\fp_new:N \l_@@_tmp_fp
+\seq_new:N \l_@@_tmp_seq
+\tl_new:N \l_@@_tmp_tl
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{variable}{\l_@@_first_tl}
+%   The first number in the list in internal format.
+%    \begin{macrocode}
+\tl_new:N \l_@@_first_tl
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{variable}{\l_@@_exp_tl}
+%   For storing the combined exponent, if present.
+%    \begin{macrocode}
+\tl_new:N \l_@@_exp_tl
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{variable}{\l_@@_start_tl, \l_@@_end_tl}
+%   Data on the end-of-list.
+%    \begin{macrocode}
+\tl_new:N \l_@@_start_tl
+\tl_new:N \l_@@_end_tl
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{variable}{\l_@@_count_int}
+%   Data on the length-of-list.
+%    \begin{macrocode}
+\int_new:N \l_@@_count_int
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{variable}{\l_@@_unit_bool, \l_@@_unit_tl}
+%    \begin{macrocode}
+\bool_new:N \l_@@_unit_bool
+\tl_new:N \l_@@_unit_tl
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{variable}{\l_@@_bracket_close_tl, \l_@@_bracket_open_tl}
+%   Purely internal for the present.
+%    \begin{macrocode}
+\tl_new:N \l_@@_bracket_close_tl
+\tl_new:N \l_@@_bracket_open_tl
+\tl_set:Nn \l_@@_bracket_open_tl { ( }
+\tl_set:Nn \l_@@_bracket_close_tl { ) }
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{variable}
+%   {
+%     \l_@@_separator_final_tl  ,
+%     \l_@@_separator_pair_tl   ,
+%     \l_@@_separator_tl        ,
+%     \l_@@_separator_text_bool ,
+%     \l_@@_exp_bracket_bool    ,
+%     \l_@@_exp_combine_bool    ,
+%     \l_@@_unit_bracket_bool   ,
+%     \l_@@_unit_repeat_bool    ,
+%     \l_@@_unit_repeat_bool
+%   }
+%   List options.
+%    \begin{macrocode}
+\bool_new:N \l_@@_exp_bracket_bool
+\bool_new:N \l_@@_exp_combine_bool
+\bool_new:N \l_@@_separator_text_bool
+\bool_new:N \l_@@_unit_bracket_bool
+\bool_new:N \l_@@_unit_power_bool
+\bool_new:N \l_@@_unit_repeat_bool
+\keys_define:nn { siunitx }
+  {
+    compound-exponents .choice: ,
+    compound-exponents / combine .code:n =
+      {
+        \bool_set_false:N \l_@@_exp_bracket_bool
+        \bool_set_true:N \l_@@_exp_combine_bool
+      } ,
+    compound-exponents / combine-bracket .code:n =
+      {
+        \bool_set_true:N \l_@@_exp_bracket_bool
+        \bool_set_true:N \l_@@_exp_combine_bool
+      } ,
+    compound-exponents / individual .code:n =
+      {
+        \bool_set_false:N \l_@@_exp_bracket_bool
+        \bool_set_false:N \l_@@_exp_combine_bool
+      } ,
+    compound-final-separator .tl_set:N =
+      \l_@@_separator_final_tl ,
+    compound-pair-separator .tl_set:N =
+      \l_@@_separator_pair_tl ,
+    compound-separator .tl_set:N =
+      \l_@@_separator_tl ,
+    compound-separator-mode .choice: ,
+    compound-separator-mode / number .code:n =
+      { \bool_set_false:N \l_@@_separator_text_bool } ,
+    compound-separator-mode / text .code:n =
+      { \bool_set_true:N \l_@@_separator_text_bool } ,
+    compound-units .choice: ,
+    compound-units / bracket .code:n =
+      {
+        \bool_set_true:N  \l_@@_unit_bracket_bool
+        \bool_set_false:N \l_@@_unit_power_bool
+        \bool_set_false:N \l_@@_unit_repeat_bool
+      } ,
+    compound-units / bracket-power .code:n =
+      {
+        \bool_set_true:N  \l_@@_unit_bracket_bool
+        \bool_set_true:N  \l_@@_unit_power_bool
+        \bool_set_false:N \l_@@_unit_repeat_bool
+      } ,
+    compound-units / power .code:n =
+      {
+        \bool_set_false:N \l_@@_unit_bracket_bool
+        \bool_set_true:N  \l_@@_unit_power_bool
+        \bool_set_false:N \l_@@_unit_repeat_bool
+      } ,
+    compound-units / repeat .code:n   =
+      {
+        \bool_set_false:N \l_@@_unit_bracket_bool
+        \bool_set_false:N \l_@@_unit_power_bool
+        \bool_set_true:N  \l_@@_unit_repeat_bool
+      } ,
+    compound-units / single .code:n   =
+      {
+        \bool_set_false:N \l_@@_unit_bracket_bool
+        \bool_set_false:N \l_@@_unit_power_bool
+        \bool_set_false:N \l_@@_unit_repeat_bool
+      }
+  }
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{macro}{\siunitx_compound_number:n}
+% \begin{macro}{\@@_format:n}
+% \begin{macro}{\@@_format:nn}
+% \begin{macro}{\@@_format:nnn}
+%   Printing a generic set starts with the question of whether we want to
+%   extract exponents. If we do, then there is the work to do with extraction.
+%   Either way, the printing is handed off to a common function. We do a quick
+%   count up-front to avoid excess work when there is not actually a list.
+%    \begin{macrocode}
+\cs_new_protected:Npn \siunitx_compound_number:n #1
+  {
+    \group_begin:
+      \bool_set_false:N \l_@@_unit_bool
+      \@@_format:nn {#1} { }
+      \@@_print:N \siunitx_print_number:x
+    \group_end:
+  }
+\cs_new_protected:Npn \@@_format:nn #1#2
+  {
+    \seq_clear:N \l_@@_tmp_seq
+    \bool_if:NTF \l_siunitx_number_parse_bool
+      {
+        \exp_args:Nxx \@@_format:nnn
+          { \tl_head:n {#1} }
+          { \tl_tail:n {#1} }
+          {#2}
+      }
+      { \tl_map_function:nN {#1} \@@_unparsed:n }
+  }
+%    \end{macrocode}
+%   Formatting at a low level needs to know about units and numbers: we have to
+%   exchange data between the two. Most of the business of handling the units
+%   is left to a dedicated auxiliary.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_format:nnn #1#2#3
+  {
+    \tl_if_blank:nTF {#1}
+      {
+        \tl_if_blank:nF {#2}
+          { \@@_format:nn {#2} {#3} }
+      }
+      { \@@_format_aux:nnn {#1} {#2} {#3} }
+  }
+\cs_new_protected:Npn \@@_format_aux:nnn #1#2#3
+  {
+    \siunitx_number_parse:nN {#1} \l_@@_tmp_tl
+    \bool_if:NTF \l_@@_unit_bool
+      { \@@_format_units:nn {#2} {#3} }
+      { \siunitx_number_process:NN \l_@@_tmp_tl \l_@@_first_tl }
+    \bool_lazy_and:nnTF
+      { \l_@@_exp_combine_bool }
+      { \int_compare_p:nNn { \tl_count:n {#2} } > 0 }
+      { \@@_extract_exponents: }
+      {
+        \bool_if:NTF \l_@@_unit_bool
+          {
+            \tl_set:Nx \l_@@_tmp_tl
+              { \siunitx_number_output:NN \l_@@_first_tl \q_nil }
+            \tl_set:Nx \l_@@_tmp_tl
+              { \@@_uncert_bracket:N \l_@@_tmp_tl }
+          }
+          {
+            \tl_set:Nx \l_@@_tmp_tl
+              { \siunitx_number_output:N \l_@@_first_tl }
+          }
+        \seq_put_right:NV \l_@@_tmp_seq \l_@@_tmp_tl
+      }
+    \tl_map_function:nN {#2} \@@_parsed:n
+  }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\@@_extract_exponents:}
+% \begin{macro}{\@@_extract_exponents_auxi:w}
+% \begin{macro}{\@@_extract_exponents_auxii:nw}
+% \begin{macro}{\@@_extract_exponents_auxiii:nnnnnnn}
+%   Extracting exponents means dealing with the first entry as a special case.
+%   After that, apply fixed processing to all other entries, tidying up using
+%   the number formatter.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_extract_exponents:
+  {
+    \tl_set:Nx \l_@@_tmp_tl
+      { \siunitx_number_output:NN \l_@@_first_tl \q_nil }
+    \exp_after:wN \@@_extract_exponents_auxi:w
+      \l_@@_tmp_tl \q_stop
+  }
+\cs_new_protected:Npn \@@_extract_exponents_auxi:w
+  #1 \q_nil #2 \q_nil #3 \q_nil #4 \q_nil #5 \q_nil #6 \q_nil #7 \q_nil #8
+  \q_nil #9 \q_stop
+  {
+    \@@_extract_exponents_auxii:nw {#1#2#3#4#5#6#7#8} #9 \q_stop
+  }
+\cs_new_protected:Npn \@@_extract_exponents_auxii:nw
+  #1#2 \q_nil #3 \q_nil #4 \q_stop
+  {
+    \seq_put_right:Nn \l_@@_tmp_seq { #1#2 }
+    \tl_set:Nn \l_@@_exp_tl { #3#4 }
+    \exp_after:wN \@@_extract_exponents_auxiii:nnnnnnn
+      \l_@@_first_tl
+  }
+\cs_new_protected:Npn \@@_extract_exponents_auxiii:nnnnnnn
+  #1#2#3#4#5#6#7
+  {
+    \keys_set:nn { siunitx }
+      {
+        drop-exponent  = true  ,
+        exponent-mode  = fixed ,
+        fixed-exponent = #6#7
+      }
+  }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\@@_parsed:n, \@@_parsed_aux:n, \@@_unparsed:n}
+%   The simple cases for parsing (or not) all entries.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_parsed:n #1
+  {
+    \tl_if_blank:nF {#1}
+      { \@@_parsed_aux:n {#1} }
+  }
+\cs_new_protected:Npn \@@_parsed_aux:n #1
+  {
+    \bool_if:NTF \l_@@_unit_bool
+      {
+        \siunitx_number_parse:nN {#1} \l_@@_tmp_tl
+        \siunitx_number_process:NN \l_@@_tmp_tl \l_@@_tmp_tl
+        \tl_set:Nx \l_@@_tmp_tl
+          { \siunitx_number_output:NN \l_@@_tmp_tl \q_nil }
+        \tl_set:Nx \l_@@_tmp_tl
+          { \@@_uncert_bracket:N \l_@@_tmp_tl }
+      }
+      { \siunitx_number_format:nN {#1} \l_@@_tmp_tl }
+    \seq_put_right:NV \l_@@_tmp_seq \l_@@_tmp_tl
+  }
+\cs_new_protected:Npn \@@_unparsed:n #1
+  {
+    \tl_if_blank:nF {#1}
+      { \seq_put_right:Nn \l_@@_tmp_seq { \ensuremath {#1} } }
+  }
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\@@_format_units:nn}
+% \begin{macro}
+%   {
+%     \@@_format_combine-exponent:n ,
+%     \@@_format_extract-exponent:n ,
+%     \@@_format_input:n
+%   }
+% \begin{macro}
+%   {
+%     \@@_format_combine-exponent:nn ,
+%     \@@_format_extract-exponent:nn
+%   }
+% \begin{macro}
+%   {
+%     \@@_format_combine-exponent_aux:n ,
+%     \@@_format_extract-exponent_aux:n
+%   }
+% \begin{macro}{\@@_extract_exp:nN}
+% \begin{macro}{\@@_extract_exp:nnnnnnnN}
+%   Actually formatting the units is much the same as is done in
+%   the quantities module, except that we have to cover the multiplication
+%   cases too: gets a bit repetitive. Notice that when combining exponents,
+%   there is no adjustment to the original exponent: we purely need to
+%   extract it.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_format_units:nn #1#2
+  {
+    \bool_if:NTF \l_@@_unit_power_bool
+      {
+        \use:c { @@_format_ \l_siunitx_quantity_prefix_mode_tl :nn }
+          {#2} { \tl_count:n {#1} + 1 }
+      }
+      {
+        \use:c { @@_format_ \l_siunitx_quantity_prefix_mode_tl :n } {#2}
+      }
+  }
+\cs_new_protected:cpx { @@_format_combine-exponent:n } #1
+  {
+    \exp_not:c { @@_format_combine-exponent_aux:n }
+      {
+        \exp_not:N \siunitx_unit_format_combine_exponent:nnN
+          {#1}
+      }
+  }
+\cs_new_protected:cpx { @@_format_combine-exponent:nn } #1#2
+  {
+    \exp_not:c { @@_format_combine-exponent_aux:n }
+      {
+        \exp_not:N \siunitx_unit_format_multiply_combine_exponent:nnnN
+          {#1} {#2}
+      }
+  }
+\cs_new_protected:cpn { @@_format_combine-exponent_aux:n } #1
+  {
+    \bool_set_true:N \l_@@_exp_combine_bool
+    \siunitx_number_process:NN \l_@@_tmp_tl \l_@@_first_tl
+    \exp_args:NV \@@_extract_exp:nN
+      \l_@@_first_tl \l_@@_tmp_fp
+    #1 \l_@@_tmp_fp \l_@@_unit_tl
+  }
+\cs_new_protected:cpx { @@_format_extract-exponent:n } #1
+  {
+    \exp_not:c { @@_format_extract-exponent_aux:n }
+      { \exp_not:N \siunitx_unit_format_extract_prefixes:nNN {#1} }
+  }
+\cs_new_protected:cpx { @@_format_extract-exponent:nn } #1#2
+  {
+    \exp_not:c { @@_format_extract-exponent_aux:n }
+      {
+        \exp_not:N \siunitx_unit_format_multiply_extract_prefixes:nnNN
+          {#1} {#2}
+      }
+  }
+\cs_new_protected:cpn { @@_format_extract-exponent_aux:n } #1
+  {
+    #1 \l_@@_unit_tl \l_@@_tmp_fp
+    \tl_set:Nx \l_@@_tmp_tl
+      { \siunitx_number_adjust_exponent:Nn \l_@@_tmp_tl \l_@@_tmp_fp }
+    \siunitx_number_process:NN \l_@@_tmp_tl \l_@@_first_tl
+    \bool_set_true:N \l_@@_exp_combine_bool
+  }
+\cs_new_protected:Npn \@@_format_input:n #1
+  {
+    \siunitx_number_process:NN \l_@@_tmp_tl \l_@@_first_tl
+    \siunitx_unit_format:nN {#1} \l_@@_unit_tl
+  }
+\cs_new_protected:Npn \@@_format_input:nn #1#2
+  {
+    \siunitx_number_process:NN \l_@@_tmp_tl \l_@@_first_tl
+    \siunitx_unit_format_multiply:nnN {#1} {#2} \l_@@_unit_tl
+  }
+\cs_new_protected:Npn \@@_extract_exp:nN #1#2
+  { \@@_extract_exp:nnnnnnnN #1 #2 }
+\cs_new_protected:Npn \@@_extract_exp:nnnnnnnN #1#2#3#4#5#6#7#8
+  { \fp_set:Nn #8 {#6#7} }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\siunitx_compound_quantity:nn}
+%   For quantities, life is more complex as there are interactions between the
+%   options for exponents and units.
+%    \begin{macrocode}
+\cs_new_protected:Npn \siunitx_compound_quantity:nn #1#2
+  {
+    \group_begin:
+      \bool_if:NT \l_@@_unit_bracket_bool
+        { \bool_set_true:N \l_@@_exp_bracket_bool }
+      \bool_if:NT \l_@@_unit_repeat_bool
+        { \bool_set_false:N \l_@@_exp_combine_bool }
+      \bool_lazy_or:nnT
+        { \l_@@_unit_bracket_bool }
+        { ! \l_@@_unit_repeat_bool }
+        { \bool_set_false:N \l_siunitx_number_bracket_ambiguous_bool }
+      \bool_set_true:N \l_@@_unit_bool
+      \@@_format:nn {#1} {#2}
+      \bool_if:NF \l_siunitx_number_parse_bool
+        { \siunitx_unit_format:nN {#2} \l_@@_unit_tl }
+      \str_if_eq:VnT \l_siunitx_quantity_prefix_mode_tl { combine-exponent }
+        { \tl_clear:N \l_@@_exp_tl }
+      \bool_if:NTF \l_@@_unit_repeat_bool
+        { \@@_print:N \@@_print_quantity:x }
+        {
+          \bool_lazy_and:nnTF
+            { \l_@@_unit_bracket_bool }
+            { \tl_if_empty_p:N \l_@@_exp_tl }
+            {
+              \siunitx_print_number:V \l_@@_bracket_open_tl
+              \@@_print:N \siunitx_print_number:x
+              \siunitx_print_number:V \l_@@_bracket_close_tl
+            }
+            { \@@_print:N \siunitx_print_number:x }
+          \@@_print_quantity:n { }
+        }
+    \group_end:
+  }
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\@@_print:N}
+% \begin{macro}{\@@_print:nnN, \@@_print:xxN}
+% \begin{macro}{\@@_print:nnnN}
+% \begin{macro}{\@@_print_aux:n}
+% \begin{macro}{\@@_print_aux:nn}
+% \begin{macro}{\@@_print_quantity:n, \@@_print_quantity:x}
+% \begin{macro}{\@@_print_separator:n, \@@_print_separator:V}
+%   We now need to know how many entries there are: the reason we don't use
+%   \cs{seq_use:Nnnn} is that we want to be able to insert
+%   \cs{siunitx_print_\dots:n} in a controlled way.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_print:N #1
+  {
+    \bool_lazy_and:nnTF
+      { \l_@@_exp_bracket_bool }
+      { ! \tl_if_empty_p:N \l_@@_exp_tl }
+      {
+        \@@_print:xxN
+          { \exp_not:V \l_@@_bracket_open_tl }
+          {
+            \exp_not:V \l_@@_bracket_close_tl
+            \exp_not:V \l_@@_exp_tl
+          }
+          #1
+      }
+      { \@@_print:xxN { } { \exp_not:V \l_@@_exp_tl } #1 }
+  }
+\cs_new_protected:Npn \@@_print:nnN #1#2#3
+  {
+    \exp_args:Nx \@@_print:nnnN
+      { \seq_count:N \l_@@_tmp_seq } {#1} {#2} #3
+  }
+\cs_generate_variant:Nn \@@_print:nnN { xx }
+%    \end{macrocode}
+%   A rather long auxiliary as we want a way to have the brackets/exponent
+%   available. The actual flow is simple enough: see how many entries there are
+%   and print as required. To keep everything generic, we have some slightly
+%   tricky saving of data to allow everything to go to the mapping.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_print:nnnN #1#2#3#4
+  {
+    \int_case:nnF {#1}
+      {
+        { 0 } { }
+        { 1 }
+          {
+            #4
+              { \seq_item:Nn \l_@@_tmp_seq { 1 } }
+          }
+        { 2 }
+          {
+            #4
+              {
+                \exp_not:n {#2}
+                \seq_item:Nn \l_@@_tmp_seq { 1 }
+              }
+            \@@_print_separator:V \l_@@_separator_pair_tl
+            #4
+              {
+                \seq_item:Nn \l_@@_tmp_seq { 2 }
+                \exp_not:n {#3}
+              }
+          }
+      }
+      {
+        \int_set:Nn \l_@@_count_int {#1}
+        \tl_set:Nn \l_@@_start_tl {#2}
+        \tl_set:Nn \l_@@_end_tl {#3}
+        \cs_set_eq:NN \@@_print_aux:n #4
+        \seq_map_indexed_function:NN
+          \l_@@_tmp_seq
+          \@@_print_aux:nn
+      }
+  }
+\cs_new_protected:Npn \@@_print_aux:n #1 { }
+\cs_new_protected:Npn \@@_print_aux:nn #1#2
+  {
+    \int_case:nnF {#1}
+      {
+        { 1 }
+          {
+            \@@_print_aux:n
+              {
+                \exp_not:V \l_@@_start_tl
+                \exp_not:n {#2}
+              }
+            \@@_print_separator:V \l_@@_separator_tl
+          }
+        { \l_@@_count_int - 1 }
+          {
+            \@@_print_aux:n { \exp_not:n {#2} }
+            \@@_print_separator:V \l_@@_separator_final_tl
+          }
+        { \l_@@_count_int }
+          {
+            \@@_print_aux:n
+              {
+                \exp_not:n {#2}
+                \exp_not:V \l_@@_end_tl
+              }
+          }
+      }
+      {
+        \@@_print_aux:n { \exp_not:n {#2} }
+        \@@_print_separator:V \l_@@_separator_tl
+      }
+  }
+\cs_new_protected:Npn \@@_print_quantity:n #1
+  { \siunitx_quantity_print:nV {#1} \l_@@_unit_tl }
+\cs_generate_variant:Nn  \@@_print_quantity:n { x }
+\cs_new_protected:Npn \@@_print_separator:n #1
+  {
+    \bool_if:NTF \l_@@_separator_text_bool
+      { #1 }
+      { \siunitx_print_number:n {#1} }
+  }
+\cs_generate_variant:Nn \@@_print_separator:n { V }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}[EXP]{\@@_uncert_bracket:N}
+% \begin{macro}[EXP]{\@@_uncert_bracket:w}
+% \begin{macro}[EXP]{\@@_uncert_bracket:nnw}
+%   Check for the case where there is a separate uncertainty but not exponent,
+%   when we are handling units.
+%    \begin{macrocode}
+\cs_new:Npn \@@_uncert_bracket:N #1
+  { \exp_after:wN \@@_uncert_bracket:w #1 \q_stop }
+\cs_new:Npn \@@_uncert_bracket:w
+  #1 \q_nil #2 \q_nil #3 \q_nil #4 \q_nil #5 \q_nil #6 \q_nil #7 \q_nil
+  #8 \q_nil #9 \q_stop
+  { \@@_uncert_bracket:nnw {#1#2#3#4#5#6} {#7#8} #9 \q_stop }
+\cs_new:Npn \@@_uncert_bracket:nnw #1#2 #3 \q_nil #4 \q_nil #5 \q_stop
+  {
+    \bool_lazy_or:nnTF
+      { \tl_if_blank_p:n {#2#3} }
+      { ! \tl_if_blank_p:n {#5} }
+      { \exp_not:n {#1#2#3#4#5} }
+      {
+        \exp_not:V \l_@@_bracket_open_tl
+        \exp_not:n {#1#2#3}
+        \exp_not:V \l_@@_bracket_close_tl
+        \exp_not:n {#4#5}
+      }
+  }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \subsection{Lists}
+%
+% Identify the internal prefix (\LaTeX3 \pkg{DocStrip} convention): only
+% internal material in this \emph{submodule} should be used directly.
+%    \begin{macrocode}
+%<@@=siunitx_list>
+%    \end{macrocode}
+%
+% \begin{variable}
+%   {
+%     \l_siunitx_list_separator_tl       ,
+%     \l_siunitx_list_separator_final_tl ,
+%     \l_siunitx_list_separator_pair_tl  ,
+%     \l_@@_exp_tl                       ,
+%     \l_@@_units_tl
+%   }
+%   Options for products.
+%    \begin{macrocode}
+\tl_new:N \l_@@_exp_tl
+\tl_new:N \l_@@_units_tl
+\keys_define:nn { siunitx }
+  {
+    list-exponents .choices:nn =
+      { combine , combine-bracket , individual }
+      { \tl_set_eq:NN \l_@@_exp_tl \l_keys_choice_tl } ,
+    list-final-separator .tl_set:N = \l_siunitx_list_separator_final_tl ,
+    list-pair-separator .tl_set:N = \l_siunitx_list_separator_pair_tl ,
+    list-separator .tl_set:N = \l_siunitx_list_separator_tl ,
+    list-units .choices:nn =
+      { bracket , repeat , single }
+      { \tl_set_eq:NN \l_@@_units_tl \l_keys_choice_tl }
+  }
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{macro}{\siunitx_number_list:nn}
+% \begin{macro}{\siunitx_quantity_list:nn}
+% \begin{macro}{\@@_aux:}
+%   Simply recover the settings and use as a list.
+%    \begin{macrocode}
+\cs_new_protected:Npn \siunitx_number_list:nn #1
+  {
+    \group_begin:
+      \@@_aux:
+      \siunitx_compound_number:n {#1}
+    \group_end:
+  }
+\cs_new_protected:Npn \siunitx_quantity_list:nn #1#2
+  {
+    \group_begin:
+      \@@_aux:
+      \siunitx_compound_quantity:nn {#1} {#2}
+    \group_end:
+  }
+\cs_new_protected:Npn \@@_aux:
+  {
+    \keys_set:nx { siunitx }
+      {
+        compound-exponents       = \l_@@_exp_tl ,
+        compound-final-separator =
+          { \exp_not:V \l_siunitx_list_separator_final_tl } ,
+        compound-pair-separator  =
+          { \exp_not:V \l_siunitx_list_separator_pair_tl } ,
+        compound-separator       =
+          { \exp_not:V \l_siunitx_list_separator_tl } ,
+        compound-separator-mode  = text ,
+        compound-units           = \l_@@_units_tl
+      }
+  }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \subsection{Products}
+%
+% Identify the internal prefix (\LaTeX3 \pkg{DocStrip} convention): only
+% internal material in this \emph{submodule} should be used directly.
+%    \begin{macrocode}
+%<@@=siunitx_product>
+%    \end{macrocode}
+%
+% \begin{variable}
+%   {
+%     \l_@@_exp_tl      ,
+%     \l_@@_phrase_bool ,
+%     \l_@@_phrase_tl   ,
+%     \l_@@_symbol_tl   ,
+%     \l_@@_units_tl
+%   }
+%   Options for products.
+%    \begin{macrocode}
+\tl_new:N \l_@@_exp_tl
+\bool_new:N \l_@@_phrase_bool
+\tl_new:N \l_@@_units_tl
+\keys_define:nn { siunitx }
+  {
+    product-exponents .choices:nn =
+      { combine , combine-bracket , individual }
+      { \tl_set_eq:NN \l_@@_exp_tl \l_keys_choice_tl } ,
+    product-mode .choice: ,
+    product-mode / phrase .code:n =
+      { \bool_set_true:N \l_@@_phrase_bool } ,
+    product-mode / symbol .code:n =
+      { \bool_set_false:N \l_@@_phrase_bool } ,
+    product-phrase .tl_set:N = \l_@@_phrase_tl ,
+    product-symbol .tl_set:N = \l_@@_symbol_tl ,
+    product-units .choices:nn =
+      { bracket , bracket-power , power , repeat , single }
+      { \tl_set_eq:NN \l_@@_units_tl \l_keys_choice_tl }
+  }
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{macro}{\siunitx_number_product:n}
+% \begin{macro}{\siunitx_quantity_product:nn}
+% \begin{macro}{\@@_aux:}
+% \begin{macro}{\@@_aux:n, \@@_aux:x}
+%   Simply recover the settings and use as a list.
+%    \begin{macrocode}
+\cs_new_protected:Npn \siunitx_number_product:n #1
+  {
+    \group_begin:
+      \@@_aux:
+      \siunitx_compound_number:n {#1}
+    \group_end:
+  }
+\cs_new_protected:Npn \siunitx_quantity_product:nn #1#2
+  {
+    \group_begin:
+      \@@_aux:
+      \siunitx_compound_quantity:nn {#1} {#2}
+    \group_end:
+  }
+\cs_new_protected:Npn \@@_aux:
+  {
+    \bool_if:NTF \l_@@_phrase_bool
+      { \@@_aux:x { \exp_not:V \l_@@_phrase_tl } }
+      { \@@_aux:x { { } \exp_not:V \l_@@_symbol_tl { } } }
+  }
+\cs_new_protected:Npn \@@_aux:n #1
+  {
+    \keys_set:nx { siunitx }
+      {
+        compound-exponents       = \l_@@_exp_tl ,
+        compound-final-separator = { \exp_not:n {#1} } ,
+        compound-pair-separator  = { \exp_not:n {#1} } ,
+        compound-separator       = { \exp_not:n {#1} } ,
+        compound-separator-mode  =
+          \bool_if:NTF \l_@@_phrase_bool { text } { number } ,
+        compound-units           = \l_@@_units_tl
+      }
+  }
+\cs_generate_variant:Nn \@@_aux:n { x }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \subsection{Ranges}
+%
+% Identify the internal prefix (\LaTeX3 \pkg{DocStrip} convention): only
+% internal material in this \emph{submodule} should be used directly.
+%    \begin{macrocode}
+%<@@=siunitx_range>
+%    \end{macrocode}
+%
+% \begin{variable}
+%   {
+%     \l_@@_exp_tl               ,
+%     \l_siunitx_range_phrase_tl ,
+%     \l_@@_units_tl
+%   }
+%   Options for products.
+%    \begin{macrocode}
+\tl_new:N \l_@@_exp_tl
+\tl_new:N \l_@@_units_tl
+\keys_define:nn { siunitx }
+  {
+    range-exponents .choices:nn =
+      { combine , combine-bracket , individual }
+      { \tl_set_eq:NN \l_@@_exp_tl \l_keys_choice_tl } ,
+    range-phrase .tl_set:N = \l_siunitx_range_phrase_tl ,
+    range-units .choices:nn =
+      { bracket , repeat , single }
+      { \tl_set_eq:NN \l_@@_units_tl \l_keys_choice_tl }
+  }
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{macro}{\siunitx_number_range:nn}
+% \begin{macro}{\siunitx_quantity_range:nnn}
+% \begin{macro}{\@@_aux:}
+%   Simply recover the settings and use as a list.
+%    \begin{macrocode}
+\cs_new_protected:Npn \siunitx_number_range:nn #1#2
+  {
+    \group_begin:
+      \@@_aux:
+      \siunitx_compound_number:n { {#1} {#2} }
+    \group_end:
+  }
+\cs_new_protected:Npn \siunitx_quantity_range:nnn #1#2#3
+  {
+    \group_begin:
+      \@@_aux:
+      \siunitx_compound_quantity:nn { {#1} {#2} } {#3}
+    \group_end:
+  }
+\cs_new_protected:Npn \@@_aux:
+  {
+    \keys_set:nx { siunitx }
+      {
+        compound-exponents       = \l_@@_exp_tl ,
+        compound-pair-separator  = { \exp_not:V \l_siunitx_range_phrase_tl } ,
+        compound-separator-mode  = text ,
+        compound-units           = \l_@@_units_tl
+      }
+  }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \subsection{Standard settings for module options}
+%
+% Some of these follow naturally from the point of definition
+% (\foreign{e.g.}~boolean variables are always |false| to begin with),
+% but for clarity everything is set here.
+%    \begin{macrocode}
+\keys_set:nn { siunitx }
+  {
+    compound-exponents       = individual  ,
+    compound-final-separator =
+      {
+        \ifmmode \  \else \space \fi
+        \text { and }
+        \ifmmode \  \else \space \fi
+      } ,
+    compound-pair-separator  =
+      {
+        \ifmmode \  \else \space \fi
+        \text { and }
+        \ifmmode \  \else \space \fi
+      } ,
+    compound-separator       =
+      { , \ifmmode \  \else \space \fi } ,
+    compound-separator-mode  = text        ,
+    compound-units           = repeat      ,
+    list-exponents           = individual  ,
+    list-final-separator     =
+      {
+        \ifmmode \  \else \space \fi
+        \text { and }
+        \ifmmode \  \else \space \fi
+      } ,
+    list-pair-separator      =
+      {
+        \ifmmode \  \else \space \fi
+        \text { and }
+        \ifmmode \  \else \space \fi
+      } ,
+    list-separator           =
+      { , \ifmmode \  \else \space \fi } ,
+    list-units               = repeat      ,
+    product-exponents        = individual  ,
+    product-mode             = symbol      ,
+    product-phrase           =
+      {
+        \ifmmode \  \else \space \fi
+        \text { by }
+        \ifmmode \  \else \space \fi
+      } ,
+    product-symbol           = \times      ,
+    product-units            = repeat      ,
+    range-exponents          = individual  ,
+    range-phrase             =
+      {
+        \ifmmode \  \else \space \fi
+        \text { to }
+        \ifmmode \  \else \space \fi
+      } ,
+    range-units              = repeat
+  }
+%    \end{macrocode}
+%
+%    \begin{macrocode}
+%</package>
+%    \end{macrocode}
+%
+% \end{implementation}
+%
+% \PrintIndex

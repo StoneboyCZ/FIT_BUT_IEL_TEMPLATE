@@ -1,0 +1,116 @@
+\iffalse meta-comment
+
+File: siunitx-code.tex Copyright (C) 2016-2022 Joseph Wright
+
+It may be distributed and/or modified under the conditions of the
+LaTeX Project Public License (LPPL), either version 1.3c of this
+license or (at your option) any later version.  The latest version
+of this license is in the file
+
+   https://www.latex-project.org/lppl.txt
+
+This file is part of the "siunitx bundle" (The Work in LPPL)
+and all files in that bundle must be distributed together.
+
+The released version of this bundle is available from CTAN.
+
+-----------------------------------------------------------------------
+
+The development version of the bundle can be found at
+
+   https://github.com/josephwright/siunitx
+
+for those people who are interested.
+
+-----------------------------------------------------------------------
+
+\fi
+
+\documentclass{l3doc}
+
+% The next line is needed so that \GetFileInfo will be able to pick up
+% version data.
+\usepackage{siunitx}
+
+% Commands for this document
+\ExplSyntaxOn
+\makeatletter
+\NewDocumentCommand \acro { m }
+  {
+    \textsc
+      {
+        \exp_args:NV \tl_if_head_eq_charcode:nNTF \f@series { m }
+          { \text_lowercase:n }
+          { \use:n }
+            {#1}
+      }
+  }
+\makeatother
+\ExplSyntaxOff
+\NewDocumentCommand\foreign{m}{\textit{#1}}
+
+% Standard settings
+\EnableDocumentation
+\DisableImplementation
+
+\begin{document}
+
+\GetFileInfo{siunitx.sty}
+
+\title{%
+  \pkg{siunitx} -- A comprehensive (SI) units package%
+  \thanks{This file describes \fileversion,
+    last revised \filedate.}%
+}
+
+\author{%
+  Joseph Wright%
+  \thanks{%
+    E-mail:
+    \href{mailto:joseph.wright@morningstar2.co.uk}
+      {joseph.wright@morningstar2.co.uk}%
+  }%
+}
+
+\date{Released \filedate}
+
+\pagenumbering{roman}
+
+\maketitle
+\tableofcontents
+\clearpage
+\pagenumbering{arabic}
+
+% Make the separate source files into a single whole, format-wise
+\makeatletter
+\RenewDocumentCommand\maketitle{}{%
+  \clearpage
+  \part{\@title}%
+}
+\makeatother
+\renewcommand*\partname{Part}
+\DeclareExpandableDocumentCommand\thanks{m}{}
+
+\let\DelayPrintIndex\PrintIndex
+\RenewDocumentCommand\PrintIndex{}{}
+
+% Load the source files in order
+%\DocInput{siunitx.dtx}
+\DocInput{siunitx-angle.dtx}
+\DocInput{siunitx-compound.dtx}
+\DocInput{siunitx-locale.dtx}
+\DocInput{siunitx-number.dtx}
+\DocInput{siunitx-print.dtx}
+\DocInput{siunitx-quantity.dtx}
+\DocInput{siunitx-symbol.dtx}
+\DocInput{siunitx-table.dtx}
+\DocInput{siunitx-unit.dtx}
+\DocInput{siunitx-abbreviation.dtx}
+\DocInput{siunitx-binary.dtx}
+\DocInput{siunitx-command.dtx}
+\DocInput{siunitx-emulation.dtx}
+\clearpage
+
+\DelayPrintIndex
+
+\end{document}

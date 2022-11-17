@@ -1,0 +1,477 @@
+% \iffalse meta-comment
+%
+% File: siunitx-quantity.dtx Copyright (C) 2018-2022 Joseph Wright
+%
+% It may be distributed and/or modified under the conditions of the
+% LaTeX Project Public License (LPPL), either version 1.3c of this
+% license or (at your option) any later version.  The latest version
+% of this license is in the file
+%
+%    https://www.latex-project.org/lppl.txt
+%
+% This file is part of the "siunitx bundle" (The Work in LPPL)
+% and all files in that bundle must be distributed together.
+%
+% The released version of this bundle is available from CTAN.
+%
+% -----------------------------------------------------------------------
+%
+% The development version of the bundle can be found at
+%
+%    https://github.com/josephwright/siunitx
+%
+% for those people who are interested.
+%
+% -----------------------------------------------------------------------
+%
+%<*driver>
+\documentclass{l3doc}
+\ProvideDocumentCommand\foreign{m}{\textit{#1}}
+% The next line is needed so that \GetFileInfo will be able to pick up
+% version data
+\usepackage{siunitx}
+\begin{document}
+  \DocInput{\jobname.dtx}
+\end{document}
+%</driver>
+% \fi
+%
+% \GetFileInfo{siunitx.sty}
+%
+% \title{^^A
+%   \pkg{siunitx-quantity} -- Quantities^^A
+%   \thanks{This file describes \fileversion,
+%     last revised \filedate.}^^A
+% }
+%
+% \author{^^A
+%  Joseph Wright^^A
+%  \thanks{^^A
+%    E-mail:
+%    \href{mailto:joseph.wright@morningstar2.co.uk}
+%      {joseph.wright@morningstar2.co.uk}^^A
+%   }^^A
+% }
+%
+% \date{Released \filedate}
+%
+% \maketitle
+%
+% \begin{documentation}
+%
+% This submodule is focussed on providing controlled printing for quantities:
+% the combination of a number and a unit. It largely builds on the submodules
+% \pkg{siunitx-number} and \pkg{siunitx-unit}. A small number of adjustments
+% are made to standard set up in the latter to reflect additional functionality
+% added here.
+%
+% \begin{function}{\siunitx_quantity:nn}
+%   \begin{syntax}
+%     \cs{siunitx_quantity:nn} \Arg{number} \Arg{unit}
+%   \end{syntax}
+%   Parses the \meta{number} and the \meta{unit} as detailed for
+%   \cs{siunitx_number_parse:nN} and \cs{siunitx_unit_format:nN},
+%   the prints the results using \cs{siunitx_print_unit:n}.
+% \end{function}
+%
+% \begin{function}
+%   {
+%     \siunitx_quantity_print:nn, \siunitx_quantity_print:nV,
+%     \siunitx_quantity_print:VV, \siunitx_quantity_print:xV
+%   }
+%   \begin{syntax}
+%     \cs{siunitx_quantity_print:nn} \Arg{number} \Arg{unit}
+%   \end{syntax}
+%   A low-level function which prints the quantity directly: there is
+%   no processing applied to either the \meta{number} or \meta{unit}. The
+%   two parts are printed using \cs{siunitx_print_unit:n} and appropriate
+%   spacing and break-prevention is applied.
+% \end{function}
+%
+% \begin{function}{allow-quantity-breaks}
+%   \begin{syntax}
+%     |allow-quantity-breaks| = |true|\verb"|"|false|
+%   \end{syntax}
+%   Specifies whether breaks are permitted between units. The standard setting
+%   is |false|.
+% \end{function}
+%
+% \begin{function}{prefix-mode}
+%   \begin{syntax}
+%     |prefix-mode| = |combine-exponent|\verb"|"|extract-exponent|\verb"|"|input|
+%   \end{syntax}
+%   Selects the method used for producing prefixes: a choice from the options
+%   |combine-exponent|, |extract-exponent| and |input|. The option
+%   |combine-exponent| combines any exponent from the number with the prefix
+%   of the first unit, and prints the updated prefix. The option
+%   |extract-exponent| removes all prefixes from the unit, and combines them
+%   with the exponent of number. The option |input| prints prefixes and
+%   exponent as given in the source. The standard setting is |input|.
+% \end{function}
+%
+% \begin{function}{quantity-product}
+%   \begin{syntax}
+%     |quantity-product| = \meta{tokens}
+%   \end{syntax}
+%   The product marker used between a number and the unit. The standard setting
+%   is~\cs{,}.
+% \end{function}
+%
+% \begin{function}{separate-uncertainty-units}
+%   \begin{syntax}
+%     |separate-uncertainty-units| = |bracket|\verb"|"|repeat|\verb"|"|single|
+%   \end{syntax}
+%   Specifies how units are applied when a separated uncertainty is present:
+%   a choice from |bracket|, |repeat| and |single|. The option |bracket| places
+%   brackets around the number, with the unit given after these. The option
+%   |repeat| means that the unit it printed with the main value and with the
+%   uncertainty. When |single| is set, the unit is printed only once and no
+%   brackets are applied. The standard setting is |bracket|.
+% \end{function}
+%
+% \end{documentation}
+%
+% \begin{implementation}
+%
+% \section{\pkg{siunitx-quantity} implementation}
+%
+% Start the \pkg{DocStrip} guards.
+%    \begin{macrocode}
+%<*package>
+%    \end{macrocode}
+%
+% Identify the internal prefix (\LaTeX3 \pkg{DocStrip} convention): only
+% internal material in this \emph{submodule} should be used directly.
+%    \begin{macrocode}
+%<@@=siunitx_quantity>
+%    \end{macrocode}
+%
+% \subsection{Initial set-up}
+%
+% \begin{variable}{\l_@@_tmp_fp, \l_@@_tmp_tl}
+%   Scratch space.
+%    \begin{macrocode}
+\fp_new:N \l_@@_tmp_fp
+\tl_new:N \l_@@_tmp_tl
+%    \end{macrocode}
+% \end{variable}
+%
+% \subsection{Main formatting routine}
+%
+% \begin{variable}{\l_@@_bracket_close_tl, \l_@@_bracket_open_tl}
+%   Purely internal for the present.
+%    \begin{macrocode}
+\tl_new:N \l_@@_bracket_close_tl
+\tl_new:N \l_@@_bracket_open_tl
+\tl_set:Nn \l_@@_bracket_open_tl { ( }
+\tl_set:Nn \l_@@_bracket_close_tl { ) }
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{variable}
+%   {
+%     \l_siunitx_quantity_prefix_mode_tl ,
+%     \l_@@_break_bool                   ,
+%     \l_@@_product_tl                   ,
+%     \l_@@_uncert_bracket_bool          ,
+%     \l_@@_uncert_repeat_bool
+%   }
+%    \begin{macrocode}
+\tl_new:N \l_siunitx_quantity_prefix_mode_tl
+\bool_new:N \l_@@_uncert_bracket_bool
+\bool_new:N \l_@@_uncert_repeat_bool
+\keys_define:nn { siunitx }
+  {
+    allow-quantity-breaks .bool_set:N =
+      \l_@@_break_bool ,
+    prefix-mode .choices:nn =
+      { combine-exponent , extract-exponent , input }
+      { \tl_set_eq:NN \l_siunitx_quantity_prefix_mode_tl \l_keys_choice_tl } ,
+    quantity-product .tl_set:N =
+      \l_@@_product_tl ,
+    separate-uncertainty-units .choice: ,
+    separate-uncertainty-units / bracket .code:n =
+      {
+        \bool_set_true:N \l_@@_uncert_bracket_bool
+        \bool_set_false:N \l_@@_uncert_repeat_bool
+      } ,
+    separate-uncertainty-units / repeat .code:n =
+      {
+        \bool_set_false:N \l_@@_uncert_bracket_bool
+        \bool_set_true:N \l_@@_uncert_repeat_bool
+      } ,
+    separate-uncertainty-units / single .code:n =
+      {
+        \bool_set_false:N \l_@@_uncert_bracket_bool
+        \bool_set_false:N \l_@@_uncert_repeat_bool
+      }
+  }
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{variable}{\l_@@_number_tl, \l_@@_unit_tl}
+%    \begin{macrocode}
+\tl_new:N \l_@@_number_tl
+\tl_new:N \l_@@_unit_tl
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{macro}{\siunitx_quantity:nn, \@@_parsed:nn}
+% \begin{macro}{\@@_parsed_combine-exponent:n, \@@_parsed_combine-exponent:n, \@@_parsed_input:n}
+% \begin{macro}{\@@_parsed_aux:w}
+% \begin{macro}{\@@_parsed_aux:nnnw}
+% \begin{macro}{\@@_parsed_aux:nnnn}
+% \begin{macro}{\@@_parsed_aux:nnn}
+%   For quantities, there is bit to do to combine things. The first question is
+%   whether we are parsing at all: if not, things are quite short. Notice that
+%   within this group we turn off bracketing in the number formatter: we
+%   have to deal with quantity-based brackets instead.
+%    \begin{macrocode}
+\cs_new_protected:Npn \siunitx_quantity:nn #1#2
+  {
+    \group_begin:
+      \siunitx_unit_options_apply:n {#2}
+      \tl_if_blank:nTF {#1}
+        {
+          \siunitx_unit_format:nN {#2} \l_@@_unit_tl
+          \siunitx_print_unit:V \l_@@_unit_tl
+        }
+        {
+          \bool_if:NTF \l_siunitx_number_parse_bool
+            { \@@_parsed:nn {#1} {#2} }
+            {
+              \tl_set:Nn \l_@@_number_tl { \ensuremath {#1} }
+              \siunitx_unit_format:nN {#2} \l_@@_unit_tl
+              \siunitx_quantity_print:VV
+                \l_@@_number_tl \l_@@_unit_tl
+            }
+        }
+    \group_end:
+  }
+%    \end{macrocode}
+%   For parsed numbers, we have two major questions to think about: whether we
+%   are combining prefixes, and whether we have a multi-part numbers to handle.
+%   Number processing has to be delayed it needs to come after any extracted
+%   exponent is combined.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_parsed:nn #1#2
+  {
+    \bool_set_false:N \l_siunitx_number_bracket_ambiguous_bool
+    \siunitx_number_parse:nN {#1} \l_@@_number_tl
+    \use:c { @@_parsed_ \l_siunitx_quantity_prefix_mode_tl :n } {#2}
+    \tl_set:Nx \l_@@_number_tl
+      { \siunitx_number_output:NN \l_@@_number_tl \q_nil }
+    \exp_after:wN \@@_parsed_aux:w \l_@@_number_tl \q_stop
+  }
+\cs_new_protected:cpn { @@_parsed_combine-exponent:n } #1
+  {
+    \siunitx_number_process:NN \l_@@_number_tl \l_@@_number_tl
+    \exp_args:NV \@@_extract_exp:nNN
+      \l_@@_number_tl \l_@@_tmp_fp \l_@@_number_tl
+    \siunitx_unit_format_combine_exponent:nnN {#1}
+      \l_@@_tmp_fp \l_@@_unit_tl
+  }
+\cs_new_protected:cpn { @@_parsed_extract-exponent:n } #1
+  {
+    \siunitx_unit_format_extract_prefixes:nNN {#1}
+      \l_@@_unit_tl \l_@@_tmp_fp
+    \tl_set:Nx \l_@@_number_tl
+      {
+        \siunitx_number_adjust_exponent:Nn
+          \l_@@_number_tl \l_@@_tmp_fp
+      }
+    \siunitx_number_process:NN \l_@@_number_tl \l_@@_number_tl
+  }
+\cs_new_protected:Npn \@@_parsed_input:n #1
+  {
+    \siunitx_number_process:NN \l_@@_number_tl \l_@@_number_tl
+    \siunitx_unit_format:nN {#1} \l_@@_unit_tl
+  }
+%    \end{macrocode}
+%   To find out if we need to work harder, we first need to split the formatted
+%   number into the constituent parts. That is done using the table-like
+%   approach: that avoids needing to both check the settings and break down
+%   the input separately.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_parsed_aux:w
+  #1 \q_nil #2 \q_nil #3 \q_nil #4 \q_nil #5 \q_nil #6 \q_nil #7 \q_nil
+  #8 \q_nil #9 \q_stop
+  { \@@_parsed_aux:nnnw {#1} {#2#3#4#5} {#6#7#8} #9 \q_stop }
+\cs_new_protected:Npn \@@_parsed_aux:nnnw
+  #1#2#3 #4 \q_nil #5 \q_nil #6 \q_stop
+  { \@@_parsed_aux:nnnn {#1} {#2} {#3#4} {#5#6} }
+\cs_new_protected:Npn \@@_parsed_aux:nnnn #1#2#3#4
+  {
+    \tl_if_blank:nTF {#3}
+      { \siunitx_quantity_print:nV {#1#2#4} \l_@@_unit_tl }
+      {
+        \bool_if:NTF \l_@@_uncert_bracket_bool
+          {
+            \siunitx_quantity_print:xV
+              {
+                \exp_not:n {#1}
+                \exp_not:V \l_@@_bracket_open_tl
+                \exp_not:n {#2#3}
+                \exp_not:V \l_@@_bracket_close_tl
+                \exp_not:n {#4}
+              }
+            \l_@@_unit_tl
+          }
+          {
+            \bool_if:NTF \l_@@_uncert_repeat_bool
+              {
+                \tl_if_blank:nTF {#4}
+                  { \@@_parsed_aux:nnn {#1#2} {#3} { } }
+                  { \@@_parsed_aux:nnn {#1#2} {#3} { { } #4 } }
+              }
+              { \siunitx_quantity_print:nV {#1#2#3#4} \l_@@_unit_tl }
+          }
+      }
+  }
+%    \end{macrocode}
+%   For the case of a separated uncertainty with repeated units, we print the
+%   two parts independently. The third argument here is the exponent if there
+%   is one, with the spacing correct in either case as we only pass the empty
+%   group if one is required.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_parsed_aux:nnn #1#2#3
+  {
+    \siunitx_quantity_print:nV {#1#3} \l_@@_unit_tl
+    \tl_if_blank:nF {#2}
+      { \siunitx_quantity_print:nV { { } #2#3 } \l_@@_unit_tl }
+  }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\@@_extract_exp:nNN}
+% \begin{macro}{\@@_extract_exp:nnnnnnnNN}
+%   To extract the exponent part for a combined prefix, we decompose the value
+%   and remove it.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_extract_exp:nNN #1#2#3
+  { \@@_extract_exp:nnnnnnnNN #1 #2 #3 }
+\cs_new_protected:Npn \@@_extract_exp:nnnnnnnNN #1#2#3#4#5#6#7#8#9
+  {
+    \fp_set:Nn #8 {#6#7}
+    \tl_set:Nx #9
+      { {#1} {#2} {#3} {#4} {#5} { } { 0 } }
+  }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}
+%   {
+%     \siunitx_quanity_print:nn, \siunitx_quanity_print:nV,
+%     \siunitx_quanity_print:VV, \siunitx_quanity_print:xV
+%   }
+%   For printing a single part of a quantity. This is needed for compound
+%   quantities and so is public: that's also the reason for passing both
+%   argument explicitly. The lazy test here is looking for the case where
+%   a |1| has been inserted at the start of a format unit \emph{and} we
+%   have some other number to print: the |1| is then removed and there is
+%   no space inserted.
+%    \begin{macrocode}
+\cs_new_protected:Npn \siunitx_quantity_print:nn #1#2
+  {
+    \siunitx_print_number:n {#1}
+    \tl_if_blank:nF {#2}
+      {
+        \bool_lazy_or:nnTF
+          { \tl_if_blank_p:n {#1} }
+          { ! \tl_if_head_eq_charcode_p:nN {#2} { 1 } }
+          {
+            \tl_use:N \l_@@_product_tl
+            \bool_if:NTF \l_@@_break_bool
+              { \penalty \binoppenalty }
+              { \nobreak }
+            \siunitx_print_unit:n {#2}
+          }
+          {
+            \exp_args:No \siunitx_print_unit:n { \use_none:n #2 }
+          }
+      }
+  }
+\cs_generate_variant:Nn \siunitx_quantity_print:nn { nV , VV , xV }
+%    \end{macrocode}
+% \end{macro}
+%
+% \subsection{Standard settings for module options}
+%
+% Some of these follow naturally from the point of definition
+% (\foreign{e.g.}~boolean variables are always |false| to begin with),
+% but for clarity everything is set here.
+%    \begin{macrocode}
+\keys_set:nn { siunitx }
+  {
+    allow-quantity-breaks      = false  ,
+    prefix-mode                = input ,
+    quantity-product           = \,     ,
+    separate-uncertainty-units = bracket
+  }
+%    \end{macrocode}
+%
+% \subsection{Adjustments to units}
+%
+% \begin{macro}{\@@_non_latin:n}
+% \begin{macro}{\@@_non_latin:nnnn}
+%   As in \pkg{siunitx-unit}, but internal in both cases as it's rather
+%   specialised.
+%    \begin{macrocode}
+\bool_lazy_or:nnTF
+  { \sys_if_engine_luatex_p: }
+  { \sys_if_engine_xetex_p: }
+  {
+    \cs_new:Npn \@@_non_latin:n #1
+      {
+        \exp_after:wN \exp_after:wN \exp_after:wN
+          \exp_not:N \char_generate:nn {#1} { \char_value_catcode:n {#1} }
+      }
+  }
+  {
+    \cs_new:Npn \@@_non_latin:n #1
+      {
+        \exp_last_unbraced:Nf \@@_non_latin:nnnn
+          { \char_to_utfviii_bytes:n {#1} }
+      }
+    \cs_new:Npn \@@_non_latin:nnnn #1#2#3#4
+      {
+        \exp_after:wN \exp_after:wN \exp_after:wN
+          \exp_not:N \char_generate:nn {#1} { 13 }
+        \exp_after:wN \exp_after:wN \exp_after:wN
+          \exp_not:N \char_generate:nn {#2} { 13 }
+      }
+  }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\arcminute, \arcsecond, \degree}
+%   The angles units are re-declared here: this is needed for using it
+%   in quantities. This is done here as it avoids a dependency in
+%   \pkg{siunitx-unit} on options it does not contain.
+%    \begin{macrocode}
+\siunitx_declare_unit:Nxn \arcminute
+  { \@@_non_latin:n { "02B9 } }
+  { quantity-product = { } }
+\siunitx_declare_unit:Nxn \arcsecond
+  { \@@_non_latin:n { "02BA } }
+  { quantity-product = { } }
+\siunitx_declare_unit:Nxn \degree
+  { \@@_non_latin:n { "00B0 } }
+  { quantity-product = { } }
+%    \end{macrocode}
+% \end{macro}
+%
+%    \begin{macrocode}
+%</package>
+%    \end{macrocode}
+%
+% \end{implementation}
+%
+% \PrintIndex

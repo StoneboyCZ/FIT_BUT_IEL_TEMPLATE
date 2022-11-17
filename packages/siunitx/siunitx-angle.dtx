@@ -1,0 +1,567 @@
+% \iffalse meta-comment
+%
+% File: siunitx-angle.dtx Copyright (C) 2016-2019,2021,2022 Joseph Wright
+%
+% It may be distributed and/or modified under the conditions of the
+% LaTeX Project Public License (LPPL), either version 1.3c of this
+% license or (at your option) any later version.  The latest version
+% of this license is in the file
+%
+%    https://www.latex-project.org/lppl.txt
+%
+% This file is part of the "siunitx bundle" (The Work in LPPL)
+% and all files in that bundle must be distributed together.
+%
+% The released version of this bundle is available from CTAN.
+%
+% -----------------------------------------------------------------------
+%
+% The development version of the bundle can be found at
+%
+%    https://github.com/josephwright/siunitx
+%
+% for those people who are interested.
+%
+% -----------------------------------------------------------------------
+%
+%<*driver>
+\documentclass{l3doc}
+\ProvideDocumentCommand\foreign{m}{\textit{#1}}
+% The next line is needed so that \GetFileInfo will be able to pick up
+% version data
+\usepackage{siunitx}
+\begin{document}
+  \DocInput{\jobname.dtx}
+\end{document}
+%</driver>
+% \fi
+%
+% \GetFileInfo{siunitx.sty}
+%
+% \title{^^A
+%   \pkg{siunitx-angle} -- Formatting angles^^A
+%   \thanks{This file describes \fileversion,
+%     last revised \filedate.}^^A
+% }
+%
+% \author{^^A
+%  Joseph Wright^^A
+%  \thanks{^^A
+%    E-mail:
+%    \href{mailto:joseph.wright@morningstar2.co.uk}
+%      {joseph.wright@morningstar2.co.uk}^^A
+%   }^^A
+% }
+%
+% \date{Released \filedate}
+%
+% \maketitle
+%
+% \begin{documentation}
+%
+% \section{Formatting angles}
+%
+% \begin{function}{\siunitx_angle:n, \siunitx_angle:nnn}
+%   \begin{syntax}
+%     \cs{siunitx_angle:n} \Arg{angle}
+%     \cs{siunitx_angle:nnn} \Arg{degrees} \Arg{minutes} \Arg{seconds}
+%   \end{syntax}
+%   Typeset the \meta{angle} (which may be given as separate \meta{degree},
+%   \meta{minute} and \meta{second} components). The \meta{angle} (or components)
+%   may be given as expressions. The \meta{angle} should be a number as understood
+%   by \cs{siunitx_format_number:nN}, with no uncertainty, exponent or imaginary
+%   part.  The unit symbols for degrees, minutes and seconds are |\degree|,
+%   |\arcminute| and |\arcsecond|, respectively
+% \end{function}
+%
+% \subsection{Key--value options}
+%
+% The options defined by this submodule are available within the \pkg{l3keys}
+% |siunitx| tree.
+%
+% \begin{function}{angle-mode}
+%   \begin{syntax}
+%     |angle-mode| = \meta{choice}
+%   \end{syntax}
+%   Selects how angles are formatted: a choice from
+%   the options |arc|, |decimal| and |input|. The option |arc| means that angles
+%   will always be typeset in arc (degree, minute, second) format, whilst
+%   |decimal| means that angles are typeset as a single decimal value. The
+%   |input| setting means that the input format (\foreign{i.e.}~difference
+%   between \cs{siunitx_angle:n} and \cs{siunitx_angle:nnn}) is maintained. The
+%   standard setting is |input|.
+% \end{function}
+%
+% \begin{function}
+%   {
+%     angle-symbol-degree ,
+%     angle-symbol-minute ,
+%     angle-symbol-second
+%   }
+%   \begin{syntax}
+%     |angle-symbol-degree| = \meta{symbol}
+%   \end{syntax}
+%   Sets the symbol used for arc degrees, minutes or seconds, respectively.
+% \end{function}
+%
+% \begin{function}{angle-symbol-over-decimal}
+%   \begin{syntax}
+%     |angle-symbol-over-decimal| = |true|\verb"|"|false|
+%   \end{syntax}
+%   Determines if the arc separator is printed over the decimal marker, a
+%   format used in astronomy. The standard setting is |false|.
+% \end{function}
+%
+% \begin{function}{arc-separator}
+%   \begin{syntax}
+%     |arc-separator| = \meta{separator}
+%   \end{syntax}
+%   Inserted between arc parts (degree, minute and second components).
+%   The standard setting is |\,|.
+% \end{function}
+%
+% \begin{function}{fill-angle-degrees}
+%   \begin{syntax}
+%     |fill-arc-degrees| = |true|\verb"|"|false|
+%   \end{syntax}
+%   Determines whether a missing degrees part is zero-filled when printing an
+%   arc. The standard setting is |false|.
+% \end{function}
+%
+% \begin{function}{fill-angle-minutes}
+%   \begin{syntax}
+%     |fill-arc-minutes| = |true|\verb"|"|false|
+%   \end{syntax}
+%   Determines whether a missing minutes part is zero-filled when printing an
+%   arc. The standard setting is |false|.
+% \end{function}
+%
+% \begin{function}{fill-angle-seconds}
+%   \begin{syntax}
+%     |fill-arc-seconds| = |true|\verb"|"|false|
+%   \end{syntax}
+%   Determines whether a missing seconds part is zero-filled when printing an
+%   arc. The standard setting is |false|.
+% \end{function}
+%
+% \begin{function}{number-angle-product}
+%   \begin{syntax}
+%     |number-angle-product| = \meta{separator}
+%   \end{syntax}
+%   Inserted between the value of an angle and the unit (degree, minute or
+%   second component). The standard setting is |\,|.
+% \end{function}
+%
+% \end{documentation}
+%
+% \begin{implementation}
+%
+% \section{\pkg{siunitx-angle} implementation}
+%
+% Start the \pkg{DocStrip} guards.
+%    \begin{macrocode}
+%<*package>
+%    \end{macrocode}
+%
+% Identify the internal prefix (\LaTeX3 \pkg{DocStrip} convention): only
+% internal material in this \emph{submodule} should be used directly.
+%    \begin{macrocode}
+%<@@=siunitx_angle>
+%    \end{macrocode}
+%
+%  \begin{variable}{\l_@@_tmp_bool, \l_@@_tmp_dim, \l_@@_tmp_tl}
+%    Scratch space.
+%    \begin{macrocode}
+\bool_new:N \l_@@_tmp_bool
+\dim_new:N \l_@@_tmp_dim
+\tl_new:N \l_@@_tmp_tl
+%    \end{macrocode}
+%  \end{variable}
+%
+%  \begin{variable}
+%    {
+%      \l_@@_symbol_degree_tl    ,
+%      \l_@@_symbol_minute_tl    ,
+%      \l_@@_symbol_second_tl    ,
+%      \l_@@_force_arc_bool      ,
+%      \l_@@_force_decimal_bool  ,
+%      \l_@@_astronomy_bool      ,
+%      \l_@@_separator_tl        ,
+%      \l_@@_fill_degrees_bool   ,
+%      \l_@@_fill_minutes_bool   ,
+%      \l_@@_fill_seconds_bool   ,
+%      \l_@@_product_tl
+%    }
+%    \begin{macrocode}
+\keys_define:nn { siunitx }
+  {
+    angle-mode .choice: ,
+    angle-mode / arc .code:n =
+      {
+        \bool_set_true:N \l_@@_force_arc_bool
+        \bool_set_false:N \l_@@_force_decimal_bool
+      } ,
+    angle-mode / decimal .code:n =
+      {
+        \bool_set_false:N \l_@@_force_arc_bool
+        \bool_set_true:N \l_@@_force_decimal_bool
+      } ,
+    angle-mode / input .code:n =
+      {
+        \bool_set_false:N \l_@@_force_arc_bool
+        \bool_set_false:N \l_@@_force_decimal_bool
+      } ,
+    angle-symbol-degree .tl_set:N =
+      \l_@@_symbol_degree_tl ,
+    angle-symbol-minute .tl_set:N =
+      \l_@@_symbol_minute_tl ,
+    angle-symbol-second .tl_set:N =
+      \l_@@_symbol_second_tl ,
+    angle-symbol-over-decimal .bool_set:N =
+      \l_@@_astronomy_bool ,
+    angle-separator .tl_set:N =
+      \l_@@_separator_tl ,
+    fill-angle-degrees .bool_set:N =
+      \l_@@_fill_degrees_bool ,
+    fill-angle-minutes .bool_set:N =
+      \l_@@_fill_minutes_bool ,
+    fill-angle-seconds .bool_set:N =
+      \l_@@_fill_seconds_bool ,
+    number-angle-product .tl_set:N =
+      \l_@@_product_tl
+  }
+\bool_new:N \l_@@_force_arc_bool
+\bool_new:N \l_@@_force_decimal_bool
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{macro}{\siunitx_angle:n}
+% \begin{macro}{\siunitx_angle:nnn}
+% \begin{macro}{\@@_arc_convert:n}
+%   The first step here is to force format conversion if required. Going to
+%   a decimal is easy, going to arc format is a bit more painful: avoid
+%   repeating calculations mainly for code readability.
+%    \begin{macrocode}
+\cs_new_protected:Npn \siunitx_angle:n #1
+  {
+    \bool_if:NTF \l_@@_force_arc_bool
+      { \exp_args:Ne \@@_arc_convert:n { \fp_eval:n {#1} } }
+      {
+        \siunitx_number_parse:nN {#1} \l_@@_degrees_tl
+        \siunitx_number_process:NN \l_@@_degrees_tl \l_@@_degrees_tl
+        \tl_set:Nx \l_@@_degrees_tl
+          { \siunitx_number_output:NN \l_@@_degrees_tl \q_nil }
+        \@@_arc_print:VVV
+          \l_@@_degrees_tl
+          \c_empty_tl
+          \c_empty_tl
+      }
+  }
+\cs_new_protected:Npn \siunitx_angle:nnn #1#2#3
+  {
+    \bool_if:NTF \l_@@_force_decimal_bool
+      {
+        \exp_args:Ne \siunitx_angle:n
+          { \fp_eval:n { #1 + (#2) / 60 + (#3) / 3600 } }
+      }
+      { \@@_arc_sign:nnn {#1} {#2} {#3} }
+  }
+\cs_new_protected:Npn \@@_arc_convert:n #1
+  {
+    \use:x
+      {
+        \siunitx_angle:nnn
+          { \fp_eval:n { trunc(#1,0) } }
+          { \fp_eval:n { trunc((#1 - trunc(#1,0)) * 60,0) } }
+          {
+            \fp_eval:n
+              {
+                (
+                          (#1 - trunc(#1,0)) * 60
+                  - trunc((#1 - trunc(#1,0)) * 60,0)
+                )
+                * 60
+              }
+          }
+      }
+  }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \begin{variable}{\l_@@_degrees_tl, \l_@@_minutes_tl, \l_@@_seconds_tl}
+%   Space for formatting parsed numbers.
+%    \begin{macrocode}
+\tl_new:N \l_@@_degrees_tl
+\tl_new:N \l_@@_minutes_tl
+\tl_new:N \l_@@_seconds_tl
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{variable}{\l_@@_sign_tl}
+%   For the \enquote{sign shuffle}.
+%    \begin{macrocode}
+\tl_new:N \l_@@_sign_tl
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{macro}{\@@_arc_sign:nnn}
+% \begin{macro}{\@@_arc_sign:nn}
+% \begin{macro}{\@@_extract_sign:nnnnnnnn}
+% \begin{macro}[EXP]{\@@_sign:nnnnnnn}
+%   To get the sign in the right place whilst dealing with zero filling
+%   means doing some shuffling. That means doing processing of each number
+%   manually.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_arc_sign:nnn #1#2#3
+  {
+    \group_begin:
+      \keys_set:nn { siunitx }
+        {
+          input-close-uncertainty = ,
+          input-exponent-markers  = ,
+          input-open-uncertainty  = ,
+          input-uncertainty-signs =
+        }
+      \tl_clear:N \l_@@_sign_tl
+      \@@_arc_sign:nn {#1} { degrees }
+      \@@_arc_sign:nn {#2} { minutes }
+      \@@_arc_sign:nn {#3} { seconds }
+      \tl_if_empty:NF \l_@@_sign_tl
+        {
+          \clist_map_inline:nn { degrees , minutes , seconds }
+            {
+              \tl_if_empty:cF { l_@@_ ##1 _tl }
+                {
+                  \tl_set:cx { l_@@_ ##1 _tl }
+                    {
+                       { }
+                       { \exp_not:V \l_@@_sign_tl }
+                       \exp_after:wN \exp_after:wN \exp_after:wN
+                         \@@_sign:nnnnnnn
+                           \cs:w l_@@_ ##1 _tl \cs_end:
+                    }
+                  \clist_map_break:
+                }
+            }
+        }
+      \clist_map_inline:nn { degrees , minutes , seconds }
+        {
+          \tl_if_empty:cF { l_@@_ ##1 _tl }
+            {
+              \exp_args:Ncc \siunitx_number_process:NN
+                { l_@@_ ##1 _tl } { l_@@_ ##1 _tl }
+              \tl_set:cx { l_@@_ ##1 _tl }
+                {
+                  \exp_args:Nc \siunitx_number_output:NN
+                    { l_@@_ ##1 _tl } \q_nil
+                }
+            }
+        }
+      \@@_arc_print:VVV
+        \l_@@_degrees_tl
+        \l_@@_minutes_tl
+        \l_@@_seconds_tl
+    \group_end:
+  }
+\cs_new_protected:Npn \@@_arc_sign:nn #1#2
+  {
+    \tl_if_blank:nTF {#1}
+      {
+        \bool_if:cTF { l_@@_fill_ #2 _bool }
+          {
+            \tl_set:cn { l_@@_ #2 _tl }
+              { { } { } { 0 } { } { } { } { 0 } }
+          }
+          { \tl_clear:c { l_@@_ #2 _tl } }
+      }
+      {
+        \siunitx_number_parse:nN {#1} \l_@@_tmp_tl
+        \exp_after:wN \@@_extract_sign:nnnnnnnn \l_@@_tmp_tl {#2}
+      }
+  }
+\cs_new_protected:Npn \@@_extract_sign:nnnnnnnn #1#2#3#4#5#6#7#8
+  {
+    \tl_if_blank:nTF {#2}
+      { \tl_set_eq:cN { l_@@_ #8 _tl } \l_@@_tmp_tl }
+      {
+        \tl_set:cn { l_@@_ #8 _tl }
+          { {#1} { } {#3} {#4} {#5} {#6} {#7} }
+        \tl_set:Nn \l_@@_sign_tl {#2}
+        \keys_set:nn { siunitx }
+          { input-comparators = , input-signs = }
+      }
+  }
+\cs_new:Npn \@@_sign:nnnnnnn #1#2#3#4#5#6#7
+  { \exp_not:n { {#3} {#4} {#5} {#6} {#7} } }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+%  \begin{variable}{\l_@@_marker_box, \l_@@_unit_box}
+%    For \enquote{astronomy style} angles.
+%    \begin{macrocode}
+\box_new:N \l_@@_marker_box
+\box_new:N \l_@@_unit_box
+%    \end{macrocode}
+%  \end{variable}
+%
+% \begin{macro}
+%   {
+%     \@@_arc_print:nnn, \@@_arc_print:VVV,
+%     \@@_arc_print_auxi:nnn, \@@_arc_print_auxi:nVn
+%   }
+% \begin{macro}{\@@_arc_print_auxii:w}
+% \begin{macro}{\@@_arc_print_auxiii:n}
+% \begin{macro}{\@@_arc_print_auxiv:NN}
+% \begin{macro}{\@@_arc_print_auxv:w}
+% \begin{macro}{\@@_arc_print_auxvi:n}
+%   The final stage of printing an angle is to put together the three parts:
+%   this works even for decimal angles as they will blank arguments for the
+%   other two parts The need to handle astronomy-style formatting means that
+%   the number has to be decomposed into parts.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_arc_print:nnn #1#2#3
+  {
+    \@@_arc_print_auxi:nVn {#1}
+      \l_@@_symbol_degree_tl {#2#3}
+    \@@_arc_print_auxi:nVn {#2}
+      \l_@@_symbol_minute_tl {#3}
+    \@@_arc_print_auxi:nVn {#3}
+      \l_@@_symbol_second_tl { }
+  }
+\cs_generate_variant:Nn \@@_arc_print:nnn { VVV }
+\cs_new_protected:Npn \@@_arc_print_auxi:nnn #1#2#3
+  {
+    \tl_if_blank:nF {#1}
+      {
+        \bool_if:NTF \l_@@_astronomy_bool
+          { \@@_arc_print_auxii:nw {#2} #1 \q_stop }
+          {
+            \@@_arc_print_auxv:w #1 \q_stop
+            \@@_arc_print_auxvi:n {#2}
+          }
+        \tl_if_blank:nF {#3}
+          {
+            \nobreak
+            \l_@@_separator_tl
+          }
+      }
+  }
+\cs_generate_variant:Nn \@@_arc_print_auxi:nnn { nV }
+%    \end{macrocode}
+%    To align the two parts of the astronomy-style marker, we need to allow
+%    for the |\scriptspace|.
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_arc_print_auxii:nw
+  #1#2 \q_nil #3 \q_nil #4 \q_nil #5 \q_nil #6 \q_nil #7 \q_nil #8 \q_stop
+  {
+    \mode_if_math:TF
+      { \bool_set_true:N \l_@@_tmp_bool }
+      { \bool_set_false:N \l_@@_tmp_bool }
+    \siunitx_print_number:n {#2#3#4}
+    \tl_if_blank:nTF {#6}
+      { \@@_arc_print_auxvi:n {#1} }
+      {
+        \hbox_set:Nn \l_@@_marker_box
+          {
+            \@@_arc_print_auxiii:n
+               { \siunitx_print_number:n {#5} }
+          }
+        \hbox_set:Nn \l_@@_unit_box
+          {
+            \@@_arc_print_auxiii:n
+              {
+                \siunitx_unit_format:nN {#1} \l_@@_tmp_tl
+                \siunitx_print_unit:V \l_@@_tmp_tl
+                \skip_horizontal:n { -\scriptspace }
+              }
+          }
+        \dim_compare:nNnTF { \box_wd:N \l_@@_marker_box } >
+          { \box_wd:N \l_@@_unit_box }
+          {
+            \@@_arc_print_auxiv:NN
+              \l_@@_marker_box
+              \l_@@_unit_box
+          }
+          {
+            \@@_arc_print_auxiv:NN
+              \l_@@_unit_box
+              \l_@@_marker_box
+          }
+        \hbox_set_to_wd:Nnn \l_@@_marker_box
+          \l_@@_tmp_dim
+          {
+            \hbox_overlap_right:n
+              { \box_use_drop:N \l_@@_marker_box }
+            \hbox_overlap_right:n
+              { \box_use_drop:N \l_@@_unit_box }
+            \tex_hfil:D
+          }
+        \box_use:N \l_@@_marker_box
+        \skip_horizontal:N \scriptspace
+        \siunitx_print_number:n {#6}
+      }
+  }
+\cs_new_protected:Npn \@@_arc_print_auxiii:n #1
+  {
+    \bool_if:NTF \l_@@_tmp_bool
+      { \ensuremath }
+      { \use:n }
+        {#1}
+  }
+\cs_new_protected:Npn \@@_arc_print_auxiv:NN #1#2
+  {
+    \dim_set:Nn \l_@@_tmp_dim { \box_wd:N #1 }
+    \hbox_set_to_wd:Nnn #2
+      \l_@@_tmp_dim
+      {
+        \tex_hss:D
+        \hbox_unpack_drop:N #2
+        \tex_hss:D
+      }
+  }
+\cs_new_protected:Npn \@@_arc_print_auxv:w
+  #1 \q_nil #2 \q_nil #3 \q_nil #4 \q_nil #5 \q_nil #6 \q_stop
+  { \siunitx_print_number:n {#1#2#3#4#5} }
+\cs_new_protected:Npn \@@_arc_print_auxvi:n #1
+  {
+    \nobreak
+    \l_@@_product_tl
+    \siunitx_unit_format:nN {#1} \l_@@_tmp_tl
+    \siunitx_print_unit:V \l_@@_tmp_tl
+  }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+%    \begin{macrocode}
+\keys_set:nn { siunitx }
+  {
+    angle-mode                = input      ,
+    angle-symbol-degree       = \degree    ,
+    angle-symbol-minute       = \arcminute ,
+    angle-symbol-over-decimal = false      ,
+    angle-symbol-second       = \arcsecond ,
+    angle-separator           =            ,
+    fill-angle-degrees        = false      ,
+    fill-angle-minutes        = false      ,
+    fill-angle-seconds        = false      ,
+    number-angle-product      =
+  }
+%    \end{macrocode}
+%
+%    \begin{macrocode}
+%</package>
+%    \end{macrocode}
+%
+% \end{implementation}
+%
+% \PrintIndex
