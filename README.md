@@ -1,4 +1,4 @@
-# Šablona pro projekt IEL, verze 2022/01
+# Šablona pro projekt IEL, verze 2022/02
 
 Tento dokument popisuje použití šablony pro projekt IEL.
 
@@ -18,6 +18,25 @@ Pokud chcete použít balík circuitikz s parametry v šabloně, použijte:
 `latexmk -pdf 00-projekt.tex`
 
 příkaz `latexmk` přeloží projekt s balíkem circuitikz, který je přiložený k šabloně.
+
+### Lokálně - vlastní instalace LaTeXu
+
+V Linuxu lze použít balíky
+
+* `texlive-latex-base`
+* `texlive-latex-recommended`
+* `texlive-latex-extra`
+* `texlive-lang-czechslovak`
+* `texlive-science`
+* `texlive-pictures`
+
+Instalaci lze v Ubuntu spustit z Terminálu příkazem
+
+`sudo apt install texlive-latex-base texlive-latex-recommended texlive-latex-extra texlive-lang-czechslovak texlive-science texlive-pictures`
+
+Překlad šablony lze poté provést příkazem `make`. 
+
+Pro Windows lze použít např. distribuci MikTeX (při instalaci stačí zaškrtnout, aby se chybějící balíky doinstalovaly automaticky).
 
 ### Merlin
 Distribuce LaTeXu je nainstalována i na serveru merlin. Pro překlad šablony na merlinovi můžete použít stejné příkazy jako ty použité v sekci Lokálně.
