@@ -118,26 +118,26 @@ sk. & $U_1$ [\Vo] & $U_2$ [\Vo]  & $R_1$ [$\Omega$] & $R_2$ [$\Omega$] & $R_3$ [
     % druhy priklad
     \newcommand{\druhyZadani}[1]{
         \def\druhySkupina{#1}
-        Stanovte napětí $U_{R5}$ a proud $I_{R5}$. Použijte metodu Théveninovy věty. \\
+        Stanovte napětí $U_{R6}$ a proud $I_{R6}$. Použijte metodu Théveninovy věty. \\
         
          \begin{tabular}{|c|c|c|c|c|c|c|c|} \hline
-sk. & $U$ [\Vo] & $R_1$ [$\Omega$] & $R_2$ [$\Omega$] & $R_3$ [$\Omega$] & $R_4$ [$\Omega$] & $R_5$ [$\Omega$] \\ \hline
+sk. & $U$ [\Vo] & $R_1$ [$\Omega$] & $R_2$ [$\Omega$] & $R_3$ [$\Omega$] & $R_4$ [$\Omega$] & $R_5$ [$\Omega$] & $R_6$ [$\Omega$]\\ \hline
     \ifthenelse{\equal{#1}{A}}
-    {A & 50 & 100 & 525 & 620 & 210 & 530}{}
+    {A & 50 & 100 & 525 & 620 & 210 & 530 & 50}{}
     \ifthenelse{\equal{#1}{B}}
-    {B & 100 & 50 & 310 & 610 & 220 & 570}{}
+    {B & 100 & 50 & 310 & 610 & 220 & 570 & 100}{}
     \ifthenelse{\equal{#1}{C}}
-    {C & 200 & 70 & 220 & 630 & 240 & 450}{}
+    {C & 200 & 70 & 220 & 630 & 240 & 450 & 200}{}
     \ifthenelse{\equal{#1}{D}}
-    {D & 150 & 200 & 200 & 660 & 200 & 550}{}
+    {D & 150 & 200 & 200 & 660 & 200 & 550 & 150}{}
     \ifthenelse{\equal{#1}{E}}
-    {E & 250 & 150 & 335 & 625 & 245 & 600}{}
+    {E & 250 & 150 & 335 & 625 & 245 & 600 & 300}{}
     \ifthenelse{\equal{#1}{F}}
-    {F & 130 & 180 & 350 & 600 & 195 & 650}{}
+    {F & 130 & 180 & 350 & 600 & 195 & 650 & 80}{}
     \ifthenelse{\equal{#1}{G}}
-    {G & 180 & 250 & 315 & 615 & 180 & 460}{}
+    {G & 180 & 250 & 315 & 615 & 180 & 460 & 120}{}
     \ifthenelse{\equal{#1}{H}}
-    {H & 220 & 190 & 360 & 580 & 205 & 560}{}
+    {H & 220 & 190 & 360 & 580 & 205 & 560 & 250}{}
     \\ \hline \end{tabular} \\
     
     \includegraphics[scale=0.5,keepaspectratio]{fig/Pr2.pdf} \\
@@ -175,8 +175,8 @@ sk. & $U$ [\Vo] & $I_1$ [\Am] & $I_2$ [\Am] & $R_1$ [$\Omega$] & $R_2$ [$\Omega$
     \newcommand{\ctvrtyZadani}[1]{
         \def\ctvrtySkupina{#1}
         Pro napájecí napětí platí: $u_1=U_1{\cdot}\sin(2{\pi}ft)$, $u_2=U_2{\cdot}\sin(2{\pi}ft)$.\\
-Ve vztahu pro napětí $u_{C_{2}}=U_{C_2}{\cdot}\sin(2{\pi}ft+\varphi_{C_{2}})$
-určete $|U_{C_{2}}|$ a $\varphi_{C_{2}}$. Použijte metodu smyčkových proudů.\\
+Ve vztahu pro napětí $u_{L_{2}}=U_{L_2}{\cdot}\sin(2{\pi}ft+\varphi_{L_{2}})$
+určete $|U_{L_{2}}|$ a $\varphi_{L_{2}}$. Použijte metodu smyčkových proudů.\\
 
 Pozn: Pomocné směry šipek napájecích zdrojů platí pro speciální časový okamžik ($t=\frac{\pi}{2{\omega}}$).
         
@@ -205,26 +205,26 @@ sk. & $U_1$ [\Vo] & $U_2$ [\Vo] & $R_1$ [$\Omega$] & $R_2$ [$\Omega$] & $L_{1}$ 
     % paty priklad
     \newcommand{\patyZadani}[1]{
         \def\patySkupina{#1}
-        V obvodu na obrázku níže v čase $t=0$ [\s] sepne spínač $S$. Sestavte diferenciální rovnici popisující chování obvodu na obrázku, dále ji upravte dosazením hodnot parametrů. Vypočítejte analytické řešení $i_{L}~=~f(t)$. Proveďte kontrolu výpočtu dosazením do sestavené diferenciální rovnice.\\
+        V obvodu na obrázku níže v čase $t=0$ [\s] sepne spínač $S$. Sestavte diferenciální rovnici popisující chování obvodu na obrázku, dále ji upravte dosazením hodnot parametrů. Vypočítejte analytické řešení $u_{C}~=~f(t)$. Proveďte kontrolu výpočtu dosazením do sestavené diferenciální rovnice.\\
         
         \begin{tabular}{|c|c|c|c|c|} \hline
-        sk. & $U$ [\Vo] & $L$ [\He] & $R$ [$\Omega$] & $i_L(0)$ [\Am] \\ \hline
+        sk. & $U$ [\Vo] & $C$ [\F] & $R$ [$\Omega$] & $u_C(0)$ [\Vo] \\ \hline
     \ifthenelse{\equal{#1}{A}}
-    {A & 60 & 50 & 10 & 14}{}
+    {A & 40 & 1 & 25 & 10}{}
     \ifthenelse{\equal{#1}{B}}
-    {B & 40 & 10 & 20 & 16}{}
+    {B & 30 & 5 & 125 & 12}{}
     \ifthenelse{\equal{#1}{C}}
-    {C & 45 & 5 & 30 & 12}{}
+    {C & 35 & 5 & 25 & 15}{}
     \ifthenelse{\equal{#1}{D}}
-    {D & 35 & 5 & 25 & 15}{}
+    {D & 25 & 4 & 20 & 17}{}
     \ifthenelse{\equal{#1}{E}}
-    {E & 50 & 30 & 40 & 10}{}
+    {E & 40 & 2 & 100 & 13}{}
     \ifthenelse{\equal{#1}{F}}
-    {F & 30 & 30 & 15 & 11}{}
+    {F & 22 & 10 & 5 & 8}{}
     \ifthenelse{\equal{#1}{G}}
-    {G & 10 & 50 & 25 & 7}{}
+    {G & 20 & 8 & 100 & 5}{}
     \ifthenelse{\equal{#1}{H}}
-    {H & 8 & 50 & 40 & 4}{}
+    {H & 18 & 2 & 200 & 3}{}
     \\ \hline \end{tabular} \\
     \includegraphics[scale=0.5,keepaspectratio]{fig/Pr5.pdf} \\
     }

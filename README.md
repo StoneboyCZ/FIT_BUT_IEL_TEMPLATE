@@ -1,4 +1,4 @@
-# Šablona pro projekt IEL, verze 2022/02
+# Šablona pro projekt IEL, verze 2023/01
 
 Tento dokument popisuje použití šablony pro projekt IEL.
 
@@ -60,7 +60,7 @@ V této části souboru README je stručně představena struktura šablony.
   * fitiel.cls
      Definice stylu dokumentu. 
   * latexmkrc
-     Nastavení pro utilitu latexmk (umístění balíků, podsložka packages). 
+     Nastavení pro utilitu latexmk (umístění balíků, podadresář packages). 
   * README.md
      Tento dokument.
 
