@@ -1,7 +1,7 @@
-% Copyright 2018-2022 by Romano Giannetti
-% Copyright 2015-2022 by Stefan Lindner
-% Copyright 2013-2022 by Stefan Erhardt
-% Copyright 2007-2022 by Massimo Redaelli
+% Copyright 2018-2023 by Romano Giannetti
+% Copyright 2015-2023 by Stefan Lindner
+% Copyright 2013-2023 by Stefan Erhardt
+% Copyright 2007-2023 by Massimo Redaelli
 %
 % This file may be distributed and/or modified
 %
@@ -448,6 +448,36 @@
     \fi
 }
 
+% set the color and dash pattern for a subset of the shape, following keys #1/color
+% and #1/dash. The keys must exist, and check for none or default for both
+\def\pgf@circ@subset@color@dash#1{%
+    % You *must* be sure that this is called inside a \pgfscope!
+    \edef\@@none{none}\edef\@@default{default}
+    \edef\@@tmp{\ctikzvalof{#1/color}}
+    \ifx\@@tmp\@@default\else
+        \pgfsetcolor{\@@tmp}
+    \fi
+    \edef\@@tmp{\ctikzvalof{#1/dash}}
+    \ifx\@@tmp\@@default\else
+        \ifx\@@tmp\@@none
+            \pgfsetdash{}{0pt}% solid line, override dash
+        \else
+            \expandafter\pgfsetdash\expandafter{\@@tmp}{0cm}
+        \fi
+    \fi
+}
+
+% set the text color (via \color) if the color is not default or none
+% needed in some strange case (like bodydiode' dots)
+\def\pgf@circ@maybe@color#1{%
+    \edef\@@none{none}\edef\@@default{default}%
+     \edef\@@tmp{\ctikzvalof{#1}}%
+     \ifx\@@tmp\@@default\else
+        \ifx\@@tmp\@@none\else
+            \color{\@@tmp}%
+        \fi
+     \fi
+}
 
 %%>>>
 
@@ -801,6 +831,8 @@
 %
 % Option "t=*" for nodes
 \pgfkeys{/tikz/t/.add code={}{\ctikzset{text=#1}}}
+\pgfkeys{/tikz/t1/.add code={}{\ctikzset{text in=#1}}}
+\pgfkeys{/tikz/t2/.add code={}{\ctikzset{text out=#1}}}
 %
 \ctikzset{bipole/.is family}
 \ctikzset{bipole/kind/.initial=}
@@ -933,6 +965,18 @@
 \ctikzset{diodes/scale/.initial=1.0}
 \ctikzset{diodes/fill/.initial=none}
 \ctikzset{diodes/thickness/.initial=none}
+% we define opto arrows style here because they are used also
+% in transistors
+\ctikzset{opto arrows/.is family}
+\ctikzset{opto arrows/relative thickness/.initial=1}
+\ctikzset{opto arrows/color/.initial=default}
+\ctikzset{opto arrows/dash/.initial=default}
+\def\pgf@circ@set@optoarrow@style{%
+    % You *must* be sure that this is called inside a \pgfscope!
+    \pgfsetlinewidth{\ctikzvalof{opto arrows/relative thickness}\pgflinewidth}
+        \pgf@circ@subset@color@dash{opto arrows}
+        \pgfcirc@set@arrows{opto}{}{latexslim}
+    }
 
 \ctikzset{batteries/scale/.initial=1.0}
 \ctikzset{batteries/fill/.initial=none}
@@ -1093,7 +1137,10 @@
 % shaping the +/- sign, see pgfcircvoltage.tex
 \ctikzset{voltage/american font/.initial={}}
 \ctikzset{voltage/american plus/.initial={$+$}}
-\ctikzset{voltage/american minus/.initial={$-$}}
+% In the mayority of fonts, the size of - is smaller than +, so we have
+% unaligned signs when positioned independently.
+% See https://github.com/circuitikz/circuitikz/issues/721
+\ctikzset{voltage/american minus/.initial={$\vphantom{+}-$}}
 % here we start the voltage adjustments for special components.
 % default values:
 %
