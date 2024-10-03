@@ -1,6 +1,6 @@
 # makefile pro preklad LaTeX verze sablony IEL
 # (c) 2022 Petr Veigend
-# E-mail: iveigend AT fit vut cz
+# E-mail: veigend AT fit vut cz
 # Upraveno na zaklade Makefile ze sablony pro zaverecne prace FIT.
 #===========================================
 CO=00-projekt

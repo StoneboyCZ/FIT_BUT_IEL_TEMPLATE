@@ -1,4 +1,4 @@
-# Šablona pro projekt IEL, verze 2023/01
+# Šablona pro projekt IEL, verze 2024/01
 
 Tento dokument popisuje použití šablony pro projekt IEL.
 
@@ -68,4 +68,4 @@ V této části souboru README je stručně představena struktura šablony.
 Velmi doporučuji webovou knihu https://en.wikibooks.org/wiki/LaTeX, pokud s LaTeXem začínáte. Pokud řešíte problémy, google.
 
 # Autor
-Za šablonnu zodpovídá výhradně ing. Petr Veigend (iveigend@fit.vut.cz), dotazy směřujte prosím výhradně na něj. 
+Za šablonnu odpovídá výhradně Petr Veigend (veigend@fit.vut.cz), dotazy směřujte prosím výhradně na něj. 

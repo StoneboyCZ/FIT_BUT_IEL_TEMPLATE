@@ -90,7 +90,7 @@
 
     \newcommand{\prvniZadani}[1]{
         \def\prvniSkupina{#1}
-        Stanovte napětí $U_{R2}$ a proud $I_{R2}$. Použijte metodu postupného zjednodušování obvodu. \\
+        Stanovte napětí $U_{R3}$ a proud $I_{R3}$. Použijte metodu postupného zjednodušování obvodu. \\
         
         \begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|} \hline
 sk. & $U_1$ [\Vo] & $U_2$ [\Vo]  & $R_1$ [$\Omega$] & $R_2$ [$\Omega$] & $R_3$ [$\Omega$] & $R_4$ [$\Omega$] & $R_5$ [$\Omega$] & $R_6$ [$\Omega$] & $R_7$ [$\Omega$] & $R_8$ [$\Omega$] \\ \hline
@@ -118,10 +118,10 @@ sk. & $U_1$ [\Vo] & $U_2$ [\Vo]  & $R_1$ [$\Omega$] & $R_2$ [$\Omega$] & $R_3$ [
     % druhy priklad
     \newcommand{\druhyZadani}[1]{
         \def\druhySkupina{#1}
-        Stanovte napětí $U_{R6}$ a proud $I_{R6}$. Použijte metodu Théveninovy věty. \\
+        Stanovte napětí $U_{R4}$ a proud $I_{R4}$. Použijte metodu Théveninovy věty. \\
         
-         \begin{tabular}{|c|c|c|c|c|c|c|c|} \hline
-sk. & $U$ [\Vo] & $R_1$ [$\Omega$] & $R_2$ [$\Omega$] & $R_3$ [$\Omega$] & $R_4$ [$\Omega$] & $R_5$ [$\Omega$] & $R_6$ [$\Omega$]\\ \hline
+        \begin{tabular}{|c|c|c|c|c|c|c|c|} \hline
+sk. & $U_1$ [\Vo] & $U_2$ [\Vo] & $R_1$ [$\Omega$] & $R_2$ [$\Omega$] & $R_3$ [$\Omega$] & $R_4$ [$\Omega$] & $R_5$ [$\Omega$]\\ \hline
     \ifthenelse{\equal{#1}{A}}
     {A & 50 & 100 & 525 & 620 & 210 & 530 & 50}{}
     \ifthenelse{\equal{#1}{B}}
@@ -146,26 +146,26 @@ sk. & $U$ [\Vo] & $R_1$ [$\Omega$] & $R_2$ [$\Omega$] & $R_3$ [$\Omega$] & $R_4$
     % treti priklad
     \newcommand{\tretiZadani}[1]{
         \def\tretiSkupina{#1}
-        Stanovte napětí $U_{R4}$ a proud $I_{R4}$. Použijte metodu uzlových napětí ($U_A$, $U_B$, $U_C$). 
+        Stanovte napětí $U_{R2}$ a proud $I_{R2}$. Použijte metodu uzlových napětí ($U_A$, $U_B$, $U_C$). 
         
-        \begin{tabular}{|c|c|c|c|c|c|c|c|c|} \hline
-sk. & $U$ [\Vo] & $I_1$ [\Am] & $I_2$ [\Am] & $R_1$ [$\Omega$] & $R_2$ [$\Omega$] & $R_3$ [$\Omega$] & $R_4$ [$\Omega$] & $R_5$ [$\Omega$] \\ \hline
+        \begin{tabular}{|c|c|c|c|c|c|c|c|c|c|} \hline
+sk. & $U_1$ [\Vo] & $U_2$ [\Vo] & $I$ [\Am] & $R_1$ [$\Omega$] & $R_2$ [$\Omega$] & $R_3$ [$\Omega$] & $R_4$ [$\Omega$] & $R_5$ [$\Omega$] & $R_6$ [$\Omega$] \\ \hline
     \ifthenelse{\equal{#1}{A}}
-    {A & 120 & 0.9  & 0.7  & 53 & 49 & 65 & 39 & 32}{}
+    {A & 120 & 50 & 0.7 & 53 & 49 & 65 & 39 & 32 & 48}{}
     \ifthenelse{\equal{#1}{B}}
-    {B & 150 & 0.7  & 0.8  & 49 & 45 & 61 & 34 & 34}{}
+    {B & 150 & 70 & 0.8 & 49 & 45 & 61 & 34 & 34 & 55}{}
     \ifthenelse{\equal{#1}{C}}
-    {C & 110 & 0.85 & 0.75 & 44 & 31 & 56 & 20 & 30}{}
+    {C & 110 & 100 & 0.75 & 44 & 31 & 56 & 20 & 30 & 60}{}
     \ifthenelse{\equal{#1}{D}}
-    {D & 115 & 0.6  & 0.9  & 50 & 38 & 48 & 37 & 28}{}
+    {D & 115 & 60 & 0.9 & 50 & 38 & 48 & 37 & 28 & 45}{}
     \ifthenelse{\equal{#1}{E}}
-    {E & 135 & 0.55 & 0.65 & 52 & 42 & 52 & 42 & 21}{}
+    {E & 135 & 110 & 0.65 & 52 & 42 & 52 & 42 & 21 & 40}{}
     \ifthenelse{\equal{#1}{F}}
-    {F & 145 & 0.75 & 0.85 & 48 & 44 & 53 & 36 & 25}{}
+    {F & 145 & 120 & 0.85 & 48 & 44 & 53 & 36 & 25 & 70}{}
     \ifthenelse{\equal{#1}{G}}
-    {G & 160 & 0.65 & 0.45 & 46 & 41 & 53 & 33 & 29}{}
+    {G & 160 & 135 & 0.45 & 46 & 41 & 53 & 33 & 29 & 65}{}
     \ifthenelse{\equal{#1}{H}}
-    {H & 130 & 0.95 & 0.50 & 47 & 39 & 58 & 28 & 25}{}
+    {H & 130 & 90 & 0.50 & 47 & 39 & 58 & 28 & 25 & 35}{}
     \\ \hline \end{tabular} \\
     
     \includegraphics[scale=0.5,keepaspectratio]{fig/Pr3.pdf} \\
@@ -175,8 +175,8 @@ sk. & $U$ [\Vo] & $I_1$ [\Am] & $I_2$ [\Am] & $R_1$ [$\Omega$] & $R_2$ [$\Omega$
     \newcommand{\ctvrtyZadani}[1]{
         \def\ctvrtySkupina{#1}
         Pro napájecí napětí platí: $u_1=U_1{\cdot}\sin(2{\pi}ft)$, $u_2=U_2{\cdot}\sin(2{\pi}ft)$.\\
-Ve vztahu pro napětí $u_{L_{2}}=U_{L_2}{\cdot}\sin(2{\pi}ft+\varphi_{L_{2}})$
-určete $|U_{L_{2}}|$ a $\varphi_{L_{2}}$. Použijte metodu smyčkových proudů.\\
+Ve vztahu pro napětí $u_{L_{1}}=U_{L_1}{\cdot}\sin(2{\pi}ft+\varphi_{L_{1}})$
+určete $|U_{L_{1}}|$ a $\varphi_{L_{1}}$. Použijte metodu smyčkových proudů.\\
 
 Pozn: Pomocné směry šipek napájecích zdrojů platí pro speciální časový okamžik ($t=\frac{\pi}{2{\omega}}$).
         
@@ -205,26 +205,26 @@ sk. & $U_1$ [\Vo] & $U_2$ [\Vo] & $R_1$ [$\Omega$] & $R_2$ [$\Omega$] & $L_{1}$ 
     % paty priklad
     \newcommand{\patyZadani}[1]{
         \def\patySkupina{#1}
-        V obvodu na obrázku níže v čase $t=0$ [\s] sepne spínač $S$. Sestavte diferenciální rovnici popisující chování obvodu na obrázku, dále ji upravte dosazením hodnot parametrů. Vypočítejte analytické řešení $u_{C}~=~f(t)$. Proveďte kontrolu výpočtu dosazením do sestavené diferenciální rovnice.\\
+        V obvodu na obrázku níže v čase $t=0$ [\s] sepne spínač $S$. Sestavte diferenciální rovnici popisující chování obvodu na obrázku, dále ji upravte dosazením hodnot parametrů. Vypočítejte analytické řešení ${i_{L}=f(t)}$. Proveďte kontrolu výpočtu dosazením do sestavené diferenciální rovnice.\\
         
         \begin{tabular}{|c|c|c|c|c|} \hline
-        sk. & $U$ [\Vo] & $C$ [\F] & $R$ [$\Omega$] & $u_C(0)$ [\Vo] \\ \hline
+        sk. & $U$ [\Vo] & $L$ [\He] & $R$ [$\Omega$] & $i_L(0)$ [\Am] \\ \hline
     \ifthenelse{\equal{#1}{A}}
-    {A & 40 & 1 & 25 & 10}{}
+    {A & 40 & 10 & 20 & 10}{}
     \ifthenelse{\equal{#1}{B}}
-    {B & 30 & 5 & 125 & 12}{}
+    {B & 30 & 25 & 10 & 12}{}
     \ifthenelse{\equal{#1}{C}}
-    {C & 35 & 5 & 25 & 15}{}
+    {C & 50 & 5 & 25 & 15}{}
     \ifthenelse{\equal{#1}{D}}
-    {D & 25 & 4 & 20 & 17}{}
+    {D & 60 & 4 & 20 & 17}{}
     \ifthenelse{\equal{#1}{E}}
-    {E & 40 & 2 & 100 & 13}{}
+    {E & 40 & 30 & 120 & 13}{}
     \ifthenelse{\equal{#1}{F}}
-    {F & 22 & 10 & 5 & 8}{}
+    {F & 25 & 10 & 50 & 8}{}
     \ifthenelse{\equal{#1}{G}}
-    {G & 20 & 8 & 100 & 5}{}
+    {G & 20 & 2 & 100 & 5}{}
     \ifthenelse{\equal{#1}{H}}
-    {H & 18 & 2 & 200 & 3}{}
+    {H & 12 & 6 & 240 & 3}{}
     \\ \hline \end{tabular} \\
     \includegraphics[scale=0.5,keepaspectratio]{fig/Pr5.pdf} \\
     }
