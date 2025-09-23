@@ -1,1 +1,0 @@
-$ENV{'TEXINPUTS'}='./packages/circuitikz//:' . $ENV{'TEXINPUTS'}; 
