@@ -1,4 +1,4 @@
-# Šablona pro projekt IEL, verze 2024/01
+# Šablona pro projekt IEL, verze 2025/01
 
 Tento dokument popisuje použití šablony pro projekt IEL.
 
