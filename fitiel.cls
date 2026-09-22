@@ -90,7 +90,7 @@
 
     \newcommand{\prvniZadani}[1]{
         \def\prvniSkupina{#1}
-        Stanovte napětí $U_{R1}$ a proud $I_{R1}$. Použijte metodu postupného zjednodušování obvodu. \\
+        Stanovte napětí $U_{R7}$ a proud $I_{R7}$. Použijte metodu postupného zjednodušování obvodu. \\
         
         \begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|} \hline
 sk. & $U_1$ [\Vo] & $U_2$ [\Vo]  & $R_1$ [$\Omega$] & $R_2$ [$\Omega$] & $R_3$ [$\Omega$] & $R_4$ [$\Omega$] & $R_5$ [$\Omega$] & $R_6$ [$\Omega$] & $R_7$ [$\Omega$] & $R_8$ [$\Omega$] \\ \hline
@@ -101,7 +101,7 @@ sk. & $U_1$ [\Vo] & $U_2$ [\Vo]  & $R_1$ [$\Omega$] & $R_2$ [$\Omega$] & $R_3$ [
     \ifthenelse{\equal{#1}{C}}
     {C & 100 & 80 & 450 & 810 & 190 & 220 & 220 & 720 & 260 & 180}{}
     \ifthenelse{\equal{#1}{D}}
-    {D & 105 & 85 & 420 & 980 & 330 & 280 & 310 & 710 & 240 & 200}{}
+    {D & 105  & 85 & 420 & 980 & 330 & 280 & 310 & 710 & 240 & 200}{}
     \ifthenelse{\equal{#1}{E}}
     {E & 115 & 55 & 485 & 660 & 100 & 340 & 575 & 815 & 255 & 225}{}
     \ifthenelse{\equal{#1}{F}}
@@ -146,26 +146,26 @@ sk. & $U_1$ [\Vo] & $R_1$ [$\Omega$] & $R_2$ [$\Omega$] & $R_3$ [$\Omega$] & $R_
     % treti priklad
     \newcommand{\tretiZadani}[1]{
         \def\tretiSkupina{#1}
-        Stanovte napětí $U_{R4}$ a proud $I_{R4}$. Použijte metodu uzlových napětí ($U_A$, $U_B$, $U_C$). 
+        Stanovte napětí $U_{R5}$ a proud $I_{R5}$. Použijte metodu uzlových napětí ($U_A$, $U_B$, $U_C$). 
         
         \begin{tabular}{|c|c|c|c|c|c|c|c|c|c|} \hline
-sk. & $U_1$ [\Vo] & $U_2$ [\Vo] & $I$ [\Am] & $R_1$ [$\Omega$] & $R_2$ [$\Omega$] & $R_3$ [$\Omega$] & $R_4$ [$\Omega$] & $R_5$ [$\Omega$] & $R_6$ [$\Omega$] \\ \hline
+sk. & $U$ [\Vo] & $I_1$ [\Am] & $I_2$ [\Am] & $R_1$ [$\Omega$] & $R_2$ [$\Omega$] & $R_3$ [$\Omega$] & $R_4$ [$\Omega$] & $R_5$ [$\Omega$] & $R_6$ [$\Omega$] \\ \hline
     \ifthenelse{\equal{#1}{A}}
-    {A & 120 & 50 & 0.7 & 53 & 49 & 65 & 39 & 32 & 48}{}
+    {A & 120 & 0.5  & 0.7  & 530 & 490 & 650 & 390 & 320 & 480}{}
     \ifthenelse{\equal{#1}{B}}
-    {B & 150 & 70 & 0.8 & 49 & 45 & 61 & 34 & 34 & 55}{}
+    {B & 150 & 0.7  & 0.8  & 490 & 450 & 610 & 340 & 340 & 550}{}
     \ifthenelse{\equal{#1}{C}}
-    {C & 110 & 100 & 0.75 & 44 & 31 & 56 & 20 & 30 & 60}{}
+    {C & 110 & 0.9  & 0.75 & 440 & 310 & 560 & 200 & 300 & 600}{}
     \ifthenelse{\equal{#1}{D}}
-    {D & 115 & 60 & 0.9 & 50 & 38 & 48 & 37 & 28 & 45}{}
+    {D & 115 & 0.6  & 0.9  & 500 & 380 & 480 & 370 & 280 & 450}{}
     \ifthenelse{\equal{#1}{E}}
-    {E & 135 & 110 & 0.65 & 52 & 42 & 52 & 42 & 21 & 40}{}
+    {E & 135 & 0.2  & 0.65 & 520 & 420 & 520 & 420 & 210 & 400}{}
     \ifthenelse{\equal{#1}{F}}
-    {F & 145 & 120 & 0.85 & 48 & 44 & 53 & 36 & 25 & 70}{}
+    {F & 145 & 0.4  & 0.85 & 480 & 440 & 530 & 360 & 250 & 700}{}
     \ifthenelse{\equal{#1}{G}}
-    {G & 160 & 135 & 0.45 & 46 & 41 & 53 & 33 & 29 & 65}{}
+    {G & 160 & 0.35 & 0.45 & 460 & 410 & 540 & 330 & 290 & 650}{}
     \ifthenelse{\equal{#1}{H}}
-    {H & 130 & 90 & 0.50 & 47 & 39 & 58 & 28 & 25 & 35}{}
+    {H & 130 & 0.95 & 0.5  & 470 & 390 & 580 & 280 & 250 & 350}{}
     \\ \hline \end{tabular} \\
     
     \includegraphics[scale=0.5,keepaspectratio]{fig/Pr3.pdf} \\
@@ -175,29 +175,29 @@ sk. & $U_1$ [\Vo] & $U_2$ [\Vo] & $I$ [\Am] & $R_1$ [$\Omega$] & $R_2$ [$\Omega$
     \newcommand{\ctvrtyZadani}[1]{
         \def\ctvrtySkupina{#1}
         Pro napájecí napětí platí: $u_1=U_1{\cdot}\sin(2{\pi}ft)$, $u_2=U_2{\cdot}\sin(2{\pi}ft)$.\\
-Ve vztahu pro napětí $u_{L_{2}}=U_{L_2}{\cdot}\sin(2{\pi}ft+\varphi_{L_{2}})$
-určete $|U_{L_{2}}|$ a $\varphi_{L_{2}}$. Použijte metodu smyčkových proudů.\\
+Ve vztahu pro napětí $u_{C_{2}}=U_{C_2}{\cdot}\sin(2{\pi}ft+\varphi_{C_{2}})$
+určete $|U_{C_{2}}|$ a $\varphi_{C_{2}}$. Použijte metodu smyčkových proudů.\\
 
 Pozn: Pomocné směry šipek napájecích zdrojů platí pro speciální časový okamžik ($t=\frac{\pi}{2{\omega}}$).
         
         \begin{tabular}{|c|c|c|c|c|c|c|c|c|c|} \hline
 sk. & $U_1$ [\Vo] & $U_2$ [\Vo] & $R_1$ [$\Omega$] & $R_2$ [$\Omega$] & $L_{1}$ [\mH] & $L_{2}$ [\mH] & $C_1$ [$\uF$] & $C_2$ [$\uF$] & $f$ [\Hz] \\ \hline
     \ifthenelse{\equal{#1}{A}}
-    {A & 3 & 5 & 12 & 14 & 120 & 100 & 200 & 105 & 70}{}
+    {A & 3 & 5 & 120 & 140 & 120 & 100 & 200 & 105 & 70}{}
     \ifthenelse{\equal{#1}{B}}
-    {B & 2 & 4 & 11 & 15 & 100 &  85 & 220 &  95 & 80}{}
+    {B & 2 & 4 & 110 & 150 & 100 &  85 & 220 &  95 & 80}{}
     \ifthenelse{\equal{#1}{C}}
-    {C & 3 & 4 & 10 & 13 & 220 &  70 & 230 &  85 & 75}{}
+    {C & 3 & 4 & 100 & 130 & 220 &  70 & 230 &  85 & 75}{}
     \ifthenelse{\equal{#1}{D}}
-    {D & 4 & 5 & 13 & 15 & 180 &  90 & 210 &  75 & 85}{}
+    {D & 4 & 5 & 130 & 150 & 180 &  90 & 210 &  75 & 85}{}
     \ifthenelse{\equal{#1}{E}}
-    {E & 5 & 3 & 14 & 13 & 130 &  60 & 100 &  65 & 90}{}
+    {E & 5 & 3 & 140 & 130 & 130 &  60 & 100 &  65 & 90}{}
     \ifthenelse{\equal{#1}{F}}
-    {F & 2 & 3 & 12 & 10 & 170 &  80 & 150 &  90 & 65}{}
+    {F & 2 & 3 & 120 & 100 & 170 &  80 & 150 &  90 & 65}{}
     \ifthenelse{\equal{#1}{G}}
-    {G & 5 & 5 & 13 & 12 & 140 &  60 & 160 &  80 & 60}{}
+    {G & 5 & 5 & 130 & 120 & 140 &  60 & 160 &  80 & 60}{}
     \ifthenelse{\equal{#1}{H}}
-    {H & 5 & 6 & 10 & 10 & 160 &  75 & 155 &  70 & 95}{}
+    {H & 5 & 6 & 100 & 100 & 160 &  75 & 155 &  70 & 95}{}
     \\ \hline \end{tabular} \\
     \includegraphics[scale=0.5,keepaspectratio]{fig/Pr4.pdf} \\
     }
@@ -205,26 +205,26 @@ sk. & $U_1$ [\Vo] & $U_2$ [\Vo] & $R_1$ [$\Omega$] & $R_2$ [$\Omega$] & $L_{1}$ 
     % paty priklad
     \newcommand{\patyZadani}[1]{
         \def\patySkupina{#1}
-        V obvodu na obrázku níže v čase $t=0$ [\s] sepne spínač $S$. Sestavte diferenciální rovnici popisující chování obvodu na obrázku, dále ji upravte dosazením hodnot parametrů. Vypočítejte analytické řešení ${u_{C}=f(t)}$. Proveďte kontrolu výpočtu dosazením do sestavené diferenciální rovnice.\\
+        V obvodu na obrázku níže v čase $t=0$ [\s] sepne spínač $S$. Sestavte diferenciální rovnici popisující chování obvodu na obrázku, dále ji upravte dosazením hodnot parametrů. Vypočítejte analytické řešení ${i_{L}=f(t)}$. Proveďte kontrolu výpočtu dosazením do sestavené diferenciální rovnice.\\
         
         \begin{tabular}{|c|c|c|c|c|} \hline
-        sk. & $U$ [\Vo] & $C$ [\F] & $R$ [$\Omega$] & $u_C(0)$ [\Vo] \\ \hline
+        sk. & $U$ [\Vo] & $L$ [\He] & $R$ [$\Omega$] & $i_L(0)$ [\Am] \\ \hline
     \ifthenelse{\equal{#1}{A}}
-    {A & 30 & 1 & 20 & 10}{}
+    {A & 30 & 5  & 150 & 1}{}
     \ifthenelse{\equal{#1}{B}}
-    {B & 40 & 2 & 125 & 12}{}
+    {B & 20 & 2  & 100 & 2}{}
     \ifthenelse{\equal{#1}{C}}
-    {C & 30 & 4 & 25 & 15}{}
+    {C & 10 & 4  & 200 & 5}{}
     \ifthenelse{\equal{#1}{D}}
-    {D & 25 & 5 & 20 & 20}{}
+    {D & 60 & 3  & 120 & 3}{}
     \ifthenelse{\equal{#1}{E}}
-    {E & 20 & 2 & 250 & 13}{}
+    {E & 50 & 5  & 500 & 4}{}
     \ifthenelse{\equal{#1}{F}}
-    {F & 22 & 4 & 200 & 8}{}
+    {F & 70 & 10 & 350 & 7}{}
     \ifthenelse{\equal{#1}{G}}
-    {G & 28 & 2 & 100 & 5}{}
+    {G & 40 & 8  & 160 & 6}{}
     \ifthenelse{\equal{#1}{H}}
-    {H & 18 & 5 & 50 & 3}{}
+    {H & 90 & 5  & 450 & 8}{}
     \\ \hline \end{tabular} \\
     \includegraphics[scale=0.5,keepaspectratio]{fig/Pr5.pdf} \\
     }
