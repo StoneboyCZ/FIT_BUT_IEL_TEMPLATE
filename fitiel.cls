@@ -44,7 +44,7 @@
 \usepackage[european,straightvoltages,betterproportions,EFvoltages]{circuitikz}
 
 % jednotky
-\usepackage{siunitx}
+\usepackage[output-decimal-marker={,}]{siunitx}
 %%
 
 %% logo a nastavení správného jazyka pro dokument
